@@ -2,27 +2,31 @@ version: '3.8'
 
 services:
   gateway:
-    build:
+    build: 
       context: .
-      dockerfile: apps/gateway/Dockerfile
+      dockerfile: ./apps/gateway/Dockerfile
     ports:
       - "3001:3001"
     environment:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - REDIS_URL=redis://redis:6379
+      - PORT=3001
     depends_on:
       - redis
 
   dashboard:
     build:
       context: .
-      dockerfile: apps/dashboard/Dockerfile
+      dockerfile: ./apps/dashboard/Dockerfile
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_GATEWAY_URL=http://localhost:3001
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
 
   redis:
     image: redis:alpine
     ports:
       - "6379:6379"
+
+networks:
+  gravity-net:
+    driver: bridge

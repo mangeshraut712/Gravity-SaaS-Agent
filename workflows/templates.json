@@ -1,0 +1,58 @@
+[
+    {
+        "id": "morning-digest",
+        "name": "Morning Briefing",
+        "description": "Scrapes top news and financial markets at 8 AM",
+        "steps": [
+            {
+                "action": "web_search",
+                "params": {
+                    "query": "top tech news today"
+                }
+            },
+            {
+                "action": "web_search",
+                "params": {
+                    "query": "S&P 500 performance"
+                }
+            },
+            {
+                "action": "summarize",
+                "params": {
+                    "focus": "briefing"
+                }
+            },
+            {
+                "action": "whatsapp_send",
+                "params": {
+                    "template": "digest"
+                }
+            }
+        ]
+    },
+    {
+        "id": "lead-gen",
+        "name": "B2B Lead Finder",
+        "description": "Finds CTOs of recently funded startups",
+        "steps": [
+            {
+                "action": "browser_open",
+                "params": {
+                    "url": "https://news.ycombinator.com"
+                }
+            },
+            {
+                "action": "extract_entities",
+                "params": {
+                    "type": "company"
+                }
+            },
+            {
+                "action": "enrich_leads",
+                "params": {
+                    "provider": "apollo"
+                }
+            }
+        ]
+    }
+]

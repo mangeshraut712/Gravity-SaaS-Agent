@@ -1,0 +1,33 @@
+{
+    "mcpServers": {
+        "google-search": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-google-search"
+            ],
+            "env": {
+                "GOOGLE_API_KEY": "sk-placeholder",
+                "GOOGLE_CSE_ID": "id-placeholder"
+            }
+        },
+        "filesystem": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-filesystem",
+                "/Users/mangeshraut/Downloads"
+            ]
+        },
+        "github": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-github"
+            ],
+            "env": {
+                "GITHUB_PERSONAL_ACCESS_TOKEN": "token-placeholder"
+            }
+        }
+    }
+}
