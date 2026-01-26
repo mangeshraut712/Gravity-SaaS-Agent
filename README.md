@@ -1,9 +1,36 @@
-# 🌌 GravityBot (Secure Production Edition)
-> **The Secure, Autonomous AI Agent for Your Digital Life.**
+# 🌌 GravityOS: The Production-Grade Autonomous Agent Framework
+> **Build, Secure, and Monetize AI Agents with Hands.**
 
 ![GravityBot Dashboard](https://gemini-static.googleusercontent.com/antigravity/brain/3514a195-44dd-4874-8386-9b01fce0ab04/gravity_bot_dashboard_final_1769432596427.png)
 
-GravityBot is the industrial answer to the "Clawdbot" craze. It is built for **security-first** autonomy, addressing the critical risks of giving an AI shell access to your machine.
+GravityBot (now GravityOS) is a high-performance, multi-tenant SaaS framework for deploying autonomous AI agents. Unlike simple chatbots, GravityOS agents are equipped with "hands" via the **Model Context Protocol (MCP)**, allowing them to interact with the real world, manage files, and automate complex workflows.
+
+---
+
+## 🚀 Key Features
+*   **Proactive Heartbeat Engine**: Agents that don't just respond, but reach out when it matters.
+*   **Cost-Optimized Memory**: Intelligent context caching that reduces Anthropic API costs by up to 90%.
+*   **Multi-tenant Architecture**: Built-in Subscription & Billing logic (`@gravity/db`).
+*   **Security-First Gateway**: Boot-time security audits and sandbox-ready execution.
+*   **Premium Telemetry Dashboard**: Minimalist 2026 aesthetics for real-time monitoring.
+
+---
+
+## 🛠️ Quick Start
+1. **Clone the Repo**:
+   ```bash
+   git clone https://github.com/mangeshraut712/Gravity-SaaS-Agent.git
+   cd Gravity-SaaS-Agent
+   ```
+2. **Install & Setup**:
+   ```bash
+   chmod +x install.sh
+   ./install.sh
+   ```
+3. **Run All services**:
+   ```bash
+   npm run dev
+   ```
 
 ---
 
