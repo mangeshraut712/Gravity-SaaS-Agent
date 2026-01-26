@@ -1,0 +1,21 @@
+{
+  "name": "@gravity/memory",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces",
+    "build": "npm run build --workspaces --if-present",
+    "start": "npm run start --workspaces",
+    "lint": "npm run lint --workspaces"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "prettier": "^3.0.0"
+  },
+  "packageManager": "pnpm@9.0.0"
+}

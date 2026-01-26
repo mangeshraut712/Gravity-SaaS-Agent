@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "target": "ESNext",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "declaration": true,
+        "baseUrl": ".",
+        "jsx": "preserve",
+        "paths": {
+            "@gravity/memory": [
+                "packages/memory/src/index.ts"
+            ],
+            "@gravity/mcp-client": [
+                "packages/mcp-client/src/index.ts"
+            ],
+            "@gravity/db": [
+                "packages/db/src/index.ts"
+            ]
+        },
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true
+    }
+}
