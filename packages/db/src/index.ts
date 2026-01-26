@@ -16,6 +16,7 @@ export class GravityDB {
         // Seed some demo users
         this.createUser('demo-user', 'mangesh@example.com', 'PRO');
         this.createUser('1234567890', 'user@example.com', 'FREE');
+        this.createUser('dashboard-user', 'dashboard@example.com', 'PRO');
     }
 
     async getUser(id: string): Promise<UserProfle | undefined> {

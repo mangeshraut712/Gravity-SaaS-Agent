@@ -38,7 +38,15 @@ export class SecurityService {
             score -= 30;
         }
 
-        // 5. Check rate limiting configuration
+        // 5. Check OpenRouter API key
+        const openRouterKey = process.env.OPENROUTER_API_KEY;
+        if (!openRouterKey || !openRouterKey.startsWith('sk-or-')) {
+            vulnerabilities.push('WARN: Invalid or missing OpenRouter API key.');
+            recommendations.push('Set a valid OPENROUTER_API_KEY in your environment');
+            score -= 15;
+        }
+
+        // 6. Check rate limiting configuration
         const rateLimitEnabled = process.env.RATE_LIMIT_MAX_REQUESTS && parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) > 0;
         if (!rateLimitEnabled) {
             vulnerabilities.push('WARN: Rate limiting is not configured.');
@@ -92,4 +100,10 @@ export class SecurityService {
     validateApiKey(key: string): boolean {
         return key.startsWith('sk-ant-') && key.length >= 40;
     }
+
+    validateOpenRouterKey(key: string): boolean {
+        return key.startsWith('sk-or-') && key.length >= 40;
+    }
 }
+
+export const securityService = new SecurityService();

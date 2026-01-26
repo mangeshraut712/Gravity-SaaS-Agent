@@ -10,8 +10,9 @@ import { GravityDB } from '@gravity/db';
 import { SubscriptionService } from './services/billing/subscription.js';
 import { ChannelManager } from './services/channel-manager.js';
 import { SkillsPlatform } from './services/skills-platform.js';
-import { ApiResponse, SystemStats, Session, Message, ChannelMessage } from '@gravity/types';
+import { ApiResponse, SystemStats, Session, Message, ChannelMessage, ChatCompletionRequest } from '@gravity/types';
 import rateLimit from 'express-rate-limit';
+import { modelProviderManager } from './services/model-provider.js';
 
 dotenv.config();
 
@@ -193,7 +194,7 @@ async function processMessage(userId: string, text: string): Promise<string> {
         // 4. Fetch MCP tools
         const tools = await mcp.getTools();
 
-        // 5. Enhanced logic for tool execution
+        // 5. LLM Completion via OpenRouter/Anthropic
         let reply = '';
         const lowerText = text.toLowerCase();
         
@@ -206,10 +207,25 @@ async function processMessage(userId: string, text: string): Promise<string> {
                 logger.error('Search tool failed', error);
                 reply = `❌ Sorry, I encountered an error while searching for "${query}".`;
             }
-        } else if (lowerText.includes('file') && lowerText.includes('read')) {
-            reply = `📁 File reading capability detected. Please specify the file path.`;
         } else {
-            reply = `✅ Processed: "${text}". Memory optimized. ${tools.length} Tools active.`;
+            try {
+                // Try to use OpenRouter if configured, fallback to direct Anthropic or simulated response
+                if (process.env.OPENROUTER_API_KEY) {
+                    const response = await modelProviderManager.chatCompletion({
+                        provider: 'openrouter',
+                        messages: [
+                            { role: 'system', content: system[0].text },
+                            ...messages.map(m => ({ role: m.role, content: m.content }))
+                        ]
+                    } as ChatCompletionRequest);
+                    reply = response.content;
+                } else {
+                    reply = `✅ Processed: "${text}". Memory optimized. ${tools.length} Tools active. (Mode: Simulated - No API Key)`;
+                }
+            } catch (error) {
+                logger.error('LLM completion failed', error);
+                reply = `❌ Sorry, I encountered an error while thinking. Let me try again later.`;
+            }
         }
 
         // 6. Update session

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GravityOS OpenRouter Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #ffd700;
+        }
+        button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .response {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .success {
+            background: rgba(76, 175, 80, 0.2);
+            border-color: #4caf50;
+        }
+        .error {
+            background: rgba(244, 67, 54, 0.2);
+            border-color: #f44336;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+        .status.connected {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4caf50;
+        }
+        .status.disconnected {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #f44336;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            margin: 5px 0;
+            box-sizing: border-box;
+        }
+        input::placeholder, textarea::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        select option {
+            background: #333;
+            color: white;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #ffd700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌌 GravityOS OpenRouter Test</h1>
+        
+        <div class="test-section">
+            <h3>🔗 Connection Status</h3>
+            <div id="connectionStatus" class="status disconnected">
+                Checking connection...
+            </div>
+            <button onclick="checkConnection()">Check Connection</button>
+            <button onclick="getProviders()">Get Providers</button>
+        </div>
+
+        <div class="test-section">
+            <h3>🤖 Model Testing</h3>
+            <div class="form-group">
+                <label for="modelSelect">Select Model:</label>
+                <select id="modelSelect">
+                    <option value="">Loading models...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="messageInput">Test Message:</label>
+                <textarea id="messageInput" rows="4" placeholder="Enter your test message here...">Hello! Can you tell me about GravityOS and OpenRouter integration?</textarea>
+            </div>
+            <button onclick="testChatCompletion()">Test Chat Completion</button>
+            <button onclick="testStreamingChat()">Test Streaming Chat</button>
+            <div id="chatResponse" class="response"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 System Information</h3>
+            <button onclick="getSystemStats()">Get System Stats</button>
+            <button onclick="getSecurityAudit()">Security Audit</button>
+            <div id="systemResponse" class="response"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 Provider Validation</h3>
+            <button onclick="validateProvider('openrouter')">Validate OpenRouter</button>
+            <button onclick="testModelList()">List Available Models</button>
+            <div id="validationResponse" class="response"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3004';
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkConnection();
+            loadModels();
+        });
+
+        async function checkConnection() {
+            const statusEl = document.getElementById('connectionStatus');
+            statusEl.innerHTML = '<div class="loading"></div>Checking connection...';
+            statusEl.className = 'status';
+            
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                if (data.status === 'healthy') {
+                    statusEl.innerHTML = `✅ Connected - Uptime: ${Math.floor(data.uptime)}s`;
+                    statusEl.className = 'status connected';
+                } else {
+                    throw new Error('Service not healthy');
+                }
+            } catch (error) {
+                statusEl.innerHTML = `❌ Disconnected - ${error.message}`;
+                statusEl.className = 'status disconnected';
+            }
+        }
+
+        async function getProviders() {
+            const responseEl = document.getElementById('systemResponse');
+            responseEl.innerHTML = '<div class="loading"></div>Fetching providers...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/providers`);
+                const data = await response.json();
+                
+                responseEl.className = 'response success';
+                responseEl.innerHTML = JSON.stringify(data, null, 2);
+            } catch (error) {
+                responseEl.className = 'response error';
+                responseEl.innerHTML = `Error: ${error.message}`;
+            }
+        }
+
+        async function loadModels() {
+            const selectEl = document.getElementById('modelSelect');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/models`);
+                const data = await response.json();
+                
+                selectEl.innerHTML = '';
+                data.data.models.forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model;
+                    option.textContent = model;
+                    selectEl.appendChild(option);
+                });
+                
+                // Set default model
+                if (data.data.models.includes('openrouter/anthropic/claude-sonnet-4-5')) {
+                    selectEl.value = 'openrouter/anthropic/claude-sonnet-4-5';
+                }
+            } catch (error) {
+                selectEl.innerHTML = '<option value="">Failed to load models</option>';
+            }
+        }
+
+        async function testChatCompletion() {
+            const responseEl = document.getElementById('chatResponse');
+            const messageInput = document.getElementById('messageInput').value;
+            const modelSelect = document.getElementById('modelSelect').value;
+            
+            if (!messageInput.trim()) {
+                alert('Please enter a message');
+                return;
+            }
+            
+            responseEl.innerHTML = '<div class="loading"></div>Processing...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        messages: [
+                            { role: 'user', content: messageInput }
+                        ],
+                        model: modelSelect || undefined,
+                        temperature: 0.7,
+                        maxTokens: 1000
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    responseEl.className = 'response success';
+                    responseEl.innerHTML = `✅ **Response from ${data.data.provider}:**\n\n${data.data.content}\n\n---\n**Model:** ${data.data.model}\n**Tokens Used:** ${data.data.usage.totalTokens}\n**Prompt Tokens:** ${data.data.usage.promptTokens}\n**Completion Tokens:** ${data.data.usage.completionTokens}`;
+                } else {
+                    throw new Error(data.error || 'Unknown error');
+                }
+            } catch (error) {
+                responseEl.className = 'response error';
+                responseEl.innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+
+        async function testStreamingChat() {
+            const responseEl = document.getElementById('chatResponse');
+            const messageInput = document.getElementById('messageInput').value;
+            const modelSelect = document.getElementById('modelSelect').value;
+            
+            if (!messageInput.trim()) {
+                alert('Please enter a message');
+                return;
+            }
+            
+            responseEl.innerHTML = '<div class="loading"></div>Starting streaming...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        messages: [
+                            { role: 'user', content: messageInput }
+                        ],
+                        model: modelSelect || undefined,
+                        stream: true,
+                        temperature: 0.7,
+                        maxTokens: 1000
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    responseEl.className = 'response success';
+                    responseEl.innerHTML = `✅ **Streaming Response from ${data.data.provider}:**\n\n${data.data.content}\n\n---\n**Note:** Streaming is simulated in this demo. Full streaming requires WebSocket integration.`;
+                } else {
+                    throw new Error(data.error || 'Unknown error');
+                }
+            } catch (error) {
+                responseEl.className = 'response error';
+                responseEl.innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+
+        async function getSystemStats() {
+            const responseEl = document.getElementById('systemResponse');
+            responseEl.innerHTML = '<div class="loading"></div>Fetching system stats...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/stats`);
+                const data = await response.json();
+                
+                responseEl.className = 'response success';
+                responseEl.innerHTML = JSON.stringify(data, null, 2);
+            } catch (error) {
+                responseEl.className = 'response error';
+                responseEl.innerHTML = `Error: ${error.message}`;
+            }
+        }
+
+        async function getSecurityAudit() {
+            const responseEl = document.getElementById('systemResponse');
+            responseEl.innerHTML = '<div class="loading"></div>Running security audit...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/security/audit`);
+                const data = await response.json();
+                
+                responseEl.className = 'response success';
+                responseEl.innerHTML = JSON.stringify(data, null, 2);
+            } catch (error) {
+                responseEl.className = 'response error';
+                responseEl.innerHTML = `Error: ${error.message}`;
+            }
+        }
+
+        async function validateProvider(provider) {
+            const responseEl = document.getElementById('validationResponse');
+            responseEl.innerHTML = '<div class="loading"></div>Validating provider...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/providers/${provider}/validate`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                responseEl.className = 'response success';
+                responseEl.innerHTML = JSON.stringify(data, null, 2);
+            } catch (error) {
+                responseEl.className = 'response error';
+                responseEl.innerHTML = `Error: ${error.message}`;
+            }
+        }
+
+        async function testModelList() {
+            const responseEl = document.getElementById('validationResponse');
+            responseEl.innerHTML = '<div class="loading"></div>Fetching models...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/models`);
+                const data = await response.json();
+                
+                responseEl.className = 'response success';
+                responseEl.innerHTML = JSON.stringify(data, null, 2);
+            } catch (error) {
+                responseEl.className = 'response error';
+                responseEl.innerHTML = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
