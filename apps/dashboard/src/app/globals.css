@@ -1,267 +1,136 @@
-/* 2026 Design System - "Hyper-Clean" */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
-    --bg-page: #FFFFFF;
-    --bg-card: #FFFFFF;
-    --bg-nav: #FBFBFB;
-
-    --ink-solid: #000000;
-    --ink-faint: #888888;
-    --ink-border: #EAEAEA;
-
-    --accent-brand: #000000;
-    /* Apple-esque reliability */
-    --accent-active: #007AFF;
-    /* Electric Blue for "alive" indicators */
-
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
-    --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.08);
-
-    --radius-sm: 12px;
-    --radius-md: 20px;
-    --radius-lg: 32px;
+  --foreground-rgb: 0 0 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
 }
 
-* {
-    box-sizing: border-box;
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
 }
 
 body {
-    background-color: var(--bg-page);
-    color: var(--ink-solid);
-    font-family: 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    margin: 0;
-    height: 100vh;
-    overflow: hidden;
-    -webkit-font-smoothing: antialiased;
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb)))
+    )
+    rgb(var(--background-start-rgb));
 }
 
-.layout {
-    display: grid;
-    grid-template-columns: 280px 1fr 400px;
-    height: 100vh;
+/* Custom scrollbar styles */
+::-webkit-scrollbar {
+  width: 6px;
 }
 
-/* Sidebar */
-.sidebar {
-    background: var(--bg-nav);
-    border-right: 1px solid var(--ink-border);
-    padding: 32px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 48px;
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
 }
 
-.brand-icon {
-    width: 40px;
-    height: 40px;
-    background: var(--ink-solid);
-    border-radius: 12px;
-    display: grid;
-    place-items: center;
-    color: #fff;
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
-.nav-link {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px;
-    border-radius: var(--radius-sm);
-    color: var(--ink-faint);
-    font-weight: 500;
-    transition: 0.2s;
-    cursor: pointer;
-    margin-bottom: 4px;
+/* Animation classes */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-.nav-link:hover {
-    background: #EEE;
-    color: var(--ink-solid);
+@keyframes slideIn {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
-.nav-link.active {
-    background: var(--ink-solid);
-    color: #FFF;
-    box-shadow: var(--shadow-md);
+@keyframes bounce {
+  0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); }
+  50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
 }
 
-/* Main Bento Grid */
-.main {
-    padding: 40px;
-    background: #FFF;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
 }
 
-.header {
-    margin-bottom: 40px;
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
 }
 
-.header h1 {
-    font-size: 32px;
-    letter-spacing: -0.04em;
-    margin-bottom: 8px;
+.animate-bounce {
+  animation: bounce 1s infinite;
 }
 
-.header p {
-    color: var(--ink-faint);
-    font-size: 16px;
+/* Glassmorphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.bento-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: 320px 160px;
-    gap: 24px;
+.glass-dark {
+  background: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.bento-card {
-    background: var(--bg-card);
-    border: 1px solid var(--ink-border);
-    border-radius: var(--radius-md);
-    padding: 24px;
-    transition: transform 0.2s, box-shadow 0.2s;
-    display: flex;
-    flex-direction: column;
+/* Gradient backgrounds */
+.gradient-purple {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-.bento-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-    border-color: #CCC;
+.gradient-blue {
+  background: linear-gradient(135deg, #667eea 0%, #4facfe 100%);
 }
 
-.bento-large {
-    grid-column: span 2;
+.gradient-green {
+  background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
 }
 
-/* Chat Panel */
-.chat-panel {
-    border-left: 1px solid var(--ink-border);
-    background: #FFF;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
+/* Utility classes */
+.shadow-glow {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
 }
 
-.chat-header {
-    padding: 24px 32px;
-    border-bottom: 1px solid var(--ink-border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.shadow-glow-green {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
 }
 
-.status-badge {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    background: #F0F9FF;
-    color: #007AFF;
-    padding: 6px 12px;
-    border-radius: 100px;
+.shadow-glow-red {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
 }
 
-.status-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #007AFF;
-    animation: pulse 2s infinite;
+.text-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-@keyframes pulse {
-    0% {
-        opacity: 0.4;
-    }
-
-    50% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 0.4;
-    }
+/* Loading states */
+.loading-dots {
+  display: inline-flex;
+  gap: 4px;
 }
 
-.messages {
-    flex: 1;
-    padding: 32px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+.loading-dots div {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #8B5CF6;
+  animation: bounce 1.4s infinite ease-in-out both;
 }
 
-.msg-bubble {
-    padding: 16px 20px;
-    border-radius: 20px;
-    max-width: 85%;
-    font-size: 15px;
-    line-height: 1.5;
-    box-shadow: var(--shadow-sm);
-}
-
-.msg-ai {
-    background: #F5F5F7;
-    color: #000;
-    border-bottom-left-radius: 4px;
-    align-self: flex-start;
-}
-
-.msg-user {
-    background: #000;
-    color: #FFF;
-    border-bottom-right-radius: 4px;
-    align-self: flex-end;
-}
-
-.input-zone {
-    padding: 24px 32px;
-    display: flex;
-    gap: 16px;
-}
-
-.chat-input {
-    flex: 1;
-    border: 1px solid var(--ink-border);
-    border-radius: 16px;
-    padding: 16px 20px;
-    font-size: 15px;
-    outline: none;
-    transition: 0.2s;
-    background: #FAFAFA;
-}
-
-.chat-input:focus {
-    border-color: #000;
-    background: #FFF;
-    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
-}
-
-.send-btn {
-    width: 54px;
-    height: 54px;
-    background: #000;
-    color: #fff;
-    border-radius: 16px;
-    border: none;
-    cursor: pointer;
-    display: grid;
-    place-items: center;
-}
-
-.send-btn:hover {
-    transform: scale(1.05);
-}
+.loading-dots div:nth-child(1) { animation-delay: -0.32s; }
+.loading-dots div:nth-child(2) { animation-delay: -0.16s; }

@@ -6,25 +6,16 @@
     "declaration": true,
     "baseUrl": ".",
     "jsx": "react-jsx",
-    "lib": ["ESNext", "DOM"],
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "paths": {
-      "@gravity/memory": [
-        "packages/memory/src/index.ts"
-      ],
-      "@gravity/mcp-client": [
-        "packages/mcp-client/src/index.ts"
-      ],
-      "@gravity/db": [
-        "packages/db/src/index.ts"
-      ],
-      "@gravity/types": [
-        "packages/types/src/index.ts"
-      ]
-    }
+    "outDir": "./dist",
+    "rootDir": "./src"
   }
 }

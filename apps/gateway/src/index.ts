@@ -94,13 +94,13 @@ async function processChannelMessage(channelMessage: ChannelMessage): Promise<vo
             channel: channelMessage.channelId,
             contentLength: channelMessage.content.length
         });
-        
+
         // Check for mentions in group messages
         if (channelMessage.metadata?.isGroup && channelMessage.metadata.mentions?.length === 0) {
             logger.info('Skipping group message without mentions');
             return;
         }
-        
+
         // 1. Validate SaaS Access
         const access = await subscription.validateAccess(channelMessage.userId);
         if (!access.allowed) {
@@ -140,10 +140,10 @@ async function processChannelMessage(channelMessage: ChannelMessage): Promise<vo
         }
 
         logger.info(`Channel message processed successfully for ${channelMessage.userId}`);
-        
+
     } catch (error) {
         logger.error(`Error processing channel message for ${channelMessage.userId}`, error);
-        
+
         // Send error response
         try {
             await channelManager.sendMessage(
@@ -161,7 +161,7 @@ async function processChannelMessage(channelMessage: ChannelMessage): Promise<vo
 async function processMessage(userId: string, text: string): Promise<string> {
     try {
         logger.info(`Processing message from ${userId}`, { textLength: text.length });
-        
+
         // 1. Validate SaaS Access
         const access = await subscription.validateAccess(userId);
         if (!access.allowed) {
@@ -197,7 +197,7 @@ async function processMessage(userId: string, text: string): Promise<string> {
         // 5. LLM Completion via OpenRouter/Anthropic
         let reply = '';
         const lowerText = text.toLowerCase();
-        
+
         if (lowerText.includes('search')) {
             const query = text.replace(/search/i, '').trim();
             try {
@@ -231,10 +231,10 @@ async function processMessage(userId: string, text: string): Promise<string> {
         // 6. Update session
         const userMessage: Message = { role: 'user', content: text, timestamp: new Date() };
         const assistantMessage: Message = { role: 'assistant', content: reply, timestamp: new Date() };
-        
+
         session.messages.push(userMessage, assistantMessage);
         session.lastActive = new Date();
-        
+
         // Keep only last 50 messages to prevent memory bloat
         if (session.messages.length > 50) {
             session.messages = session.messages.slice(-50);
@@ -242,7 +242,7 @@ async function processMessage(userId: string, text: string): Promise<string> {
 
         logger.info(`Message processed successfully for ${userId}`);
         return reply;
-        
+
     } catch (error) {
         logger.error(`Error processing message for ${userId}`, error);
         return '❌ Sorry, I encountered an unexpected error. Please try again.';
@@ -281,7 +281,7 @@ app.post('/api/message', async (req: Request, res: Response) => {
 app.post('/api/channels/:type/send', async (req: Request, res: Response) => {
     const { type } = req.params;
     const { channelId, content, options } = req.body;
-    
+
     if (!channelId || !content) {
         return res.status(400).json({
             success: false,
@@ -311,7 +311,7 @@ app.get('/api/channels/status', async (req: Request, res: Response) => {
     try {
         const statuses = channelManager.getChannelStatuses();
         const stats = channelManager.getStats();
-        
+
         res.json({
             success: true,
             data: { statuses, stats },
@@ -331,7 +331,7 @@ app.get('/api/skills', async (req: Request, res: Response) => {
     try {
         const skills = skillsPlatform.getAvailableSkills();
         const stats = skillsPlatform.getStats();
-        
+
         res.json({
             success: true,
             data: { skills, stats },
@@ -350,7 +350,7 @@ app.get('/api/skills', async (req: Request, res: Response) => {
 app.post('/api/skills/:skillId/execute', async (req: Request, res: Response) => {
     const { skillId } = req.params;
     const { userId, workspaceId, input } = req.body;
-    
+
     if (!userId || !input) {
         return res.status(400).json({
             success: false,
@@ -366,7 +366,7 @@ app.post('/api/skills/:skillId/execute', async (req: Request, res: Response) => 
             userId,
             input
         );
-        
+
         res.json({
             success: true,
             data: execution,
@@ -417,7 +417,7 @@ app.get('/api/stats', async (req: Request, res: Response) => {
         const userId = (req.query.userId as string) || 'demo-user';
         const user = await db.getUser(userId);
         const tools = await mcp.getTools();
-        
+
         const stats: SystemStats = {
             status: 'online',
             uptime: process.uptime(),
@@ -441,7 +441,7 @@ app.get('/api/stats', async (req: Request, res: Response) => {
             data: stats,
             timestamp: new Date()
         } as ApiResponse<SystemStats>);
-        
+
     } catch (error) {
         logger.error('Stats endpoint failed', error);
         res.status(500).json({
@@ -494,6 +494,10 @@ app.get('/stats', async (req: Request, res: Response) => {
 });
 
 async function bootstrap() {
+    // 0. Initialize Model Providers
+    console.log('🔄 Initializing Model Providers...');
+    await modelProviderManager.init();
+
     // 1. Run Security Audit
     console.log(' Initiating Startup Security Scan...');
     const audit = await security.audit();
@@ -512,7 +516,7 @@ async function bootstrap() {
         { type: 'telegram' as const, enabled: true, config: {} },
         { type: 'slack' as const, enabled: true, config: {} }
     ];
-    
+
     await channelManager.initializeChannels(channelConfigs);
     console.log('✅ Multi-channel system initialized');
 

@@ -1,11 +1,11 @@
-import { 
+import {
   IModelProvider,
   ModelProvider,
-  OpenRouterConfig, 
-  ModelRequest, 
-  ModelResponse, 
-  ChatCompletionRequest, 
-  ChatCompletionResponse 
+  OpenRouterConfig,
+  ModelRequest,
+  ModelResponse,
+  ChatCompletionRequest,
+  ChatCompletionResponse
 } from '@gravity/types';
 
 export class OpenRouterProvider implements IModelProvider {
@@ -24,7 +24,7 @@ export class OpenRouterProvider implements IModelProvider {
 
   async chatCompletion(request: ChatCompletionRequest): Promise<ChatCompletionResponse> {
     const startTime = Date.now();
-    
+
     try {
       const model = request.model || this.defaultModel;
       const payload: ModelRequest = {
@@ -112,7 +112,7 @@ export class OpenRouterProvider implements IModelProvider {
   getModelInfo(modelId: string): { name: string; provider: string; capabilities: string[] } {
     const [provider, ...modelParts] = modelId.split('/');
     const modelName = modelParts.join('/');
-    
+
     return {
       name: modelName,
       provider: provider || 'openrouter',
@@ -146,8 +146,10 @@ export class ModelProviderManager {
   private providers: Map<string, IModelProvider> = new Map();
   private defaultProvider: string = 'openrouter';
 
-  constructor() {
-    this.initializeProviders();
+  constructor() { }
+
+  async init() {
+    await this.initializeProviders();
   }
 
   private async initializeProviders() {
@@ -165,9 +167,9 @@ export class ModelProviderManager {
         ],
         defaultModel: process.env.OPENROUTER_MODEL || 'openrouter/anthropic/claude-sonnet-4-5'
       });
-      
+
       this.providers.set('openrouter', openRouter);
-      
+
       // Validate API key
       const isValid = await openRouter.validateApiKey();
       if (isValid) {
@@ -184,7 +186,7 @@ export class ModelProviderManager {
 
   async chatCompletion(request: ChatCompletionRequest): Promise<ChatCompletionResponse> {
     const provider = this.getProvider(request.provider);
-    
+
     if (!provider) {
       throw new Error(`Provider not found: ${request.provider || this.defaultProvider}`);
     }
@@ -194,7 +196,7 @@ export class ModelProviderManager {
 
   async listModels(provider?: string): Promise<string[]> {
     const modelProvider = this.getProvider(provider);
-    
+
     if (!modelProvider) {
       throw new Error(`Provider not found: ${provider || this.defaultProvider}`);
     }
@@ -217,29 +219,25 @@ export class ModelProviderManager {
 
   async validateAllProviders(): Promise<Record<string, boolean>> {
     const results: Record<string, boolean> = {};
-    
+
     for (const [name, provider] of this.providers) {
-      if ('validateApiKey' in provider && typeof provider.validateApiKey === 'function') {
-        results[name] = await provider.validateApiKey();
-      } else {
-        results[name] = true; // Assume valid if no validation method
-      }
+      results[name] = await provider.validateApiKey();
     }
-    
+
     return results;
   }
 
   async getProviderStats(): Promise<Record<string, any>> {
     const stats: Record<string, any> = {};
-    
+
     for (const [name, provider] of this.providers) {
-      if ('getUsageStats' in provider && typeof provider.getUsageStats === 'function') {
-        stats[name] = await provider.getUsageStats();
+      if ('getUsageStats' in provider && typeof (provider as any).getUsageStats === 'function') {
+        stats[name] = await (provider as any).getUsageStats();
       } else {
         stats[name] = { status: 'available' };
       }
     }
-    
+
     return stats;
   }
 }

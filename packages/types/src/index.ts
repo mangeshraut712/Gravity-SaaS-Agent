@@ -39,12 +39,22 @@ export interface SecurityAuditResult {
 }
 
 export interface SystemStats {
+  status: 'online' | 'offline' | 'degraded';
   uptime: number;
-  memoryUsage: NodeJS.MemoryUsage;
-  activeConnections: number;
-  totalRequests: number;
+  activeSessions: number;
+  mcpTools: number;
+  memoryUsage: {
+    rss: number;
+    heapUsed: number;
+    heapTotal: number;
+    external: number;
+    arrayBuffers: number;
+  };
+  userTier: string;
+  usagePercent: number;
   errorRate: number;
-  lastUpdated: Date;
+  responseTime: number;
+  lastUpdated?: Date;
 }
 
 export interface ChannelStatus {
@@ -76,7 +86,7 @@ export interface ApiResponse<T = any> {
   data?: T;
   error?: string;
   message?: string;
-  timestamp?: string;
+  timestamp?: Date | string;
   requestId?: string;
 }
 

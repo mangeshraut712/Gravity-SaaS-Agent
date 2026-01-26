@@ -195,8 +195,23 @@
             statusEl.className = 'status';
             
             try {
-                const response = await fetch(`${API_BASE}/health`);
+                console.log('Testing connection to:', `${API_BASE}/health`);
+                const response = await fetch(`${API_BASE}/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const data = await response.json();
+                console.log('Response data:', data);
                 
                 if (data.status === 'healthy') {
                     statusEl.innerHTML = `✅ Connected - Uptime: ${Math.floor(data.uptime)}s`;
@@ -205,6 +220,7 @@
                     throw new Error('Service not healthy');
                 }
             } catch (error) {
+                console.error('Connection error:', error);
                 statusEl.innerHTML = `❌ Disconnected - ${error.message}`;
                 statusEl.className = 'status disconnected';
             }
@@ -230,22 +246,34 @@
             const selectEl = document.getElementById('modelSelect');
             
             try {
+                console.log('Loading models from:', `${API_BASE}/api/models`);
                 const response = await fetch(`${API_BASE}/api/models`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const data = await response.json();
+                console.log('Models loaded:', data);
                 
                 selectEl.innerHTML = '';
-                data.data.models.forEach(model => {
-                    const option = document.createElement('option');
-                    option.value = model;
-                    option.textContent = model;
-                    selectEl.appendChild(option);
-                });
-                
-                // Set default model
-                if (data.data.models.includes('openrouter/anthropic/claude-sonnet-4-5')) {
-                    selectEl.value = 'openrouter/anthropic/claude-sonnet-4-5';
+                if (data.success && data.data.models) {
+                    data.data.models.forEach(model => {
+                        const option = document.createElement('option');
+                        option.value = model;
+                        option.textContent = model;
+                        selectEl.appendChild(option);
+                    });
+                    
+                    // Set default model
+                    if (data.data.models.includes('openrouter/anthropic/claude-sonnet-4-5')) {
+                        selectEl.value = 'openrouter/anthropic/claude-sonnet-4-5';
+                    }
+                } else {
+                    throw new Error('Invalid response format');
                 }
             } catch (error) {
+                console.error('Failed to load models:', error);
                 selectEl.innerHTML = '<option value="">Failed to load models</option>';
             }
         }
