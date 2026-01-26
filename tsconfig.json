@@ -5,7 +5,12 @@
         "moduleResolution": "NodeNext",
         "declaration": true,
         "baseUrl": ".",
-        "jsx": "preserve",
+        "lib": ["ESNext"],
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
         "paths": {
             "@gravity/memory": [
                 "packages/memory/src/index.ts"
@@ -15,11 +20,10 @@
             ],
             "@gravity/db": [
                 "packages/db/src/index.ts"
+            ],
+            "@gravity/types": [
+                "packages/types/src/index.ts"
             ]
-        },
-        "strict": true,
-        "esModuleInterop": true,
-        "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true
+        }
     }
 }

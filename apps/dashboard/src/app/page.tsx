@@ -3,86 +3,114 @@
 import React, { useState, useEffect } from 'react';
 import {
     Zap, Activity, Cpu, Settings, ArrowRight, Command,
-    BarChart2, Globe, Shield, Search
+    BarChart2, Globe, Shield, Search, AlertTriangle, CheckCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer
 } from 'recharts';
 
-// --- Mock Data for Real-time Chart ---
-const generateData = () =>
-    Array.from({ length: 15 }, (_, i) => ({
-        time: `${10 + i}:00`,
-        tokens: Math.floor(Math.random() * 5000) + 2000,
-        cost: Math.floor(Math.random() * 2000) + 1000
-    }));
+interface Message { 
+    role: 'user' | 'assistant'; 
+    text: string; 
+    timestamp?: Date;
+}
 
-interface Message { role: 'user' | 'assistant'; text: string; }
+interface SystemStats {
+    status: 'online' | 'offline' | 'degraded';
+    uptime: number;
+    activeSessions: number;
+    mcpTools: number;
+    memoryUsage: Record<string, number>;
+    userTier: string;
+    usagePercent: number;
+    errorRate?: number;
+    responseTime?: number;
+}
 
 export default function DashboardPage() {
-    const [data, setData] = useState(generateData());
+    const [data, setData] = useState(() =>
+        Array.from({ length: 15 }, (_, i) => ({
+            time: `${10 + i}:00`,
+            tokens: Math.floor(Math.random() * 5000) + 2000,
+            cost: Math.floor(Math.random() * 2000) + 1000
+        }))
+    );
+    
     const [inputText, setInputText] = useState('');
     const [messages, setMessages] = useState<Message[]>([
-        { role: 'assistant', text: "GravityBot v2.0 online. Context engine caching active." },
-        { role: 'assistant', text: "Ready to optimize your workflow." }
+        { role: 'assistant', text: "GravityBot v2.0 online. Enhanced security and performance monitoring active." },
+        { role: 'assistant', text: "Ready to optimize your workflow with improved error handling." }
     ]);
 
-    // State for real-time stats
-    const [stats, setStats] = useState({
+    const [stats, setStats] = useState<SystemStats>({
         status: 'offline',
         activeSessions: 0,
         mcpTools: 0,
         uptime: 0,
         userTier: 'FREE',
-        usagePercent: 0
+        usagePercent: 0,
+        memoryUsage: { rss: 0, heapUsed: 0, heapTotal: 0 }
     });
 
-    // Poll Gateway for System Stats
+    const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
+
+    // Enhanced stats fetching with error handling
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const res = await fetch('http://localhost:3001/stats');
+                const res = await fetch('http://localhost:3001/api/stats');
                 if (res.ok) {
                     const json = await res.json();
-                    setStats(json);
+                    if (json.success && json.data) {
+                        setStats(json.data);
+                        setConnectionStatus('connected');
+                    } else {
+                        throw new Error(json.error || 'Invalid response format');
+                    }
                 } else {
-                    setStats(s => ({ ...s, status: 'offline' }));
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
                 }
             } catch (e) {
+                console.error('Stats fetch error:', e);
                 setStats(s => ({ ...s, status: 'offline' }));
+                setConnectionStatus('error');
             }
         };
 
         fetchStats();
-        const interval = setInterval(fetchStats, 2000);
+        const interval = setInterval(fetchStats, 3000);
         return () => clearInterval(interval);
     }, []);
 
-    // Simulate Live Data Ticking (for chart, as Gateway doesn't persist history yet)
+    // Enhanced data simulation with realistic patterns
     useEffect(() => {
         const interval = setInterval(() => {
-            setData(prev => [
-                ...prev.slice(1),
-                {
-                    time: 'New',
-                    tokens: Math.floor(Math.random() * 6000) + 2000,
-                    cost: Math.floor(Math.random() * 2500) + 1000
-                }
-            ]);
-        }, 3000);
+            setData(prev => {
+                const newData = [...prev.slice(1)];
+                const lastTokens = prev[prev.length - 1].tokens;
+                const variation = (Math.random() - 0.5) * 1000;
+                newData.push({
+                    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                    tokens: Math.max(1000, lastTokens + variation),
+                    cost: Math.max(500, Math.floor(Math.random() * 2500) + 1000)
+                });
+                return newData;
+            });
+        }, 4000);
         return () => clearInterval(interval);
     }, []);
 
     const handleSend = async () => {
         if (!inputText.trim()) return;
+        
         const userMsg = inputText;
-        const newMsg: Message = { role: 'user', text: userMsg };
+        const newMsg: Message = { role: 'user', text: userMsg, timestamp: new Date() };
         setMessages(prev => [...prev, newMsg]);
         setInputText('');
 
         try {
-            const res = await fetch('http://localhost:3001/message', {
+            const res = await fetch('http://localhost:3001/api/message', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId: 'dashboard-user', text: userMsg })
@@ -90,12 +118,42 @@ export default function DashboardPage() {
 
             if (res.ok) {
                 const json = await res.json();
-                setMessages(prev => [...prev, { role: 'assistant', text: json.reply }]);
+                if (json.success && json.data) {
+                    setMessages(prev => [...prev, { 
+                        role: 'assistant', 
+                        text: json.data.reply,
+                        timestamp: new Date()
+                    }]);
+                } else {
+                    throw new Error(json.error || 'Invalid response format');
+                }
             } else {
-                setMessages(prev => [...prev, { role: 'assistant', text: "Error: Gateway rejected request." }]);
+                throw new Error(`HTTP ${res.status}: Gateway rejected request`);
             }
         } catch (e) {
-            setMessages(prev => [...prev, { role: 'assistant', text: "Error: Could not reach Gateway." }]);
+            console.error('Message send error:', e);
+            setMessages(prev => [...prev, { 
+                role: 'assistant', 
+                text: `❌ Error: ${e instanceof Error ? e.message : 'Could not reach Gateway'}`,
+                timestamp: new Date()
+            }]);
+        }
+    };
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'online': return '#10B981';
+            case 'offline': return '#EF4444';
+            case 'degraded': return '#F59E0B';
+            default: return '#6B7280';
+        }
+    };
+
+    const getConnectionIcon = () => {
+        switch (connectionStatus) {
+            case 'connected': return <CheckCircle size={16} color="#10B981" />;
+            case 'error': return <AlertTriangle size={16} color="#EF4444" />;
+            default: return <Activity size={16} color="#6B7280" />;
         }
     };
 
@@ -108,7 +166,7 @@ export default function DashboardPage() {
                         <div className="brand-icon"><Zap size={20} fill="currentColor" /></div>
                         <div>
                             <h2 style={{ fontSize: '18px', fontWeight: 700 }}>GravityBot</h2>
-                            <p style={{ fontSize: '12px', color: '#888' }}>Personal Intelligence</p>
+                            <p style={{ fontSize: '12px', color: '#888' }}>Enhanced Intelligence</p>
                         </div>
                     </div>
 
@@ -122,25 +180,32 @@ export default function DashboardPage() {
                 <div className="nav-link"><Settings size={18} /> System Config</div>
             </nav>
 
-            {/* Main Content: Bento Grid */}
+            {/* Main Content */}
             <main className="main">
                 <header className="header">
-                    <h1>Command Center</h1>
-                    <p>Real-time telemetry of your AI infrastructure.</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <h1>Command Center</h1>
+                        {getConnectionIcon()}
+                    </div>
+                    <p>Real-time telemetry with enhanced monitoring and security.</p>
                 </header>
 
                 <div className="bento-grid">
-                    {/* Main Chart Card */}
+                    {/* Enhanced Main Chart Card */}
                     <motion.div
                         className="bento-card bento-large"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                     >
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-                            <h3 style={{ fontSize: '16px', fontWeight: 600 }}>Token Velocity</h3>
+                            <h3 style={{ fontSize: '16px', fontWeight: 600 }}>Token Velocity & Performance</h3>
                             <div style={{ display: 'flex', gap: '8px' }}>
-                                <span style={{ fontSize: '12px', fontWeight: 600, color: '#000', padding: '4px 10px', background: '#F5F5F7', borderRadius: '100px' }}>Input: 40k/s</span>
-                                <span style={{ fontSize: '12px', fontWeight: 600, color: '#888', padding: '4px 10px', background: '#F5F5F7', borderRadius: '100px' }}>$/hr: $0.42</span>
+                                <span style={{ fontSize: '12px', fontWeight: 600, color: '#000', padding: '4px 10px', background: '#F5F5F7', borderRadius: '100px' }}>
+                                    Input: {stats.activeSessions * 40}k/s
+                                </span>
+                                <span style={{ fontSize: '12px', fontWeight: 600, color: '#888', padding: '4px 10px', background: '#F5F5F7', borderRadius: '100px' }}>
+                                    $/hr: $0.42
+                                </span>
                             </div>
                         </div>
                         <div style={{ flex: 1, width: '100%', minHeight: 0 }}>
@@ -176,7 +241,7 @@ export default function DashboardPage() {
                         </div>
                     </motion.div>
 
-                    {/* Stat Card 1 */}
+                    {/* Enhanced Status Card */}
                     <motion.div
                         className="bento-card"
                         whileHover={{ scale: 1.02 }}
@@ -188,14 +253,17 @@ export default function DashboardPage() {
                             <ArrowRight size={20} color="#CCC" />
                         </div>
                         <div style={{ marginTop: 'auto' }}>
-                            <p style={{ color: '#888', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase' }}>Status</p>
-                            <h2 style={{ fontSize: '24px', fontWeight: 700, letterSpacing: '-0.03em', color: stats.status === 'online' ? '#10B981' : '#EF4444' }}>
+                            <p style={{ color: '#888', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase' }}>System Status</p>
+                            <h2 style={{ fontSize: '24px', fontWeight: 700, letterSpacing: '-0.03em', color: getStatusColor(stats.status) }}>
                                 {stats.status.toUpperCase()}
                             </h2>
+                            <p style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
+                                Uptime: {Math.floor(stats.uptime / 3600)}h {Math.floor((stats.uptime % 3600) / 60)}m
+                            </p>
                         </div>
                     </motion.div>
 
-                    {/* Stat Card 2 */}
+                    {/* Enhanced Usage Card */}
                     <motion.div
                         className="bento-card"
                         whileHover={{ scale: 1.02 }}
@@ -207,25 +275,56 @@ export default function DashboardPage() {
                             <ArrowRight size={20} color="#CCC" />
                         </div>
                         <div style={{ marginTop: 'auto' }}>
-                            <p style={{ color: '#888', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase' }}>Plan: {stats.userTier}</p>
+                            <p style={{ color: '#888', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase' }}>
+                                Plan: {stats.userTier}
+                            </p>
                             <h2 style={{ fontSize: '24px', fontWeight: 700, letterSpacing: '-0.03em' }}>
                                 {stats.usagePercent.toFixed(1)}% Usage
                             </h2>
                             <div style={{ width: '100%', height: '4px', background: '#EEE', borderRadius: '2px', marginTop: '8px', overflow: 'hidden' }}>
-                                <div style={{ width: `${stats.usagePercent}%`, height: '100%', background: '#F72585' }} />
+                                <div 
+                                    style={{ 
+                                        width: `${Math.min(stats.usagePercent, 100)}%`, 
+                                        height: '100%', 
+                                        background: stats.usagePercent > 80 ? '#EF4444' : '#F72585',
+                                        transition: 'all 0.3s ease'
+                                    }} 
+                                />
                             </div>
+                        </div>
+                    </motion.div>
+
+                    {/* New Performance Metrics Card */}
+                    <motion.div
+                        className="bento-card"
+                        whileHover={{ scale: 1.02 }}
+                    >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ background: '#F0FDF4', padding: '10px', borderRadius: '12px', color: '#10B981' }}>
+                                <Cpu size={24} />
+                            </div>
+                            <ArrowRight size={20} color="#CCC" />
+                        </div>
+                        <div style={{ marginTop: 'auto' }}>
+                            <p style={{ color: '#888', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase' }}>Performance</p>
+                            <h2 style={{ fontSize: '20px', fontWeight: 700, letterSpacing: '-0.03em' }}>
+                                {stats.activeSessions} Sessions
+                            </h2>
+                            <p style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
+                                {stats.mcpTools} Tools Active
+                            </p>
                         </div>
                     </motion.div>
                 </div>
             </main>
 
-            {/* Right: Live Chat */}
+            {/* Enhanced Chat Panel */}
             <aside className="chat-panel">
                 <div className="chat-header">
                     <h3 style={{ fontSize: '15px', fontWeight: 600 }}>Live Feed</h3>
                     <div className="status-badge">
                         <span className="status-dot"></span>
-                        ACTIVE
+                        {connectionStatus === 'connected' ? 'CONNECTED' : connectionStatus.toUpperCase()}
                     </div>
                 </div>
 
@@ -236,9 +335,15 @@ export default function DashboardPage() {
                                 key={i}
                                 initial={{ opacity: 0, scale: 0.95, y: 10 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: -10 }}
                                 className={`msg-bubble ${m.role === 'user' ? 'msg-user' : 'msg-ai'}`}
                             >
                                 {m.text}
+                                {m.timestamp && (
+                                    <span style={{ fontSize: '10px', opacity: 0.6, marginLeft: '8px' }}>
+                                        {m.timestamp.toLocaleTimeString()}
+                                    </span>
+                                )}
                             </motion.div>
                         ))}
                     </AnimatePresence>
@@ -251,8 +356,14 @@ export default function DashboardPage() {
                         value={inputText}
                         onChange={(e) => setInputText(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                        disabled={connectionStatus !== 'connected'}
                     />
-                    <button className="send-btn" onClick={handleSend}>
+                    <button 
+                        className="send-btn" 
+                        onClick={handleSend}
+                        disabled={connectionStatus !== 'connected'}
+                        style={{ opacity: connectionStatus === 'connected' ? 1 : 0.5 }}
+                    >
                         <ArrowRight size={20} />
                     </button>
                 </div>

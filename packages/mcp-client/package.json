@@ -4,11 +4,14 @@
     "type": "module",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
-    "dependencies": {},
+    "dependencies": {
+        "@gravity/types": "*"
+    },
     "scripts": {
         "build": "tsc"
     },
     "devDependencies": {
-        "typescript": "^5.0.0"
+        "typescript": "^5.0.0",
+        "@types/node": "^20.0.0"
     }
 }
