@@ -17,13 +17,18 @@ import {
     Activity,
     ChevronRight
 } from "lucide-react";
-import { supabaseClient } from "../../../lib/supabaseClient";
-import { useAuth } from "../../../hooks/useAuth";
-import { Button } from "../../../components/ui/button";
-import { Badge } from "../../../components/ui/badge";
-import { Switch } from "../../../components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
-import { StatsCard } from "../../../components/ui/stats-card";
+import { supabaseClient } from "../../../lib";
+import { useAuth } from "../../../hooks";
+import {
+  Badge,
+  Button,
+  StatsCard,
+  Switch,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../../components/ui";
 
 interface Agent {
     id: string;

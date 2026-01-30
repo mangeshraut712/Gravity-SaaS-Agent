@@ -214,3 +214,5 @@ export interface GatewayConfig {
 }
 export * from './channels.js';
 export * from './skills.js';
+export * from './errors.js';
+export * from './config.js';

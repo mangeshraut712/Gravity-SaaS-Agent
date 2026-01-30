@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseAdminClient } from '../../../../lib/supabaseAdmin';
-import { resolveTierFromProductId } from '../../../../lib/billingPlans';
+import { getSupabaseAdminClient, resolveTierFromProductId } from '../../../../lib';
 
 export async function POST(req: NextRequest) {
   let payload: any;
@@ -87,4 +86,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

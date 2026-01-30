@@ -16,15 +16,17 @@ import {
   Zap,
   MessageSquare
 } from "lucide-react";
-import { supabaseClient } from "../../../lib/supabaseClient";
-import { useAuth } from "../../../hooks/useAuth";
-import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
-import { Label } from "../../../components/ui/label";
-import { Textarea } from "../../../components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "../../../components/ui/radio-group";
-import { Switch } from "../../../components/ui/switch";
-import { cn } from "../../../lib/utils";
+import { cn, supabaseClient } from "../../../lib";
+import { useAuth } from "../../../hooks";
+import {
+  Button,
+  Input,
+  Label,
+  RadioGroup,
+  RadioGroupItem,
+  Switch,
+  Textarea,
+} from "../../../components/ui";
 
 const steps = [
   { id: 1, name: "Basic Setup", icon: Bot },

@@ -5,9 +5,8 @@ export const dynamic = 'force-dynamic';
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { Plus, Bot, Search, MoreVertical, ExternalLink, Play, Pause, Trash2 } from "lucide-react";
-import { supabaseClient } from "../../lib/supabaseClient";
-import { useAuth } from "../../hooks/useAuth";
-import { cn } from "../../lib/utils";
+import { cn, supabaseClient } from "../../lib";
+import { useAuth } from "../../hooks";
 
 interface Agent {
   id: string;
