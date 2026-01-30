@@ -1,27 +1,12 @@
 'use client';
 
-import { useEffect, useState } from "react";
+export const dynamic = 'force-dynamic';
+
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { Plus, Bot, Search, MoreVertical, ExternalLink, Play, Pause, Trash2 } from "lucide-react";
-import { supabaseClient } from "../../lib/supabaseClient";
-import { useAuth } from "../../hooks/useAuth";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { Input } from "../../components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu";
+import { cn, supabaseClient } from "../../lib";
+import { useAuth } from "../../hooks";
 
 interface Agent {
   id: string;
@@ -32,11 +17,12 @@ interface Agent {
   personality: string;
 }
 
-export default function AgentsPage() {
+function AgentsContent() {
   const { user } = useAuth();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [showDropdown, setShowDropdown] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadAgents() {
@@ -78,6 +64,7 @@ export default function AgentsPage() {
       if (error) throw error;
 
       setAgents(prev => prev.map(a => a.id === agent.id ? { ...a, status: newStatus } : a));
+      setShowDropdown(null);
     } catch (error) {
       console.error('Error toggling status:', error);
     }
@@ -88,141 +75,161 @@ export default function AgentsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">My Agents</h1>
-          <p className="text-gray-400 mt-1">
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">My Agents</h1>
+          <p className="text-gray-500 mt-1">
             Manage and monitor your AI workforce in one place.
           </p>
         </div>
         <Link href="/agents/new">
-          <Button variant="premium" className="gap-2">
+          <button className="btn-primary gap-2">
             <Plus className="h-4 w-4" />
             Create New Agent
-          </Button>
+          </button>
         </Link>
       </div>
 
-      {/* Search and Filters */}
+      {/* Search */}
       <div className="flex items-center gap-4">
         <div className="relative max-w-md flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-          <Input
+          <input
+            type="text"
             placeholder="Search by agent name..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
+            className="input-field pl-10"
           />
         </div>
-        <Button variant="outline" size="icon">
+        <button className="btn-secondary p-3">
           <Bot className="h-4 w-4" />
-        </Button>
+        </button>
       </div>
 
       {/* Agents Table */}
       <div className="card overflow-hidden">
         {loading ? (
           <div className="p-20 text-center">
-            <div className="h-10 w-10 animate-spin rounded-full border-4 border-purple-500 border-t-transparent mx-auto" />
-            <p className="mt-4 text-gray-400 text-sm">Loading your agents...</p>
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-500 border-t-transparent mx-auto" />
+            <p className="mt-4 text-gray-500 text-sm">Loading your agents...</p>
           </div>
         ) : filteredAgents.length === 0 ? (
           <div className="p-20 text-center">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-white/5">
-              <Bot className="h-10 w-10 text-gray-500" />
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gray-100">
+              <Bot className="h-10 w-10 text-gray-400" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
               {search ? "No agents found" : "No agents yet"}
             </h3>
-            <p className="text-gray-400 max-w-xs mx-auto mb-8">
+            <p className="text-gray-500 max-w-xs mx-auto mb-8">
               {search
                 ? "We couldn't find any agents matching your search. Try a different term."
                 : "Your AI workforce is empty. Start by creating your first specialized agent."}
             </p>
             {!search && (
               <Link href="/agents/new">
-                <Button variant="premium">Build Your First Agent</Button>
+                <button className="btn-primary">Build Your First Agent</button>
               </Link>
             )}
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Agent Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Personality</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredAgents.map((agent) => (
-                <TableRow key={agent.id} className="group">
-                  <TableCell className="font-semibold text-white">
-                    <Link
-                      href={`/agents/${agent.id}`}
-                      className="hover:text-purple-400 transition-colors flex items-center gap-2"
-                    >
-                      {agent.name}
-                      <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </Link>
-                  </TableCell>
-                  <TableCell className="capitalize text-gray-400">
-                    {agent.template_type.replace(/_/g, " ")}
-                  </TableCell>
-                  <TableCell className="capitalize text-gray-400">{agent.personality}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="text-left py-4 px-6 font-semibold text-gray-500">Agent Name</th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-500">Type</th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-500">Personality</th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-500">Status</th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-500">Created</th>
+                  <th className="text-right py-4 px-6 font-semibold text-gray-500">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredAgents.map((agent) => (
+                  <tr key={agent.id} className="group table-row border-b border-gray-50">
+                    <td className="py-4 px-6">
+                      <Link
+                        href={`/agents/${agent.id}`}
+                        className="font-semibold text-gray-900 hover:text-violet-600 transition-colors flex items-center gap-2"
+                      >
+                        {agent.name}
+                        <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </Link>
+                    </td>
+                    <td className="py-4 px-6 capitalize text-gray-500">
+                      {agent.template_type.replace(/_/g, " ")}
+                    </td>
+                    <td className="py-4 px-6 capitalize text-gray-500">{agent.personality}</td>
+                    <td className="py-4 px-6">
+                      <span className={cn(
+                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium",
                         agent.status === "active"
-                          ? "success"
+                          ? "bg-teal-100 text-teal-700"
                           : agent.status === "paused"
-                            ? "warning"
-                            : "outline"
-                      }
-                    >
-                      <span className={`h-1.5 w-1.5 rounded-full mr-1.5 ${agent.status === "active" ? "bg-emerald-500" : agent.status === "paused" ? "bg-amber-500" : "bg-gray-500"
-                        }`} />
-                      {agent.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-gray-500">
-                    {new Date(agent.created_at).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40">
-                          <DropdownMenuItem asChild>
-                            <Link href={`/agents/${agent.id}`} className="flex items-center gap-2 cursor-pointer">
-                              <Bot className="h-4 w-4" /> View Details
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => toggleStatus(agent)} className="flex items-center gap-2 cursor-pointer">
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-gray-100 text-gray-600"
+                      )}>
+                        <span className={cn(
+                          "h-1.5 w-1.5 rounded-full",
+                          agent.status === "active"
+                            ? "bg-teal-500"
+                            : agent.status === "paused"
+                              ? "bg-amber-500"
+                              : "bg-gray-400"
+                        )} />
+                        {agent.status}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 text-gray-500">
+                      {new Date(agent.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="py-4 px-6 text-right relative">
+                      <button
+                        onClick={() => setShowDropdown(showDropdown === agent.id ? null : agent.id)}
+                        className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </button>
+                      {showDropdown === agent.id && (
+                        <div className="absolute right-6 top-12 z-10 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2">
+                          <Link href={`/agents/${agent.id}`} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+                            <Bot className="h-4 w-4" /> View Details
+                          </Link>
+                          <button
+                            onClick={() => toggleStatus(agent)}
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 w-full text-left"
+                          >
                             {agent.status === 'active' ? (
                               <><Pause className="h-4 w-4" /> Pause Agent</>
                             ) : (
                               <><Play className="h-4 w-4" /> Resume Agent</>
                             )}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="flex items-center gap-2 text-red-400 focus:text-red-400 cursor-pointer">
+                          </button>
+                          <button className="flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-50 w-full text-left">
                             <Trash2 className="h-4 w-4" /> Delete Agent
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
+  );
+}
+
+export default function AgentsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen items-center justify-center bg-white">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-500 border-t-transparent" />
+      </div>
+    }>
+      <AgentsContent />
+    </Suspense>
   );
 }

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseAdminClient } from '../../../../lib/supabaseAdmin';
-import { getPlanLimits } from '../../../../lib/billingPlans';
+import { getPlanLimits, getSupabaseAdminClient } from '../../../../lib';
 
 const GATEWAY_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -191,4 +190,3 @@ function buildSystemPrompt(agent: {
 
   return base + custom + kb;
 }
-

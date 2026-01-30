@@ -266,7 +266,7 @@ export default function LandingPage() {
                 Start with <span className="text-gradient-rainbow">Proven Templates</span>
               </h2>
               <p className="mt-4 text-gray-500 text-lg">
-                Don't start from scratch. Use our battle-tested templates to launch faster.
+                Don&apos;t start from scratch. Use our battle-tested templates to launch faster.
               </p>
             </div>
             <Link href="/templates" className="btn-secondary whitespace-nowrap">

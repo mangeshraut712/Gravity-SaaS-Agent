@@ -1,16 +1,17 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import React from 'react';
 import { Sparkles, Check, Zap, ArrowRight, Shield, Globe, MessageSquare, CreditCard } from 'lucide-react';
-import { supabaseClient } from '../../lib/supabaseClient';
 import {
   buildPolarCheckoutUrl,
   getPlanLimits,
+  getUsageSnapshotForCurrentUser,
+  supabaseClient,
   type SubscriptionTier,
-} from '../../lib/billingPlans';
-import { getUsageSnapshotForCurrentUser } from '../../lib/usage';
-import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
+} from '../../lib';
+import { Badge, Button } from '../../components/ui';
 
 const plans = [
   {

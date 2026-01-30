@@ -1,7 +1,10 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import Link from 'next/link';
 import React from 'react';
+import { ArrowRight } from 'lucide-react';
 
 const templates = [
   {
@@ -26,8 +29,7 @@ const templates = [
     id: 'appointment_scheduler',
     emoji: '📅',
     name: 'Appointment Scheduler',
-    description:
-      'Book appointments, send reminders, and sync with your calendar tools.',
+    description: 'Book appointments, send reminders, and sync with your calendar tools.',
     category: 'Scheduling',
   },
   {
@@ -58,36 +60,35 @@ export default function TemplatesPage() {
   );
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8 animate-slide-up">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <h1 className="text-2xl font-semibold text-white sm:text-3xl">
-            Agent templates
+          <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">
+            <span className="text-gradient-rainbow">Agent templates</span>
           </h1>
-          <p className="mt-1 text-sm text-gray-400">
+          <p className="mt-1 text-sm text-gray-500">
             Production-ready AI agents you can deploy in seconds.
           </p>
         </div>
         <Link
           href="/agents/new"
-          className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-purple-500 to-blue-500 px-4 py-2 text-xs font-semibold text-white shadow shadow-purple-900/40 hover:brightness-110"
+          className="btn-primary"
         >
           Build custom agent
         </Link>
       </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-2 text-xs">
-        <span className="text-gray-400">Filter by category:</span>
+        <span className="text-gray-500">Filter by category:</span>
         {categories.map((cat) => (
           <button
             key={cat}
             type="button"
             onClick={() => setActiveCategory(cat)}
-            className={`rounded-full px-3 py-1 text-[11px] ${
-              activeCategory === cat
-                ? 'bg-white text-gray-900'
-                : 'bg-gray-900/80 text-gray-200 ring-1 ring-white/10 hover:bg-gray-800'
-            }`}
+            className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${activeCategory === cat
+                ? 'bg-violet-500 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
           >
             {cat}
           </button>
@@ -98,53 +99,58 @@ export default function TemplatesPage() {
         {filtered.map((t) => (
           <article
             key={t.id}
-            className="flex flex-col justify-between rounded-2xl border border-white/10 bg-gray-950/80 p-5 text-sm text-gray-200 shadow-sm shadow-black/40 ring-1 ring-white/10"
+            className="feature-card p-5 flex flex-col justify-between"
           >
             <div>
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl">{t.emoji}</span>
+                  <span className="text-2xl">{t.emoji}</span>
                   <div>
-                    <h2 className="text-sm font-semibold text-white sm:text-base">
+                    <h2 className="text-sm font-semibold text-gray-900">
                       {t.name}
                     </h2>
-                    <p className="text-[11px] text-gray-400">{t.category}</p>
+                    <p className="text-[11px] text-gray-500">{t.category}</p>
                   </div>
                 </div>
                 {t.badge && (
-                  <span className="rounded-full bg-amber-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-amber-300 ring-1 ring-amber-500/40">
+                  <span className="badge badge-amber">
                     {t.badge}
                   </span>
                 )}
               </div>
-              <p className="mt-3 text-xs text-gray-300">{t.description}</p>
+              <p className="mt-3 text-sm text-gray-500">{t.description}</p>
             </div>
 
-            <div className="mt-5 flex gap-2 text-xs">
+            <div className="mt-5 flex gap-2">
               <Link
                 href={`/agents/new?template=${t.id}`}
-                className="inline-flex flex-1 items-center justify-center rounded-full bg-white/5 px-3 py-2 font-medium text-gray-100 ring-1 ring-white/15 hover:bg-white/10"
+                className="btn-secondary flex-1 text-center text-sm"
               >
                 Preview
               </Link>
               <Link
                 href={`/agents/new?template=${t.id}`}
-                className="inline-flex flex-1 items-center justify-center rounded-full bg-gradient-to-r from-purple-500 to-blue-500 px-3 py-2 font-semibold text-white shadow shadow-purple-900/40 hover:brightness-110"
+                className="btn-primary flex-1 text-center text-sm"
               >
-                Use this template
+                Use Template
               </Link>
             </div>
           </article>
         ))}
       </div>
 
-      <p className="mt-8 text-center text-xs text-gray-400">
-        Can&apos;t find what you need?{' '}
-        <span className="font-medium text-gray-200">
-          Build a custom agent from scratch →
-        </span>
-      </p>
+      <div className="mt-12 rounded-2xl bg-gradient-to-r from-violet-100 to-indigo-100 p-8 text-center border border-violet-200">
+        <h3 className="text-xl font-semibold text-gray-900">
+          Can&apos;t find what you need?
+        </h3>
+        <p className="mt-2 text-gray-600">
+          Build a custom agent tailored to your specific requirements.
+        </p>
+        <Link href="/agents/new" className="mt-4 inline-flex btn-primary">
+          Build Custom Agent
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Link>
+      </div>
     </div>
   );
 }
-
