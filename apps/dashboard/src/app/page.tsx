@@ -351,6 +351,71 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* How It Works */}
+      <section id="how-it-works" className="mx-auto max-w-7xl px-6 py-24">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-gray-900 sm:text-5xl">
+            How it <span className="text-gradient-violet-indigo">works</span>
+          </h2>
+          <p className="mt-6 text-lg text-gray-600 max-w-2xl mx-auto">
+            Launch your AI agent in 4 simple steps. No coding required.
+          </p>
+        </div>
+
+        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
+          <div className="relative">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-500 text-white font-bold text-xl shadow-lg shadow-violet-500/20 mb-6">
+              1
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">Choose a Template</h3>
+            <p className="text-gray-600 leading-relaxed">
+              Select from our library of proven templates: Customer Service, Sales Qualifier, Appointment Scheduler, and more.
+            </p>
+          </div>
+
+          <div className="relative">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-500 text-white font-bold text-xl shadow-lg shadow-indigo-500/20 mb-6">
+              2
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">Customize Your Agent</h3>
+            <p className="text-gray-600 leading-relaxed">
+              Configure personality, knowledge base, and responses. Upload your FAQs or connect to your existing docs.
+            </p>
+          </div>
+
+          <div className="relative">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white font-bold text-xl shadow-lg shadow-blue-500/20 mb-6">
+              3
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">Connect Channels</h3>
+            <p className="text-gray-600 leading-relaxed">
+              Deploy to WhatsApp, embed on your website, or use our API. Multi-channel by default.
+            </p>
+          </div>
+
+          <div className="relative">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-500 text-white font-bold text-xl shadow-lg shadow-cyan-500/20 mb-6">
+              4
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">Launch & Monetize</h3>
+            <p className="text-gray-600 leading-relaxed">
+              Go live instantly. Set up pricing with Polar.sh integration and start earning from your AI agent.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-16 text-center">
+          <div className="inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-violet-50 to-indigo-50 px-8 py-4 border border-violet-100">
+            <svg className="h-6 w-6 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span className="text-sm font-semibold text-gray-700">
+              Average setup time: <span className="text-violet-600">4 minutes 32 seconds</span>
+            </span>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="mx-auto max-w-7xl px-6 py-24">
         <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-r from-violet-100 via-indigo-100 to-teal-100 p-12 md:p-24 text-center border border-gray-100">
@@ -387,10 +452,10 @@ export default function LandingPage() {
             </div>
 
             <div className="flex flex-wrap justify-center gap-10 text-sm font-medium text-gray-500">
-              <Link href="#" className="hover:text-violet-600 transition-colors">Twitter</Link>
-              <Link href="#" className="hover:text-violet-600 transition-colors">GitHub</Link>
-              <Link href="#" className="hover:text-violet-600 transition-colors">Discord</Link>
-              <Link href="#" className="hover:text-violet-600 transition-colors">Contact</Link>
+              <a href="https://twitter.com/gravity_ai" target="_blank" rel="noopener noreferrer" className="hover:text-violet-600 transition-colors">Twitter</a>
+              <a href="https://github.com/mangeshraut712/Gravity-SaaS-Agent" target="_blank" rel="noopener noreferrer" className="hover:text-violet-600 transition-colors">GitHub</a>
+              <a href="https://discord.gg/gravity" target="_blank" rel="noopener noreferrer" className="hover:text-violet-600 transition-colors">Discord</a>
+              <Link href="/contact" className="hover:text-violet-600 transition-colors">Contact</Link>
             </div>
           </div>
           <div className="mt-12 pt-8 border-t border-gray-100 text-center text-sm text-gray-400">
