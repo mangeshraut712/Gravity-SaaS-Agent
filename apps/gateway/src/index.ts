@@ -1,5 +1,23 @@
-import express, { Request, Response } from 'express';
+/**
+ * Enhanced Gateway Index
+ * Production-ready gateway with all enhancements
+ */
+
+import express, { Request, Response, NextFunction } from 'express';
+import { createServer } from 'http';
+import cors from 'cors';
 import dotenv from 'dotenv';
+import {
+    MiddlewareFactory,
+    errorHandler,
+    notFoundHandler,
+    asyncHandler,
+    validate,
+} from './middleware/index.js';
+import { WebSocketManager } from './services/websocket.js';
+import { CacheManager } from './services/cache.js';
+import { logger, LogLevel } from './services/logger.js';
+import { healthCheckService, registerDefaultHealthChecks } from './services/health-check.js';
 import { GravityMemory } from '@gravity/memory';
 import { GravityMCPClient } from '@gravity/mcp-client';
 import { WhatsAppAdapter } from './adapters/whatsapp.js';
@@ -10,60 +28,37 @@ import { GravityDB } from '@gravity/db';
 import { SubscriptionService } from './services/billing/subscription.js';
 import { ChannelManager } from './services/channel-manager.js';
 import { SkillsPlatform } from './services/skills-platform.js';
-import { ApiResponse, SystemStats, Session, Message, ChannelMessage, ChatCompletionRequest } from '@gravity/types';
-import rateLimit from 'express-rate-limit';
+import { ApiResponse, SystemStats, Session, ChannelMessage, ChatCompletionRequest } from '@gravity/types';
 import { modelProviderManager } from './services/model-provider.js';
 
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3002;
+const server = createServer(app);
+const port = process.env.PORT || 3003;
 
-app.use(express.json({ limit: '10mb' }));
-
-// Initialize CORS before routes
-import cors from 'cors';
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'];
-app.use(cors({
-    origin: allowedOrigins,
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
-}));
-
-// Rate limiting
-const limiter = rateLimit({
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
-    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
-    message: { error: 'Too many requests from this IP' },
-    standardHeaders: true,
-    legacyHeaders: false,
-});
-app.use('/api/', limiter);
-
+// Initialize core services
 const apiKey = process.env.ANTHROPIC_API_KEY || '';
 const memory = new GravityMemory(apiKey);
 const mcp = new GravityMCPClient();
 const whatsapp = new WhatsAppAdapter();
-const heartbeat = new HeartbeatService(30000); // Check every 30s for demo
+const heartbeat = new HeartbeatService(30000);
 const security = new SecurityService();
-
 const db = new GravityDB();
 const subscription = new SubscriptionService(db);
 
-// Initialize enhanced multi-channel system
+// Initialize enhanced services
 const channelManager = new ChannelManager();
 const skillsPlatform = new SkillsPlatform(memory, mcp);
+const cacheManager = new CacheManager();
+const wsManager = new WebSocketManager(server, { maxClients: 1000 });
 
-// Register enhanced channel adapters
-channelManager.registerAdapter(new EnhancedWhatsApp());
-channelManager.registerAdapter(new TelegramAdapter());
-channelManager.registerAdapter(new SlackAdapter());
+// Initialize model provider manager (OpenRouter)
+await modelProviderManager.init();
+logger.info('Model provider manager initialized', { providers: modelProviderManager.getAvailableProviders() });
 
-// Set up channel message handling
-channelManager.onMessage(async (message: ChannelMessage) => {
-    await processChannelMessage(message);
-});
+// Register default health checks
+registerDefaultHealthChecks();
 
 // Enhanced session store with TTL and cleanup
 const sessions = new Map<string, Session>();
@@ -75,476 +70,376 @@ setInterval(() => {
     for (const [userId, session] of sessions.entries()) {
         if (now - session.lastActive.getTime() > SESSION_TTL) {
             sessions.delete(userId);
-            console.log(`[Session] Cleaned up expired session for ${userId}`);
+            logger.info(`Session expired for user: ${userId}`);
         }
     }
 }, 60 * 60 * 1000); // Cleanup every hour
 
-// Enhanced error handling and logging
-const logger = {
-    info: (message: string, meta?: any) => console.log(`[INFO] ${new Date().toISOString()} - ${message}`, meta || ''),
-    warn: (message: string, meta?: any) => console.warn(`[WARN] ${new Date().toISOString()} - ${message}`, meta || ''),
-    error: (message: string, error?: any) => console.error(`[ERROR] ${new Date().toISOString()} - ${message}`, error || '')
-};
+// Enhanced middleware setup
+app.use(MiddlewareFactory.security());
+app.use(MiddlewareFactory.compressionMiddleware());
+app.use(MiddlewareFactory.requestId());
+app.use(express.json({ limit: '10mb' }));
+app.use(cors({
+    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+}));
+app.use(logger.requestLogger());
 
-// Enhanced message processing for multi-channel support
-async function processChannelMessage(channelMessage: ChannelMessage): Promise<void> {
-    try {
-        logger.info(`Processing ${channelMessage.metadata?.isGroup ? 'group' : 'direct'} message from ${channelMessage.userId}`, {
-            channel: channelMessage.channelId,
-            contentLength: channelMessage.content.length
-        });
+// Rate limiting
+app.use('/api/', MiddlewareFactory.createRateLimit({
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'),
+    maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100')
+}));
 
-        // Check for mentions in group messages
-        if (channelMessage.metadata?.isGroup && channelMessage.metadata.mentions?.length === 0) {
-            logger.info('Skipping group message without mentions');
-            return;
-        }
+// Health check endpoint
+app.get('/health', asyncHandler(async (_req: Request, res: Response) => {
+    const health = await healthCheckService.getHealthStatus();
+    const statusCode = health.status === 'healthy' ? 200 : health.status === 'degraded' ? 200 : 503;
+    res.status(statusCode).json(health);
+}));
 
-        // 1. Validate SaaS Access
-        const access = await subscription.validateAccess(channelMessage.userId);
-        if (!access.allowed) {
-            await channelManager.sendMessage(
-                'whatsapp' as any, // Extract channel type from channelId
-                channelMessage.channelId,
-                `🚫 Access Denied: ${access.reason}. Upgrade at gravitybot.ai/pricing`
-            );
-            return;
-        }
+// System stats endpoint
+app.get('/stats', asyncHandler(async (req: Request, res: Response) => {
+    const cacheKey = 'system:stats';
 
-        // 2. Get or create user workspace
-        let workspace = skillsPlatform.getWorkspace(channelMessage.userId);
-        if (!workspace) {
-            workspace = await skillsPlatform.createWorkspace(
-                channelMessage.userId,
-                `Workspace-${channelMessage.userId}`,
-                ['web-search', 'file-manager']
-            );
-        }
-
-        // 3. Process message through skills platform
-        const execution = await skillsPlatform.executeSkill(
-            'web-search', // Default skill for demo
-            workspace.id,
-            channelMessage.userId,
-            channelMessage.content
-        );
-
-        // 4. Send response back through the same channel
-        if (execution.output) {
-            await channelManager.sendMessage(
-                'whatsapp' as any, // Extract channel type from channelId
-                channelMessage.channelId,
-                execution.output
-            );
-        }
-
-        logger.info(`Channel message processed successfully for ${channelMessage.userId}`);
-
-    } catch (error) {
-        logger.error(`Error processing channel message for ${channelMessage.userId}`, error);
-
-        // Send error response
-        try {
-            await channelManager.sendMessage(
-                'whatsapp' as any,
-                channelMessage.channelId,
-                '❌ Sorry, I encountered an error processing your message.'
-            );
-        } catch (sendError) {
-            logger.error('Failed to send error response', sendError);
-        }
-    }
-}
-
-// Core Logic Handler with enhanced error handling
-async function processMessage(userId: string, text: string): Promise<string> {
-    try {
-        logger.info(`Processing message from ${userId}`, { textLength: text.length });
-
-        // 1. Validate SaaS Access
-        const access = await subscription.validateAccess(userId);
-        if (!access.allowed) {
-            logger.warn(`Access denied for ${userId}`, { reason: access.reason });
-            return `🚫 Access Denied: ${access.reason}. Upgrade at gravitybot.ai/pricing`;
-        }
-
-        // Get or create session
-        let session = sessions.get(userId);
-        if (!session) {
-            session = {
-                userId,
-                messages: [],
-                createdAt: new Date(),
-                lastActive: new Date()
-            };
-            sessions.set(userId, session);
-        }
-
-        // 2. Manage Usage
-        const tokens = Math.floor(text.length / 4) + 500;
-        await db.incrementUsage(userId, tokens);
-
-        // 3. Get cost-optimized context
-        const { system, messages } = await memory.getEffectiveContext(
-            [...session.messages.map(m => ({ role: m.role, content: m.content })), { role: 'user', content: text }],
-            "You are GravityBot, a personal AI assistant built for the future."
-        );
-
-        // 4. Fetch MCP tools
-        const tools = await mcp.getTools();
-
-        // 5. LLM Completion via OpenRouter/Anthropic
-        let reply = '';
-        const lowerText = text.toLowerCase();
-
-        if (lowerText.includes('search')) {
-            const query = text.replace(/search/i, '').trim();
-            try {
-                const toolResult = await mcp.callTool('web_search', { query });
-                reply = `🔍 I searched for "${query}".\n${toolResult.result}`;
-            } catch (error) {
-                logger.error('Search tool failed', error);
-                reply = `❌ Sorry, I encountered an error while searching for "${query}".`;
-            }
-        } else {
-            try {
-                // Try to use OpenRouter if configured, fallback to direct Anthropic or simulated response
-                if (process.env.OPENROUTER_API_KEY) {
-                    const response = await modelProviderManager.chatCompletion({
-                        provider: 'openrouter',
-                        messages: [
-                            { role: 'system', content: system[0].text },
-                            ...messages.map(m => ({ role: m.role, content: m.content }))
-                        ]
-                    } as ChatCompletionRequest);
-                    reply = response.content;
-                } else {
-                    reply = `✅ Processed: "${text}". Memory optimized. ${tools.length} Tools active. (Mode: Simulated - No API Key)`;
-                }
-            } catch (error) {
-                logger.error('LLM completion failed', error);
-                reply = `❌ Sorry, I encountered an error while thinking. Let me try again later.`;
-            }
-        }
-
-        // 6. Update session
-        const userMessage: Message = { role: 'user', content: text, timestamp: new Date() };
-        const assistantMessage: Message = { role: 'assistant', content: reply, timestamp: new Date() };
-
-        session.messages.push(userMessage, assistantMessage);
-        session.lastActive = new Date();
-
-        // Keep only last 50 messages to prevent memory bloat
-        if (session.messages.length > 50) {
-            session.messages = session.messages.slice(-50);
-        }
-
-        logger.info(`Message processed successfully for ${userId}`);
-        return reply;
-
-    } catch (error) {
-        logger.error(`Error processing message for ${userId}`, error);
-        return '❌ Sorry, I encountered an unexpected error. Please try again.';
-    }
-}
-
-// Enhanced REST API with proper error handling and response format
-app.post('/api/message', async (req: Request, res: Response) => {
-    const { userId, text } = req.body;
-    if (!userId || !text) {
-        return res.status(400).json({
-            success: false,
-            error: 'Missing userId or text',
-            timestamp: new Date()
-        } as ApiResponse);
+    // Try to get from cache
+    const cached = await cacheManager.get<SystemStats>(cacheKey);
+    if (cached) {
+        return res.json({ success: true, data: cached, cached: true });
     }
 
-    try {
-        const reply = await processMessage(userId, text);
-        res.json({
-            success: true,
-            data: { reply },
-            timestamp: new Date()
-        } as ApiResponse);
-    } catch (error) {
-        logger.error('Message processing failed', error);
-        res.status(500).json({
-            success: false,
-            error: 'Internal server error',
-            timestamp: new Date()
-        } as ApiResponse);
-    }
-});
-
-// Enhanced REST API with multi-channel support
-app.post('/api/channels/:type/send', async (req: Request, res: Response) => {
-    const { type } = req.params;
-    const { channelId, content, options } = req.body;
-
-    if (!channelId || !content) {
-        return res.status(400).json({
-            success: false,
-            error: 'Missing channelId or content',
-            timestamp: new Date()
-        } as ApiResponse);
-    }
-
-    try {
-        await channelManager.sendMessage(type as any, channelId, content, options);
-        res.json({
-            success: true,
-            data: { message: 'Sent successfully' },
-            timestamp: new Date()
-        } as ApiResponse);
-    } catch (error) {
-        logger.error('Channel send failed', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to send message',
-            timestamp: new Date()
-        } as ApiResponse);
-    }
-});
-
-app.get('/api/channels/status', async (req: Request, res: Response) => {
-    try {
-        const statuses = channelManager.getChannelStatuses();
-        const stats = channelManager.getStats();
-
-        res.json({
-            success: true,
-            data: { statuses, stats },
-            timestamp: new Date()
-        } as ApiResponse);
-    } catch (error) {
-        logger.error('Channel status fetch failed', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to fetch channel status',
-            timestamp: new Date()
-        } as ApiResponse);
-    }
-});
-
-app.get('/api/skills', async (req: Request, res: Response) => {
-    try {
-        const skills = skillsPlatform.getAvailableSkills();
-        const stats = skillsPlatform.getStats();
-
-        res.json({
-            success: true,
-            data: { skills, stats },
-            timestamp: new Date()
-        } as ApiResponse);
-    } catch (error) {
-        logger.error('Skills fetch failed', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to fetch skills',
-            timestamp: new Date()
-        } as ApiResponse);
-    }
-});
-
-app.post('/api/skills/:skillId/execute', async (req: Request, res: Response) => {
-    const { skillId } = req.params;
-    const { userId, workspaceId, input } = req.body;
-
-    if (!userId || !input) {
-        return res.status(400).json({
-            success: false,
-            error: 'Missing userId or input',
-            timestamp: new Date()
-        } as ApiResponse);
-    }
-
-    try {
-        const execution = await skillsPlatform.executeSkill(
-            skillId,
-            workspaceId || 'default',
-            userId,
-            input
-        );
-
-        res.json({
-            success: true,
-            data: execution,
-            timestamp: new Date()
-        } as ApiResponse);
-    } catch (error) {
-        logger.error('Skill execution failed', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to execute skill',
-            timestamp: new Date()
-        } as ApiResponse);
-    }
-});
-
-// Legacy endpoint for backward compatibility
-app.post('/message', async (req: Request, res: Response) => {
-    const { userId, text } = req.body;
-    if (!userId || !text) return res.status(400).json({ error: 'Missing userId or text' });
-
-    try {
-        const reply = await processMessage(userId, text);
-        res.json({ reply });
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// Initialize Adapters
-
-// SaaS Management Routes
-app.post('/signup', async (req: Request, res: Response) => {
-    const { userId, email, tier } = req.body;
-    const user = await db.createUser(userId, email, tier);
-    res.json({ success: true, user });
-});
-
-app.get('/user/:id', async (req: Request, res: Response) => {
-    const user = await db.getUser(req.params.id);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    res.json(user);
-});
-
-// Enhanced Stats Endpoint with comprehensive metrics
-app.get('/api/stats', async (req: Request, res: Response) => {
-    try {
-        const userId = (req.query.userId as string) || 'demo-user';
-        const user = await db.getUser(userId);
-        const tools = await mcp.getTools();
-
-        const stats: SystemStats = {
-            status: 'online',
-            uptime: process.uptime(),
-            activeSessions: sessions.size,
-            mcpTools: tools.length,
-            memoryUsage: {
-                rss: process.memoryUsage().rss,
-                heapUsed: process.memoryUsage().heapUsed,
-                heapTotal: process.memoryUsage().heapTotal,
-                external: process.memoryUsage().external,
-                arrayBuffers: process.memoryUsage().arrayBuffers
-            },
-            userTier: user?.tier || 'FREE',
-            usagePercent: user ? (user.tokensUsed / user.tokenLimit) * 100 : 0,
-            errorRate: 0, // TODO: Implement error tracking
-            responseTime: 0 // TODO: Implement response time tracking
-        };
-
-        res.json({
-            success: true,
-            data: stats,
-            timestamp: new Date()
-        } as ApiResponse<SystemStats>);
-
-    } catch (error) {
-        logger.error('Stats endpoint failed', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to fetch stats',
-            timestamp: new Date()
-        } as ApiResponse);
-    }
-});
-
-// Security audit endpoint
-app.get('/api/security/audit', async (req: Request, res: Response) => {
-    try {
-        const audit = await security.audit();
-        res.json({
-            success: true,
-            data: audit,
-            timestamp: new Date()
-        } as ApiResponse);
-    } catch (error) {
-        logger.error('Security audit failed', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to perform security audit',
-            timestamp: new Date()
-        } as ApiResponse);
-    }
-});
-
-// Legacy stats endpoint for backward compatibility
-app.get('/stats', async (req: Request, res: Response) => {
     const userId = (req.query.userId as string) || 'demo-user';
     const user = await db.getUser(userId);
+    const tools = await mcp.getTools();
+    const memUsage = process.memoryUsage();
 
-    res.json({
+    const stats: SystemStats = {
         status: 'online',
         uptime: process.uptime(),
         activeSessions: sessions.size,
-        mcpTools: (await mcp.getTools()).length,
+        mcpTools: tools.length,
         memoryUsage: {
-            rss: process.memoryUsage().rss,
-            heapUsed: process.memoryUsage().heapUsed,
-            heapTotal: process.memoryUsage().heapTotal,
-            external: process.memoryUsage().external,
-            arrayBuffers: process.memoryUsage().arrayBuffers
+            rss: Math.round(memUsage.rss / 1024 / 1024),
+            heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024),
+            heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024),
+            external: Math.round(memUsage.external / 1024 / 1024),
+            arrayBuffers: Math.round((memUsage.arrayBuffers || 0) / 1024 / 1024),
         },
         userTier: user?.tier || 'FREE',
-        usagePercent: user ? (user.tokensUsed / user.tokenLimit) * 100 : 0
+        usagePercent: user ? (user.tokensUsed / user.tokenLimit) * 100 : 0,
+        errorRate: 0,
+        responseTime: 0,
+        lastUpdated: new Date(),
+    };
+
+    // Cache for 30 seconds
+    await cacheManager.set(cacheKey, stats, { ttl: 30 });
+
+    res.json({ success: true, data: stats });
+}));
+
+// API Routes
+const apiRouter = express.Router();
+
+// Skills management
+apiRouter.get('/skills', asyncHandler(async (_req: Request, res: Response) => {
+    const skills = await skillsPlatform.getAvailableSkills();
+    res.json({ success: true, data: skills });
+}));
+
+apiRouter.post('/skills/:skillId/execute', asyncHandler(async (req: Request, res: Response) => {
+    const { skillId } = req.params;
+    // Execute skill through MCP
+    const result = await mcp.callTool(skillId, req.body);
+    res.json({ success: true, data: result });
+}));
+
+// Channel management
+apiRouter.get('/channels', asyncHandler(async (_req: Request, res: Response) => {
+    // Get channel statuses from the manager
+    const statuses = (channelManager as any)['channelStatuses'] as Map<string, string>;
+    const channels = Array.from(statuses.entries()).map(([type, status]) => ({
+        type,
+        status,
+    }));
+    res.json({ success: true, data: channels });
+}));
+
+apiRouter.post('/channels/:channelType/send', asyncHandler(async (req: Request, res: Response) => {
+    const { channelType } = req.params;
+    const { channelId, message } = req.body;
+    await channelManager.sendMessage(channelType as any, channelId, message);
+    res.json({ success: true, message: 'Message sent' });
+}));
+
+// Chat endpoint with OpenRouter integration
+apiRouter.post('/chat', asyncHandler(async (req: Request, res: Response) => {
+    const { message, userId = 'demo-user', conversationId, model, temperature, maxTokens } = req.body;
+
+    logger.info('Processing chat message via OpenRouter', { userId, conversationId, model });
+
+    // Get or create session
+    let session = sessions.get(userId);
+    if (!session) {
+        session = {
+            userId,
+            messages: [],
+            createdAt: new Date(),
+            lastActive: new Date(),
+        };
+        sessions.set(userId, session);
+    }
+
+    // Add user message
+    session.messages.push({
+        role: 'user',
+        content: message,
+        timestamp: new Date(),
+    });
+
+    // Prepare messages for OpenRouter
+    const messagesForModel = [
+        { role: 'system', content: 'You are a helpful AI assistant.' },
+        ...session.messages.map(msg => ({
+            role: msg.role as 'user' | 'assistant' | 'system',
+            content: msg.content
+        }))
+    ];
+
+    let response: string;
+    let usage: any = null;
+    let usedModel = model || 'openrouter/anthropic/claude-3.5-sonnet';
+
+    // Check if OpenRouter provider is available
+    const provider = modelProviderManager.getProvider('openrouter');
+    if (provider) {
+        try {
+            logger.info('Calling OpenRouter API', { model: usedModel, messageCount: messagesForModel.length });
+
+            const completionRequest: ChatCompletionRequest = {
+                messages: session.messages,
+                model: usedModel,
+                temperature: temperature || 0.7,
+                maxTokens: maxTokens || 4000
+            };
+
+            const completion = await modelProviderManager.chatCompletion(completionRequest);
+            response = completion.content;
+            usage = completion.usage;
+            usedModel = completion.model;
+
+            logger.info('OpenRouter response received', {
+                model: usedModel,
+                tokens: usage ? `${usage.promptTokens}+${usage.completionTokens}` : 'unknown'
+            });
+        } catch (error) {
+            logger.error('OpenRouter API error, falling back to echo', { error: String(error) });
+            response = `I apologize, but I encountered an issue processing your request. Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+        }
+    } else {
+        // Fallback if no provider available
+        logger.warn('No OpenRouter provider available, using echo fallback');
+        response = `Echo: ${message} (OpenRouter not configured - set OPENROUTER_API_KEY in environment)`;
+    }
+
+    // Add assistant response
+    session.messages.push({
+        role: 'assistant',
+        content: response,
+        timestamp: new Date(),
+    });
+
+    session.lastActive = new Date();
+
+    res.json({
+        success: true,
+        data: {
+            response,
+            conversationId: conversationId || userId,
+            model: usedModel,
+            usage
+        }
+    });
+}));
+
+// List available models from OpenRouter
+apiRouter.get('/models', asyncHandler(async (_req: Request, res: Response) => {
+    logger.info('Fetching available models from OpenRouter');
+
+    const provider = modelProviderManager.getProvider('openrouter');
+    if (!provider) {
+        return res.json({
+            success: false,
+            error: 'OpenRouter provider not configured',
+            data: {
+                providers: modelProviderManager.getAvailableProviders(),
+                defaultModel: 'openrouter/anthropic/claude-3.5-sonnet'
+            }
+        });
+    }
+
+    try {
+        const models = await provider.listModels();
+        res.json({
+            success: true,
+            data: {
+                provider: 'openrouter',
+                models,
+                defaultModel: 'openrouter/anthropic/claude-3.5-sonnet'
+            }
+        });
+    } catch (error) {
+        logger.error('Failed to fetch models', { error: String(error) });
+        res.json({
+            success: false,
+            error: 'Failed to fetch models',
+            data: {
+                fallbackModels: [
+                    'openrouter/anthropic/claude-sonnet-4-5',
+                    'openrouter/anthropic/claude-3.5-sonnet',
+                    'openrouter/openai/gpt-4',
+                    'openrouter/openai/gpt-4-turbo',
+                    'openrouter/meta-llama/llama-3.1-70b-instruct',
+                    'openrouter/google/gemini-pro'
+                ]
+            }
+        });
+    }
+}));
+
+// Get provider status and usage stats
+apiRouter.get('/providers/status', asyncHandler(async (_req: Request, res: Response) => {
+    const providers = modelProviderManager.getAvailableProviders();
+    const stats = await modelProviderManager.getProviderStats();
+
+    res.json({
+        success: true,
+        data: {
+            providers,
+            stats,
+            configured: providers.length > 0
+        }
+    });
+}));
+
+// Circuit breaker status
+apiRouter.get('/circuit-breakers', asyncHandler(async (_req: Request, res: Response) => {
+    const { circuitBreakerManager } = await import('./services/circuit-breaker.js');
+    const stats = circuitBreakerManager.getAllStats();
+
+    res.json({
+        success: true,
+        data: {
+            circuitBreakers: stats,
+            count: stats.length
+        }
+    });
+}));
+
+// Rate limiter status
+apiRouter.get('/rate-limit', asyncHandler(async (_req: Request, res: Response) => {
+    const { rateLimiter } = await import('./services/rate-limiter.js');
+    const stats = rateLimiter.getStats();
+
+    res.json({
+        success: true,
+        data: stats
+    });
+}));
+
+// API documentation endpoint (serves OpenAPI spec)
+apiRouter.get('/docs', asyncHandler(async (_req: Request, res: Response) => {
+    res.json({
+        openapi: '3.0.3',
+        info: {
+            title: 'AgentFlow API',
+            description: 'Multi-tenant AI Agent SaaS Platform API',
+            version: '1.0.0'
+        },
+        servers: [
+            { url: 'http://localhost:3001', description: 'Development' },
+            { url: 'https://api.agentflow.ai', description: 'Production' }
+        ],
+        paths: {
+            '/health': {
+                get: {
+                    summary: 'Health check',
+                    responses: { '200': { description: 'Gateway is healthy' } }
+                }
+            },
+            '/api/v1/chat': {
+                post: {
+                    summary: 'Send chat message',
+                    requestBody: {
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        message: { type: 'string' },
+                                        userId: { type: 'string' },
+                                        conversationId: { type: 'string' },
+                                        model: { type: 'string' }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    responses: { '200': { description: 'AI response' } }
+                }
+            },
+            '/api/v1/models': {
+                get: {
+                    summary: 'List available models',
+                    responses: { '200': { description: 'List of models' } }
+                }
+            }
+        }
+    });
+}));
+
+// Mount API router
+app.use('/api/v1', apiRouter);
+
+// 404 handler
+app.use(notFoundHandler);
+
+// Error handler (must be last)
+app.use(errorHandler);
+
+// Channel message handling
+channelManager.onMessage(async (message: ChannelMessage) => {
+    logger.info('Received channel message', { channelId: message.channelId, userId: message.userId });
+    // Process channel message
+});
+
+// Start server
+server.listen(port, () => {
+    logger.info(`🚀 Enhanced Gravity Gateway running on port ${port}`, {
+        port,
+        env: process.env.NODE_ENV || 'development',
+        version: process.env.npm_package_version || '1.0.0',
     });
 });
 
-async function bootstrap() {
-    // 0. Initialize Model Providers
-    console.log('🔄 Initializing Model Providers...');
-    await modelProviderManager.init();
-
-    // 1. Run Security Audit
-    console.log(' Initiating Startup Security Scan...');
-    const audit = await security.audit();
-    if (!audit.passed) {
-        console.warn('⚠️ SECURITY WARNINGS DETECTED:');
-        audit.vulnerabilities.forEach(v => console.warn(`  - ${v}`));
-        console.warn('Proceeding with caution... (In production, this would halt startup)');
-    } else {
-        console.log('✅ Security Audit Passed. System is locked down.');
-    }
-
-    // 2. Initialize multi-channel system
-    console.log('🌐 Initializing multi-channel system...');
-    const channelConfigs = [
-        { type: 'whatsapp' as const, enabled: true, config: {} },
-        { type: 'telegram' as const, enabled: true, config: {} },
-        { type: 'slack' as const, enabled: true, config: {} }
-    ];
-
-    await channelManager.initializeChannels(channelConfigs);
-    console.log('✅ Multi-channel system initialized');
-
-    // 3. Initialize legacy WhatsApp adapter
-    await whatsapp.initialize();
-
-    // 4. Wire up legacy messaging
-    whatsapp.onMessage(async (from, text) => {
-        const reply = await processMessage(from, text);
-        await whatsapp.sendMessage(from, reply);
+// Graceful shutdown
+process.on('SIGTERM', () => {
+    logger.info('SIGTERM received, shutting down gracefully');
+    server.close(() => {
+        logger.info('Server closed');
+        healthCheckService.destroy();
+        process.exit(0);
     });
+});
 
-    // 5. Wire up Heartbeat (Proactive AI)
-    heartbeat.onPulse(async () => {
-        if (Math.random() > 0.7) {
-            const userId = '1234567890'; // Demo user
-            console.log(`[Heartbeat] 💓 Proactive check triggered for ${userId}`);
-            const proactiveMsg = "⚠️ Proactive Alert: I noticed high latency in your primary server cluster. (Simulation)";
-            await whatsapp.sendMessage(userId, proactiveMsg);
-        }
+process.on('SIGINT', () => {
+    logger.info('SIGINT received, shutting down gracefully');
+    server.close(() => {
+        logger.info('Server closed');
+        healthCheckService.destroy();
+        process.exit(0);
     });
-    heartbeat.start();
-
-    app.listen(port, () => {
-        console.log(`🌌 GravityBot Gateway running at http://localhost:${port}`);
-        console.log(`📊 Multi-channel stats: ${JSON.stringify(channelManager.getStats())}`);
-        console.log(`🛠️ Skills platform stats: ${JSON.stringify(skillsPlatform.getStats())}`);
-    });
-}
-
-bootstrap();
+});

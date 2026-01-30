@@ -7,6 +7,8 @@ import {
   ChatCompletionRequest,
   ChatCompletionResponse
 } from '@gravity/types';
+import { openRouterBreaker, circuitBreakerManager } from './circuit-breaker.js';
+import { logger } from './logger.js';
 
 export class OpenRouterProvider implements IModelProvider {
   name = 'openrouter';
@@ -24,53 +26,69 @@ export class OpenRouterProvider implements IModelProvider {
 
   async chatCompletion(request: ChatCompletionRequest): Promise<ChatCompletionResponse> {
     const startTime = Date.now();
+    let lastError: any;
 
-    try {
-      const model = request.model || this.defaultModel;
-      const payload: ModelRequest = {
-        model,
-        messages: request.messages.map((msg: any) => ({
-          role: msg.role,
-          content: msg.content
-        })),
-        maxTokens: request.maxTokens || 4000,
-        temperature: request.temperature || 0.7,
-        stream: request.stream || false
-      };
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        // Use circuit breaker for the API call
+        return await openRouterBreaker.execute(async () => {
+          const model = request.model || this.defaultModel;
+          const payload: ModelRequest = {
+            model,
+            messages: request.messages.map((msg: any) => ({
+              role: msg.role,
+              content: msg.content
+            })),
+            maxTokens: request.maxTokens || 4000,
+            temperature: request.temperature || 0.7,
+            stream: request.stream || false
+          };
 
-      const response = await fetch(`${this.baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://gravityos.ai',
-          'X-Title': 'GravityOS AI Agent'
-        },
-        body: JSON.stringify(payload)
-      });
+          const response = await fetch(`${this.baseUrl}/chat/completions`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${this.apiKey}`,
+              'Content-Type': 'application/json',
+              'HTTP-Referer': 'https://gravityos.ai',
+              'X-Title': 'GravityOS AI Agent'
+            },
+            body: JSON.stringify(payload)
+          });
 
-      if (!response.ok) {
-        throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
+          if (!response.ok) {
+            throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
+          }
+
+          const data: ModelResponse = await response.json() as ModelResponse;
+
+          const latency = Date.now() - startTime;
+          logger.info('OpenRouter API response', {
+            model: data.model,
+            tokens: data.usage ? `${data.usage.prompt_tokens}+${data.usage.completion_tokens}` : 'unknown',
+            latency
+          });
+
+          return {
+            content: data.choices[0]?.message?.content || '',
+            model: data.model,
+            usage: {
+              promptTokens: data.usage.prompt_tokens,
+              completionTokens: data.usage.completion_tokens,
+              totalTokens: data.usage.total_tokens
+            },
+            provider: this.name
+          };
+        });
+      } catch (error) {
+        lastError = error;
+        logger.warn(`[OpenRouter] Attempt ${attempt} failed`, { error: String(error) });
+        if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
       }
-
-      const data: ModelResponse = await response.json() as ModelResponse;
-      const latency = Date.now() - startTime;
-
-      return {
-        content: data.choices[0]?.message?.content || '',
-        model: data.model,
-        usage: {
-          promptTokens: data.usage.prompt_tokens,
-          completionTokens: data.usage.completion_tokens,
-          totalTokens: data.usage.total_tokens
-        },
-        provider: this.name
-      };
-    } catch (error) {
-      const latency = Date.now() - startTime;
-      console.error(`[OpenRouter] Request failed after ${latency}ms:`, error);
-      throw error;
     }
+
+    const latency = Date.now() - startTime;
+    logger.error(`[OpenRouter] All 3 attempts failed after ${latency}ms`, { error: lastError });
+    throw lastError;
   }
 
   async listModels(): Promise<string[]> {

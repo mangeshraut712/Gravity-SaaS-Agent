@@ -4,3 +4,7 @@ dist
 .env
 .DS_Store
 *.log
+
+
+#Ignore cursor AI rules
+.cursor/rules/codacy.mdc

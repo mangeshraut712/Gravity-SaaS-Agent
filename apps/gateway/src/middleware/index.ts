@@ -6,6 +6,10 @@ import morgan from 'morgan';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { ApiResponse, SystemStats } from '@gravity/types';
 
+// Re-export new middleware
+export * from './error-handler.js';
+export * from './validation.js';
+
 // Enhanced middleware types
 export interface AuthenticatedRequest extends Request {
     user?: {
@@ -126,7 +130,7 @@ export class MiddlewareFactory {
                 }
 
                 const token = authHeader.substring(7);
-                
+
                 // Mock JWT verification (in production, use proper JWT library)
                 if (token === 'mock-admin-token') {
                     req.user = {
@@ -177,7 +181,7 @@ export class MiddlewareFactory {
                 } as ApiResponse);
             }
 
-            const hasPermission = requiredPermissions.every(permission => 
+            const hasPermission = requiredPermissions.every(permission =>
                 req.user!.permissions.includes(permission) || req.user!.permissions.includes('admin')
             );
 
@@ -253,20 +257,20 @@ export class MiddlewareFactory {
     static cors(allowedOrigins: string[] = []) {
         return (req: Request, res: Response, next: NextFunction) => {
             const origin = req.headers.origin;
-            
+
             if (allowedOrigins.includes('*') || allowedOrigins.includes(origin || '')) {
                 res.setHeader('Access-Control-Allow-Origin', origin || '*');
             }
-            
+
             res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
             res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Request-ID');
             res.setHeader('Access-Control-Allow-Credentials', 'true');
             res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
-            
+
             if (req.method === 'OPTIONS') {
                 return res.status(200).end();
             }
-            
+
             next();
         };
     }
@@ -283,7 +287,7 @@ export class MiddlewareFactory {
                 memory: process.memoryUsage(),
                 lastCheck: new Date()
             };
-            
+
             res.status(200).json(health);
         };
     }
@@ -292,7 +296,7 @@ export class MiddlewareFactory {
     static errorHandler() {
         return (err: Error, req: Request, res: Response, next: NextFunction) => {
             const requestId = (req as AuthenticatedRequest).requestId;
-            
+
             console.error(`[Error ${requestId}]`, {
                 error: err.message,
                 stack: err.stack,
@@ -304,7 +308,7 @@ export class MiddlewareFactory {
 
             // Don't leak error details in production
             const isDevelopment = process.env.NODE_ENV === 'development';
-            
+
             res.status(500).json({
                 success: false,
                 error: isDevelopment ? err.message : 'Internal server error',
@@ -375,13 +379,13 @@ export const ValidationSchemas = {
         channelId: { type: 'string', optional: true },
         metadata: { type: 'object', optional: true }
     },
-    
+
     channelSend: {
         channelId: { type: 'string', required: true },
         content: { type: 'string', required: true, minLength: 1, maxLength: 5000 },
         options: { type: 'object', optional: true }
     },
-    
+
     skillExecution: {
         skillId: { type: 'string', required: true },
         userId: { type: 'string', required: true },

@@ -1,0 +1,724 @@
+openapi: 3.0.3
+info:
+  title: AgentFlow API
+  description: Multi-tenant AI Agent SaaS Platform API
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@agentflow.ai
+
+servers:
+  - url: http://localhost:3001
+    description: Development server
+  - url: https://api.agentflow.ai
+    description: Production server
+
+tags:
+  - name: Health
+    description: Health check and monitoring endpoints
+  - name: Chat
+    description: AI Chat completion endpoints
+  - name: Models
+    description: Model listing and management
+  - name: Agents
+    description: Agent CRUD operations
+  - name: Channels
+    description: Multi-channel messaging management
+  - name: Skills
+    description: Agent skills and tools
+  - name: Analytics
+    description: Usage analytics and metrics
+  - name: Billing
+    description: Subscription and billing endpoints
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Gateway health check
+      description: Returns the health status of all gateway services
+      responses:
+        '200':
+          description: Gateway is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+        '503':
+          description: Gateway is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+  /stats:
+    get:
+      tags:
+        - Health
+      summary: System statistics
+      description: Returns system statistics and metrics
+      parameters:
+        - in: query
+          name: userId
+          schema:
+            type: string
+          description: User ID for personalized stats
+      responses:
+        '200':
+          description: System statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemStats'
+
+  /api/v1/chat:
+    post:
+      tags:
+        - Chat
+      summary: Send chat message
+      description: Send a message to the AI agent via OpenRouter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: AI response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Upstream API error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/models:
+    get:
+      tags:
+        - Models
+      summary: List available models
+      description: Returns list of available AI models from OpenRouter
+      responses:
+        '200':
+          description: List of available models
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelsResponse'
+
+  /api/v1/providers/status:
+    get:
+      tags:
+        - Models
+      summary: Provider status
+      description: Returns status of all model providers
+      responses:
+        '200':
+          description: Provider status information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderStatus'
+
+  /api/v1/agents:
+    get:
+      tags:
+        - Agents
+      summary: List agents
+      description: Returns list of user's agents
+      responses:
+        '200':
+          description: List of agents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Agent'
+    post:
+      tags:
+        - Agents
+      summary: Create agent
+      description: Create a new AI agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAgentRequest'
+      responses:
+        '201':
+          description: Agent created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/agents/{agentId}:
+    get:
+      tags:
+        - Agents
+      summary: Get agent
+      description: Get agent details by ID
+      parameters:
+        - in: path
+          name: agentId
+          required: true
+          schema:
+            type: string
+          description: Agent ID
+      responses:
+        '200':
+          description: Agent details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        '404':
+          description: Agent not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+        - Agents
+      summary: Update agent
+      description: Update agent configuration
+      parameters:
+        - in: path
+          name: agentId
+          required: true
+          schema:
+            type: string
+          description: Agent ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAgentRequest'
+      responses:
+        '200':
+          description: Agent updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        '404':
+          description: Agent not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+        - Agents
+      summary: Delete agent
+      description: Delete an agent
+      parameters:
+        - in: path
+          name: agentId
+          required: true
+          schema:
+            type: string
+          description: Agent ID
+      responses:
+        '204':
+          description: Agent deleted
+        '404':
+          description: Agent not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/channels:
+    get:
+      tags:
+        - Channels
+      summary: List channels
+      description: Returns status of all configured channels
+      responses:
+        '200':
+          description: List of channels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChannelStatus'
+
+  /api/v1/channels/{channelType}/send:
+    post:
+      tags:
+        - Channels
+      summary: Send message via channel
+      description: Send a message through a specific channel
+      parameters:
+        - in: path
+          name: channelType
+          required: true
+          schema:
+            type: string
+            enum: [whatsapp, telegram, slack, web]
+          description: Channel type
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMessageRequest'
+      responses:
+        '200':
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageSentResponse'
+
+  /api/v1/skills:
+    get:
+      tags:
+        - Skills
+      summary: List skills
+      description: Returns list of available skills for agents
+      responses:
+        '200':
+          description: List of skills
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Skill'
+
+  /api/v1/skills/{skillId}/execute:
+    post:
+      tags:
+        - Skills
+      summary: Execute skill
+      description: Execute a specific skill
+      parameters:
+        - in: path
+          name: skillId
+          required: true
+          schema:
+            type: string
+          description: Skill ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Skill parameters
+      responses:
+        '200':
+          description: Skill execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkillExecutionResult'
+
+  /api/v1/analytics/dashboard:
+    get:
+      tags:
+        - Analytics
+      summary: Dashboard analytics
+      description: Returns analytics data for the dashboard
+      responses:
+        '200':
+          description: Analytics data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardAnalytics'
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          description: Overall health status
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp of the health check
+        services:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ServiceHealth'
+      required:
+        - status
+        - timestamp
+
+    ServiceHealth:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        latency:
+          type: number
+          description: Response latency in milliseconds
+        error:
+          type: string
+          description: Error message if unhealthy
+
+    SystemStats:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [online, offline, degraded]
+        uptime:
+          type: number
+          description: Server uptime in seconds
+        activeSessions:
+          type: number
+          description: Number of active sessions
+        mcpTools:
+          type: number
+          description: Number of available MCP tools
+        memoryUsage:
+          $ref: '#/components/schemas/MemoryUsage'
+        userTier:
+          type: string
+          description: User's subscription tier
+        usagePercent:
+          type: number
+          description: Token usage percentage
+        errorRate:
+          type: number
+          description: Error rate percentage
+        responseTime:
+          type: number
+          description: Average response time in ms
+        lastUpdated:
+          type: string
+          format: date-time
+
+    MemoryUsage:
+      type: object
+      properties:
+        rss:
+          type: number
+          description: Resident Set Size in MB
+        heapUsed:
+          type: number
+          description: Heap used in MB
+        heapTotal:
+          type: number
+          description: Heap total in MB
+        external:
+          type: number
+          description: External memory in MB
+        arrayBuffers:
+          type: number
+          description: Array buffers in MB
+
+    ChatRequest:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: User message
+          minLength: 1
+          maxLength: 10000
+        userId:
+          type: string
+          description: User ID (defaults to demo-user)
+        conversationId:
+          type: string
+          description: Conversation ID for context
+        model:
+          type: string
+          description: OpenRouter model ID
+          example: openrouter/anthropic/claude-3.5-sonnet
+        temperature:
+          type: number
+          description: Temperature for response generation
+          minimum: 0
+          maximum: 2
+          default: 0.7
+        maxTokens:
+          type: integer
+          description: Maximum tokens in response
+          minimum: 1
+          maximum: 10000
+          default: 4000
+
+    ChatResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            response:
+              type: string
+              description: AI response
+            conversationId:
+              type: string
+              description: Conversation ID
+            model:
+              type: string
+              description: Model used
+            usage:
+              $ref: '#/components/schemas/TokenUsage'
+
+    TokenUsage:
+      type: object
+      properties:
+        promptTokens:
+          type: integer
+        completionTokens:
+          type: integer
+        totalTokens:
+          type: integer
+
+    ModelsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            provider:
+              type: string
+            models:
+              type: array
+              items:
+                type: string
+            defaultModel:
+              type: string
+
+    ProviderStatus:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            providers:
+              type: array
+              items:
+                type: string
+            stats:
+              type: object
+            configured:
+              type: boolean
+
+    Agent:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        templateType:
+          type: string
+        personality:
+          type: string
+        customInstructions:
+          type: string
+        knowledgeBase:
+          type: object
+        channels:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateAgentRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        templateType:
+          type: string
+          example: customer_service
+        personality:
+          type: string
+          example: friendly
+        customInstructions:
+          type: string
+          maxLength: 5000
+        knowledgeBase:
+          type: object
+
+    UpdateAgentRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        personality:
+          type: string
+        customInstructions:
+          type: string
+          maxLength: 5000
+        channels:
+          type: array
+          items:
+            type: string
+
+    ChannelStatus:
+      type: object
+      properties:
+        type:
+          type: string
+        status:
+          type: string
+          enum: [connected, disconnected, error]
+        lastActivity:
+          type: string
+          format: date-time
+        messageCount:
+          type: integer
+        errorCount:
+          type: integer
+
+    SendMessageRequest:
+      type: object
+      required:
+        - channelId
+        - message
+      properties:
+        channelId:
+          type: string
+          description: Channel-specific identifier
+        message:
+          type: string
+          description: Message content
+
+    MessageSentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+          example: Message sent
+
+    Skill:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        parameters:
+          type: object
+
+    SkillExecutionResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        result:
+          type: object
+        error:
+          type: string
+
+    DashboardAnalytics:
+      type: object
+      properties:
+        totalConversations:
+          type: integer
+        totalMessages:
+          type: integer
+        activeAgents:
+          type: integer
+        revenue:
+          type: number
+        usageByDay:
+          type: array
+          items:
+            type: object
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Error message
+        message:
+          type: string
+          description: Optional human-readable message
+        requestId:
+          type: string
+          description: Request ID for tracing
+        timestamp:
+          type: string
+          format: date-time
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
