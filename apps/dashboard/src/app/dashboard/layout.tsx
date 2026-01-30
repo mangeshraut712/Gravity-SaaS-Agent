@@ -12,7 +12,7 @@ import {
   TrendingUp,
   Bot,
 } from 'lucide-react';
-import { getSupabaseAdminClient } from '../../lib/supabaseAdmin';
+import { getSupabaseAdminClient } from '../../lib';
 
 async function getSessionEmail() {
   // Minimal server-side session guard:

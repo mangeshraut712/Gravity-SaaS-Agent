@@ -148,7 +148,7 @@ function ConversationsContent() {
                         </div>
                         <h3 className="text-xl font-bold text-gray-900">No history found</h3>
                         <p className="text-gray-500 max-w-xs mx-auto">
-                            Your agents haven't started any conversations yet. Deploy an agent to start receiving messages.
+                            Your agents haven&apos;t started any conversations yet. Deploy an agent to start receiving messages.
                         </p>
                     </div>
                 ) : (

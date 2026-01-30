@@ -1,4 +1,4 @@
-# 🚀 AgentFlow – AI Agent SaaS Platform
+# 🚀 Gravity – AI Agent SaaS Platform
 
 A production-ready, multi-tenant AI agent SaaS platform for deploying branded AI agents across web chat, WhatsApp, and API channels.
 
@@ -101,8 +101,8 @@ supabase/schema.sql
 npm run dev
 
 # Or start individually
-npm run dev --workspace=@gravity/dashboard  # Port 3000
-npm run dev --workspace=@gravity/gateway     # Port 3001
+npm run dev --workspace=@gravity/dashboard  # http://localhost:3000
+npm run dev --workspace=@gravity/gateway     # http://localhost:3003
 ```
 
 The gateway automatically falls back to in-memory caching when Redis is unavailable, so you can develop without any external dependencies.
@@ -124,7 +124,7 @@ docker-compose up -d
 
 # Services:
 # - Dashboard: http://localhost:3000
-# - Gateway: http://localhost:3001
+# - Gateway: http://localhost:3003
 # - PostgreSQL: localhost:5432 (if not using Supabase)
 # - Redis: localhost:6379 (optional)
 ```
@@ -139,7 +139,7 @@ Gravity-SaaS-Agent/
 │   ├── dashboard/          # Next.js 15 app
 │   │   ├── src/
 │   │   │   ├── app/       # App Router pages
-│   │   │   ├── components/# React components
+│   │   │   ├── components/# React components (incl. ui)
 │   │   │   ├── lib/       # Utilities & clients
 │   │   │   └── hooks/     # Custom React hooks
 │   │   └── next.config.js # Optimized build config
@@ -205,7 +205,9 @@ Pre-built templates for common use cases:
 
 ## 🛠️ API Endpoints
 
-### Chat
+### Dashboard API (Next.js)
+
+#### Chat
 ```bash
 POST /api/chat/:agentId
 Content-Type: application/json
@@ -216,29 +218,25 @@ Content-Type: application/json
 }
 ```
 
-### Agents
-```bash
-GET    /api/agents          # List agents
-POST   /api/agents          # Create agent
-GET    /api/agents/:id      # Get agent
-PUT    /api/agents/:id      # Update agent
-DELETE /api/agents/:id      # Delete agent
-```
-
-### Analytics
-```bash
-GET /api/analytics/dashboard  # Dashboard stats
-```
-
-### Webhooks
+#### Webhooks
 ```bash
 POST /api/webhooks/polar      # Polar.sh billing events
+```
+
+### Gateway API (Express)
+```bash
+GET  /health                  # Health status
+GET  /stats                   # System stats
+GET  /api/skills              # List available skills
+POST /api/skills/:skillId/execute
+GET  /api/channels            # Channel status
+POST /api/channels/:channelType/send
+POST /api/chat                # Chat with OpenRouter
 ```
 
 ## 📊 Monitoring
 
 ### Health Checks
-- Dashboard: `GET /api/health`
 - Gateway: `GET /health`
 
 ### System Stats
@@ -316,4 +314,4 @@ MIT License - see LICENSE file for details
 
 ---
 
-Built with ❤️ using Next.js, Express, Supabase, and Anthropic Claude
+Built with ❤️ using Next.js, Express, Supabase, and Anthropic

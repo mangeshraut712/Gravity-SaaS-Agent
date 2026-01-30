@@ -5,3 +5,4 @@
 
 export { ErrorBoundary } from './ErrorBoundary';
 export { ChatWidget } from './ChatWidget';
+export * from './ui';
