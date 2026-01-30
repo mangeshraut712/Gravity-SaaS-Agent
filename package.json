@@ -1,6 +1,7 @@
 {
-  "name": "@gravity/memory",
+  "name": "@gravity/agentflow",
   "version": "1.0.0",
+  "description": "Multi-tenant AI agent SaaS platform built on GravityOS",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -8,14 +9,31 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev --workspaces",
+    "dev": "concurrently \"npm run dev -w @gravity/gateway\" \"npm run dev -w @gravity/dashboard\"",
     "build": "npm run build --workspaces --if-present",
-    "start": "npm run start --workspaces",
-    "lint": "npm run lint --workspaces"
+    "start": "concurrently \"npm run start -w @gravity/gateway\" \"npm run start -w @gravity/dashboard\"",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:watch": "npm run test:watch --workspaces --if-present",
+    "test:coverage": "npm run test:coverage --workspaces --if-present",
+    "clean": "rm -rf node_modules */node_modules */*/node_modules */dist */*/dist",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\""
   },
   "devDependencies": {
+    "@types/node": "^20.19.30",
+    "concurrently": "^9.2.1",
+    "prettier": "^3.0.0",
     "typescript": "^5.0.0",
-    "prettier": "^3.0.0"
+    "vitest": "^1.6.1"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=9.0.0"
   },
   "packageManager": "pnpm@9.0.0"
 }

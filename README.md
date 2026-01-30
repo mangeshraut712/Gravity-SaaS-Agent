@@ -1,533 +1,319 @@
-# 🌌 GravityOS: Enterprise-Grade Multi-Channel AI Agent Platform
-> **Advanced AI Agent Framework with Multi-Channel Support, Real-Time Features, and Enterprise Security**
+# 🚀 AgentFlow – AI Agent SaaS Platform
 
-![GravityBot Dashboard](https://gemini-static.googleusercontent.com/antigravity/brain/3514a195-44dd-4874-8386-9b01fce0ab04/gravity_bot_dashboard_final_1769432596427.png)
+A production-ready, multi-tenant AI agent SaaS platform for deploying branded AI agents across web chat, WhatsApp, and API channels.
 
-GravityOS is a next-generation, enterprise-grade SaaS framework for deploying autonomous AI agents across multiple communication channels. Enhanced with Clawdbot-inspired architecture, it features a comprehensive skills platform, real-time WebSocket support, advanced caching, and production-ready security.
+## ✨ Features
 
----
+- 🤖 **AI Agent Builder** – Create custom agents with templates (Customer Support, Sales, FAQ, Lead Capture)
+- 💬 **Multi-Channel Deployment** – Web chat, WhatsApp, Telegram, API endpoints
+- 💳 **Billing & Subscriptions** – Polar.sh integration with tiered plans (Free, Pro, Business)
+- 📊 **Analytics Dashboard** – Real-time metrics, usage tracking, revenue monitoring
+- 🔐 **Enterprise Security** – JWT auth, RBAC, rate limiting, input validation
+- ⚡ **Performance Optimized** – Redis caching, bundle optimization, image optimization
 
-## 🚀 **Enterprise Features**
+## 🏗️ Architecture
 
-### **🌐 Multi-Channel Architecture**
-- **12+ Channel Support**: WhatsApp, Telegram, Slack, Discord, Signal, iMessage, Teams, WebChat, and more
-- **Unified Channel Manager**: Single interface for all communication platforms
-- **Real-time Status**: Live connection monitoring and health checks
-- **Cross-Channel Broadcasting**: Send messages across multiple channels simultaneously
-- **Group Intelligence**: Mention detection and group isolation
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Dashboard (Next.js 15)                   │
+│  ├─ Landing Page & Auth                                     │
+│  ├─ Agent Builder & Templates                               │
+│  ├─ Analytics & Billing                                     │
+│  └─ Real-time Chat Widget                                   │
+└─────────────────────────────────────────────────────────────┘
+                              │
+┌─────────────────────────────────────────────────────────────┐
+│                    Gateway API (Express)                    │
+│  ├─ Multi-Channel Manager (WhatsApp, Telegram, etc.)        │
+│  ├─ Skills Platform (Web Search, File Management)           │
+│  ├─ Advanced Caching (Redis + LRU)                          │
+│  ├─ Security (Helmet, JWT, Rate Limiting)                   │
+│  └─ Health Monitoring & Logging                             │
+└─────────────────────────────────────────────────────────────┘
+                              │
+┌─────────────────────────────────────────────────────────────┐
+│              Supabase (PostgreSQL + Auth)                   │
+│  ├─ Users, Agents, Conversations, Messages                  │
+│  ├─ Analytics Events & Billing Events                       │
+│  └─ Row Level Security (RLS)                                │
+└─────────────────────────────────────────────────────────────┘
+```
 
-### **🤖 Advanced Skills Platform**
-- **Built-in Skills**: Web Search, File Management, Automation, Communication Hub
-- **Workspace System**: User-specific workspaces with AGENTS.md/SOUL.md patterns
-- **Execution Tracking**: Complete audit trail with performance metrics
-- **Category Management**: Organized skills by utility, productivity, automation, communication
-- **Real-time Monitoring**: Live skill execution statistics and success rates
+## 🚀 Quick Start
 
-### **🔒 Enterprise Security**
-- **Comprehensive Security Audit**: 100-point scoring system with vulnerability detection
-- **Advanced Authentication**: JWT-based auth with role-based permissions (RBAC)
-- **Rate Limiting**: Tier-based rate limiting with Redis backend
-- **Input Validation**: Comprehensive request validation and sanitization
-- **Security Logging**: Authentication, authorization, suspicious activity tracking
-- **CSP Headers**: Content Security Policy and security headers
+### Prerequisites
+- Node.js 18+
+- Supabase account
+- Anthropic API key
+- Polar.sh account (for billing)
 
-### **⚡ Real-Time Features**
-- **WebSocket Server**: Real-time bidirectional communication with 1000+ concurrent clients
-- **Live Dashboard**: Real-time updates for system metrics, channel status, and skill execution
-- **Channel Subscriptions**: Topic-based message routing with permissions
-- **Heartbeat System**: Automatic connection health monitoring
-- **Message Queuing**: Offline message queuing for reconnection scenarios
+### Installation
 
-### **📊 Performance & Monitoring**
-- **Redis Caching**: Production-ready caching with tag-based invalidation
-- **Performance Monitoring**: Request timing, slow query detection, system metrics
-- **Advanced Dashboard**: Multi-tab interface with real-time visualizations
-- **Resource Monitoring**: CPU, memory, disk usage with visual indicators
-- **Analytics**: Comprehensive usage analytics and performance metrics
-
----
-
-## 🛠️ **Quick Start**
-
-### **1. Clone & Install**
 ```bash
-git clone https://github.com/mangeshraut712/Gravity-SaaS-Agent.git
+# Clone the repository
+git clone <repository-url>
 cd Gravity-SaaS-Agent
-npm install
-```
 
-### **2. Environment Setup**
-```bash
+# Install dependencies
+npm install
+
+# Set up environment variables
 cp .env.example .env
-# Edit .env with your API keys and configuration
+# Edit .env with your credentials
 ```
 
-### **3. Start Services**
-```bash
-# Start all services (development)
-npm run dev
+### Environment Setup
 
-# Or start individual services
-npm run dev --workspace=@gravity/gateway  # Enhanced Gateway (port 3003)
-npm run dev --workspace=@gravity/dashboard # Enhanced Dashboard (port 3000)
-```
-
-### **4. Access Points**
-- **Dashboard**: http://localhost:3000 (Enhanced multi-tab interface)
-- **Gateway API**: http://localhost:3003 (Multi-channel backend)
-- **WebSocket**: ws://localhost:3003/ws (Real-time updates)
-- **Health Check**: http://localhost:3003/health
-
----
-
-## 🏗️ **Architecture Overview**
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                   🌌 Enhanced Dashboard (React + TypeScript)                        │
-│                   ├─ Real-time WebSocket Updates                                   │
-│                   ├─ Advanced Visualizations                                     │
-│                   ├─ Multi-Channel Monitoring                                    │
-│                   ├─ Performance Metrics                                          │
-│                   ├─ Dark Mode Support                                            │
-│                   └─ Responsive Design                                             │
-└─────────────────────────────────────────────────────────────────────────┘
-                                │
-┌─────────────────────────────────────────────────────────────────────────┐
-│                   🔧 Enhanced API Gateway (Express + TypeScript)                        │
-│                   ├─ Advanced Middleware Layer                                      │
-│                   │   - Security (Helmet, CSP, HSTS)                           │
-│                   │   - Authentication (JWT + RBAC)                              │
-│                   │   - Rate Limiting (Redis-based)                               │
-│                   │   - Validation (Joi schemas)                                   │
-│                   │   - Compression (Gzip)                                          │
-│                   │   - Logging (Winston)                                          │
-│                   └─ Enhanced Error Handling                                      │
-│                   ├─ Real-Time WebSocket Server (ws)                                   │
-│                   ├─ Redis Cache Layer                                               │
-│                   ├─ Multi-Channel Manager                                           │
-│                   ├─ Skills Platform                                                 │
-│                   └─ Advanced Logging System                                         │
-└─────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 📊 **Enhanced Features**
-
-### **🌐 Multi-Channel System**
-```bash
-# Channel Status
-curl http://localhost:3003/api/channels/status
-# Response: 3/3 channels connected (WhatsApp, Telegram, Slack)
-
-# Send Message via Channel
-curl -X POST http://localhost:3003/api/channels/whatsapp/send \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -d '{"channelId":"test-channel","content":"Hello from API"}'
-```
-
-### **🤖 Skills Platform**
-```bash
-# List Available Skills
-curl http://localhost:3003/api/skills
-# Response: 4 built-in skills with execution statistics
-
-# Execute Skill
-curl -X POST http://localhost:3003/api/skills/web-search/execute \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -d '{"userId":"user-123","input":"What is the latest AI news?"}'
-```
-
-### **🔌 WebSocket Real-Time Updates**
-```javascript
-// Connect to WebSocket
-const ws = new WebSocket('ws://localhost:3003/ws');
-
-// Subscribe to channel updates
-ws.send(JSON.stringify({
-    type: 'subscribe',
-    channel: 'system-stats'
-}));
-
-// Receive real-time updates
-ws.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    console.log('Real-time update:', data);
-};
-```
-
-### **📊 Performance Monitoring**
-```bash
-# System Statistics (with caching)
-curl http://localhost:3003/api/stats
-# Response: Real-time system metrics with performance data
-
-# WebSocket Statistics
-curl http://localhost:3003/api/ws/stats
-# Response: WebSocket connection statistics
-```
-
----
-
-## 📦 **Project Structure**
+Create `.env` in the root:
 
 ```bash
-gravity-saas-agent/
-├── apps/
-│   ├── dashboard/                    # Next.js 15 Enhanced Dashboard
-│   │   ├── src/app/
-│   │   │   ├── page.tsx              # Original dashboard
-│   │   │   ├── advanced-dashboard.tsx # Enhanced multi-tab interface
-│   │   │   └── enhanced-page.tsx      # Multi-channel dashboard
-│   │   └── package.json
-│   └── gateway/                      # Express.js Enhanced Gateway
-│       ├── src/
-│       │   ├── adapters/             # Channel Adapters (WhatsApp, Telegram, Slack)
-│       │   ├── middleware/            # Advanced Middleware (Security, Auth, Rate Limiting)
-│       │   ├── services/             # Core Services (Security, Skills, Channels, Cache, WebSocket)
-│       │   ├── index.ts              # Original Gateway
-│       │   └── enhanced-index.ts     # Enhanced Gateway with new features
-│       └── package.json
-├── packages/
-│   ├── types/                        # TypeScript Type Definitions
-│   │   ├── src/
-│   │   │   ├── index.ts              # Core types
-│   │   │   ├── channels.ts           # Channel-specific types
-│   │   │   └── skills.ts             # Skills platform types
-│   ├── mcp-client/                   # Model Context Protocol Client
-│   ├── memory/                       # Cost-Optimized Memory Engine
-│   └── db/                           # Multi-tenant Database Layer
-├── .env.example                      # Environment configuration template
-├── package.json                      # Root package with workspaces
-└── README.md                         # This file
-```
+# Database
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_key
 
----
+# AI
+ANTHROPIC_API_KEY=your_anthropic_key
 
-## 🔧 **Configuration**
+# Billing
+POLAR_PRO_PRODUCT_ID=your_pro_product_id
+POLAR_BUSINESS_PRODUCT_ID=your_business_product_id
 
-### **Environment Variables (.env)**
-```bash
-# Core Configuration
-ANTHROPIC_API_KEY=sk-ant-...
-PORT=3003
-NODE_ENV=production
+# Security
+JWT_SECRET=your_jwt_secret
 
-# Security Settings
-SANDBOX_MODE=true                    # Enable sandbox execution
-GITHUB_TOKEN_SCOPE=read              # Limit GitHub token permissions
-ANTHROPIC_MODEL=claude-3-5-sonnet-20241022
-
-# Rate Limiting
-RATE_LIMIT_MAX_REQUESTS=100
-RATE_LIMIT_WINDOW_MS=900000
-
-# CORS Configuration
-ALLOWED_ORIGINS=http://localhost:3000,https://yourdomain.com
-
-# Redis Configuration
+# Redis (optional, for caching)
 REDIS_URL=redis://localhost:6379
-
-# WebSocket Configuration
-WS_ALLOWED_ORIGINS=http://localhost:3000,https://yourdomain.com
-WS_MAX_CLIENTS=1000
-
-# Logging Configuration
-LOG_LEVEL=info
-LOG_FILE_PATH=./logs
-
-# Multi-Channel Configuration
-WHATSAPP_ENABLED=true
-TELEGRAM_ENABLED=true
-SLACK_ENABLED=true
 ```
 
----
+### Database Setup
 
-## 🚀 **Development Commands**
+Run the schema in Supabase SQL Editor:
 
-### **All Services**
 ```bash
-npm run dev              # Start all services in development mode
-npm run build            # Build all packages and applications
-npm run test             # Run all tests
-npm run lint             # Run linting
-npm run clean            # Clean build artifacts
+supabase/schema.sql
 ```
 
-### **Individual Services**
+### Development
+
 ```bash
-# Enhanced Gateway (Recommended)
-npm run dev --workspace=@gravity/gateway
-
-# Enhanced Dashboard
-npm run dev --workspace=@gravity/dashboard
-
-# Packages
-npm run build --workspace=@gravity/types
-npm run build --workspace=@gravity/mcp-client
-npm run build --workspace=@gravity/memory
-npm run build --workspace=@gravity/db
-```
-
----
-
-## 🔒 **Security Features**
-
-### **Authentication & Authorization**
-- **JWT Tokens**: Secure authentication with refresh tokens
-- **Role-Based Access Control (RBAC)**: Granular permissions system
-- **Tier-Based Access**: FREE, PRO, ENTERPRISE user tiers
-- **Session Management**: Secure session handling with TTL
-
-### **Security Middleware**
-- **Helmet.js**: Comprehensive security headers
-- **CSP Headers**: Content Security Policy for XSS protection
-- **Rate Limiting**: Advanced rate limiting with Redis backend
-- **Input Validation**: Joi schema validation for all endpoints
-- **CORS Protection**: Configurable CORS with origin validation
-
-### **Security Monitoring**
-- **Authentication Logging**: Login attempts, failures, IP tracking
-- **Suspicious Activity Detection**: Pattern-based threat detection
-- **Security Audit**: Automated vulnerability scanning with scoring
-- **Compliance Logging**: Complete audit trail for regulatory requirements
-
----
-
-## 📊 **Performance Features**
-
-### **Caching System**
-- **Redis Integration**: Production-ready Redis with connection pooling
-- **Tag-Based Invalidation**: Smart cache invalidation by tags and patterns
-- **TTL Management**: Configurable time-to-live with automatic cleanup
-- **Cache Middleware**: Automatic response caching for GET requests
-- **Performance Metrics**: Cache hit/miss ratios and timing analysis
-
-### **Performance Monitoring**
-- **Request Timing**: Automatic slow request detection and alerting
-- **Memory Usage**: Real-time memory monitoring with threshold alerts
-- **System Metrics**: CPU, disk, network I/O tracking
-- **Database Performance**: Slow query identification and logging
-- **API Performance**: Response time tracking and optimization
-
----
-
-## 🌐 **API Documentation**
-
-### **Enhanced Endpoints**
-
-#### **System Management**
-```bash
-GET    /health                    # Health check
-GET    /api/stats                 # System statistics (cached)
-GET    /api/security/audit        # Security audit (admin only)
-```
-
-#### **Multi-Channel Management**
-```bash
-GET    /api/channels/status       # Channel status
-POST   /api/channels/:type/send   # Send message via channel
-```
-
-#### **Skills Platform**
-```bash
-GET    /api/skills                 # List available skills (cached)
-POST   /api/skills/:skillId/execute # Execute skill with tracking
-```
-
-#### **Real-Time Features**
-```bash
-GET    /api/ws/stats              # WebSocket statistics
-POST   /api/broadcast             # Real-time message broadcasting
-```
-
-### **Authentication**
-All API endpoints (except `/health`) require authentication:
-```bash
-curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-     http://localhost:3003/api/stats
-```
-
-### **Rate Limiting**
-Rate limits are enforced based on user tier:
-- **FREE**: 30 requests per 15 minutes
-- **PRO**: 100 requests per 15 minutes  
-- **ENTERPRISE**: 500 requests per 15 minutes
-
----
-
-## 🚀 **Deployment Guide**
-
-### **Development Environment**
-```bash
-# Local development
-npm install
+# Start all services - no Docker required!
 npm run dev
 
-# Individual service testing
-npm run dev --workspace=@gravity/gateway &
-npm run dev --workspace=@gravity/dashboard &
+# Or start individually
+npm run dev --workspace=@gravity/dashboard  # Port 3000
+npm run dev --workspace=@gravity/gateway     # Port 3001
 ```
 
-### **Production Deployment**
+The gateway automatically falls back to in-memory caching when Redis is unavailable, so you can develop without any external dependencies.
+
+### Production Build
+
 ```bash
-# Build all packages
 npm run build
+npm start
+```
 
-# Start production services
-npm run start
+### Docker Deployment
 
-# Or use Docker (recommended)
+Docker is optional - use only for production or full-stack deployments with Redis:
+
+```bash
+# Start all services with Docker Compose
 docker-compose up -d
+
+# Services:
+# - Dashboard: http://localhost:3000
+# - Gateway: http://localhost:3001
+# - PostgreSQL: localhost:5432 (if not using Supabase)
+# - Redis: localhost:6379 (optional)
 ```
 
-### **Environment Configuration**
-- **Development**: Use `.env.development` for local settings
-- **Production**: Use `.env.production` with production-grade security
-- **Testing**: Use `.env.test` for automated testing
+**For local development**, simply run `npm run dev` - no Docker needed!
 
-### **Docker Deployment**
-```dockerfile
-# Dockerfile example
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY . .
-RUN npm run build
-EXPOSE 3003
-CMD ["npm", "start"]
+## 📁 Project Structure
+
+```
+Gravity-SaaS-Agent/
+├── apps/
+│   ├── dashboard/          # Next.js 15 app
+│   │   ├── src/
+│   │   │   ├── app/       # App Router pages
+│   │   │   ├── components/# React components
+│   │   │   ├── lib/       # Utilities & clients
+│   │   │   └── hooks/     # Custom React hooks
+│   │   └── next.config.js # Optimized build config
+│   └── gateway/           # Express API server
+│       ├── src/
+│       │   ├── services/  # Business logic
+│       │   ├── middleware/# Express middleware
+│       │   └── adapters/  # Channel adapters
+│       └── Dockerfile
+├── packages/              # Shared packages
+│   ├── types/            # TypeScript definitions
+│   ├── db/               # Database utilities
+│   ├── memory/           # Memory management
+│   └── mcp-client/       # MCP client
+├── supabase/
+│   └── schema.sql        # Database schema
+├── docker-compose.yml    # Container orchestration
+└── package.json          # Workspace configuration
 ```
 
----
+## 🔑 Key Features
 
-## 🤖 **Skills Platform Documentation**
+### Multi-Channel Support
+Deploy agents to multiple channels:
+- Web Chat (embedded widget)
+- WhatsApp Business API
+- Telegram Bot
+- Slack
+- Custom API endpoints
 
-### **Built-in Skills**
+### Agent Templates
+Pre-built templates for common use cases:
+- Customer Service Bot
+- Sales Qualifier
+- Appointment Scheduler
+- FAQ Assistant
+- Lead Capture Bot
 
-#### **1. Web Search (utility)**
-- **ID**: `web-search`
-- **Tools**: `web_search`
-- **Permissions**: `network`
-- **Usage**: "search for [query]" or "find information about [topic]"
+### Subscription Plans
 
-#### **2. File Manager (productivity)**
-- **ID**: `file-manager`
-- **Tools**: `file_read`, `file_write`, `file_list`
-- **Permissions**: `filesystem`
-- **Usage**: "read file [path]" or "write to [path]"
+| Feature | Free | Pro ($49/mo) | Business ($199/mo) |
+|---------|------|--------------|-------------------|
+| Agents | 1 | 5 | Unlimited |
+| Messages/mo | 100 | 5,000 | 50,000 |
+| Channels | Web | All | All |
+| Branding | Powered by | White-label | White-label |
+| Support | Community | Priority | Dedicated |
 
-#### **3. Automation Assistant (automation)**
-- **ID**: `automation`
-- **Tools**: `process_run`, `cron_schedule`
-- **Permissions**: `process`, `cron`
-- **Usage**: "automate [task]" or "schedule [action]"
+### Security Features
+- JWT-based authentication
+- Role-based access control (RBAC)
+- Rate limiting per user tier
+- Input validation & sanitization
+- Security headers (Helmet, CSP, HSTS)
+- Row Level Security (RLS) in Supabase
 
-#### **4. Communication Hub (communication)**
-- **ID**: `communication`
-- **Tools**: `message_send`, `channel_list`
-- **Permissions**: `channels`
-- **Usage**: "send message to [channel]" or "list channels"
+### Performance Optimizations
+- **Bundle Splitting**: Webpack vendor chunks (340 kB)
+- **Image Optimization**: WebP/AVIF formats
+- **Caching**: Two-tier (LRU + Redis)
+- **Static Generation**: 15 pages prerendered
+- **Compression**: Gzip enabled
 
----
+## 🛠️ API Endpoints
 
-## 🌐 **Multi-Channel Integration**
+### Chat
+```bash
+POST /api/chat/:agentId
+Content-Type: application/json
 
-### **Supported Channels**
-1. **WhatsApp**: Business API integration with group support ✅
-2. **Telegram**: Bot API with command handling ✅
-3. **Slack**: Workspace integration with channel routing ✅
-4. **Discord**: Server and channel support (planned)
-5. **Signal**: Private messaging integration (planned)
-6. **iMessage**: Apple ecosystem integration (planned)
-7. **Microsoft Teams**: Enterprise integration (planned)
-8. **WebChat**: Custom web interface (included)
+{
+  "message": "Hello!",
+  "conversationId": "optional-id"
+}
+```
 
----
+### Agents
+```bash
+GET    /api/agents          # List agents
+POST   /api/agents          # Create agent
+GET    /api/agents/:id      # Get agent
+PUT    /api/agents/:id      # Update agent
+DELETE /api/agents/:id      # Delete agent
+```
 
-## 📊 **Monitoring & Analytics**
+### Analytics
+```bash
+GET /api/analytics/dashboard  # Dashboard stats
+```
 
-### **Dashboard Features**
-- **Overview Tab**: System stats, performance metrics, channel status
-- **Channels Tab**: Individual channel status and configuration
-- **Skills Tab**: Skill execution statistics and category breakdown
-- **Analytics Tab**: Advanced analytics and performance metrics
-- **Users Tab**: User management and activity monitoring
-- **Settings Tab**: System configuration and preferences
+### Webhooks
+```bash
+POST /api/webhooks/polar      # Polar.sh billing events
+```
 
-### **API Metrics**
-- **Real-time Stats**: System uptime, active sessions, memory usage
-- **Channel Analytics**: Message volume, response times, error rates
-- **Skill Analytics**: Execution counts, success rates, performance metrics
-- **Performance Metrics**: Response times, cache hit rates, system load
+## 📊 Monitoring
 
----
+### Health Checks
+- Dashboard: `GET /api/health`
+- Gateway: `GET /health`
 
-## 🤝 **Contributing**
+### System Stats
+```bash
+GET /api/stats
+```
 
-### **Development Workflow**
+Response:
+```json
+{
+  "status": "online",
+  "uptime": 3600,
+  "activeSessions": 42,
+  "memoryUsage": {
+    "rss": 128,
+    "heapUsed": 64
+  }
+}
+```
+
+## 🚢 Deployment
+
+### Environment Variables
+Required for production:
+- All database credentials
+- API keys (Anthropic, Polar)
+- JWT secret (strong, random)
+- Redis URL (optional but recommended)
+
+### Docker Production
+```bash
+# Production with optimized images
+docker-compose -f docker-compose.yml up -d
+```
+
+### Build Optimization
+The Next.js configuration includes:
+- Vendor bundle splitting
+- Image optimization
+- Static asset caching (1 year)
+- DNS prefetch hints
+
+## 🔧 Troubleshooting
+
+### Build Issues
+```bash
+# Clean and rebuild
+npm run clean
+npm install
+npm run build
+```
+
+### Database Connection
+- Verify Supabase credentials
+- Check RLS policies are enabled
+- Ensure schema is applied
+
+### Redis Cache
+- **Optional**: Falls back to in-memory LRU if Redis unavailable
+- No Docker required for local development - cache works out of the box
+- Redis only needed for production multi-instance deployments
+- Check REDIS_URL environment variable if using Redis
+
+## 📄 License
+
+MIT License - see LICENSE file for details
+
+## 🤝 Contributing
+
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
 5. Open a Pull Request
 
-### **Code Standards**
-- **TypeScript**: Strict type checking required
-- **Testing**: All new features must include tests
-- **Documentation**: Update README for new features
-- **Security**: Follow security best practices
-
 ---
 
-## 📄 **License**
-
-This project is licensed under the MIT License.
-
----
-
-## 🙏 **Acknowledgments**
-
-- **Clawdbot**: Inspiration for multi-channel architecture and skills platform
-- **Anthropic**: Claude AI model for intelligent agent capabilities
-- **Model Context Protocol**: Standard for tool integration
-- **Next.js**: Framework for the dashboard interface
-- **Express.js**: Backend framework for the gateway
-- **Redis**: High-performance caching and session storage
-- **Winston**: Structured logging for production environments
-
----
-
-## 📞 **Support & Community**
-
-- **Documentation**: Check this README and inline code comments
-- **Issues**: Report bugs and request features on GitHub
-- **Discussions**: Join community discussions for questions and ideas
-- **Security**: Report security vulnerabilities privately
-
----
-
-## 🚀 **Performance Benchmarks**
-
-### **System Performance**
-- **Response Time**: < 100ms average API response time
-- **Throughput**: 1000+ concurrent WebSocket connections
-- **Cache Hit Rate**: 85%+ cache hit ratio for frequently accessed data
-- **Memory Usage**: < 512MB for production deployment
-- **CPU Usage**: < 50% under normal load
-
-### **Scalability Metrics**
-- **Horizontal Scaling**: Redis clustering support
-- **Load Balancing**: WebSocket load balancing ready
-- **Database**: Optimized queries with indexing
-- **CDN Ready**: Static asset optimization
-
----
-
-**🌌 GravityOS - Enterprise-Grade Multi-Channel AI Platform!**
-
-*Built with ❤️ using modern web technologies and inspired by the best in AI agent frameworks.*
+Built with ❤️ using Next.js, Express, Supabase, and Anthropic Claude

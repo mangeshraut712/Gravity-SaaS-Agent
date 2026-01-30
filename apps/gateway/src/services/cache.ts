@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import Redis from 'ioredis';
+import { Redis } from 'ioredis';
 import { ApiResponse } from '@gravity/types';
 
 export interface CacheOptions {
@@ -23,7 +23,7 @@ export class CacheManager {
 
     constructor(redisUrl?: string) {
         this.redis = new Redis(redisUrl || process.env.REDIS_URL || 'redis://localhost:6379');
-        
+
         this.redis.on('error', (error: any) => {
             console.error('[Cache] Redis error:', error);
         });
@@ -43,12 +43,12 @@ export class CacheManager {
             timestamp: new Date(),
             compressed: compress
         });
-        
+
         if (compress) {
             // In production, use proper compression
             return Buffer.from(serialized).toString('base64');
         }
-        
+
         return serialized;
     }
 
@@ -66,17 +66,17 @@ export class CacheManager {
         try {
             const fullKey = this.getKey(key);
             const serialized = await this.redis.get(fullKey);
-            
+
             if (!serialized) {
                 return null;
             }
 
             const entry: CacheEntry<T> = JSON.parse(serialized);
-            
+
             // Check if expired
             const now = new Date();
             const expiryTime = new Date(entry.timestamp.getTime() + entry.ttl * 1000);
-            
+
             if (now > expiryTime) {
                 await this.redis.del(fullKey);
                 return null;
@@ -94,7 +94,7 @@ export class CacheManager {
         try {
             const fullKey = this.getKey(key);
             const ttl = options.ttl || this.defaultTTL;
-            
+
             const entry: CacheEntry<T> = {
                 data,
                 timestamp: new Date(),
@@ -104,11 +104,11 @@ export class CacheManager {
             };
 
             const serialized = JSON.stringify(entry);
-            
+
             if (options.tags && options.tags.length > 0) {
                 // Store tag mappings for invalidation
                 await Promise.all(
-                    options.tags.map(tag => 
+                    options.tags.map(tag =>
                         this.redis.sadd(`${this.keyPrefix}tag:${tag}`, fullKey)
                     )
                 );
@@ -135,12 +135,12 @@ export class CacheManager {
         try {
             const tagKey = `${this.keyPrefix}tag:${tag}`;
             const keys = await this.redis.smembers(tagKey);
-            
+
             if (keys.length > 0) {
                 await this.redis.del(...keys);
                 console.log(`[Cache] Invalidated tag ${tag}: ${keys.length} keys`);
             }
-            
+
             await this.redis.del(tagKey);
         } catch (error: any) {
             console.error(`[Cache] Tag invalidation error for ${tag}:`, error);
@@ -155,7 +155,7 @@ export class CacheManager {
         try {
             const pattern = `${this.keyPrefix}*`;
             const keys = await this.redis.keys(pattern);
-            
+
             if (keys.length > 0) {
                 await this.redis.del(...keys);
                 console.log(`[Cache] Cleared ${keys.length} keys`);
@@ -178,7 +178,7 @@ export class CacheManager {
                 ?.split(':')[1] || 'N/A';
 
             const keys = await this.redis.dbsize();
-            
+
             return {
                 totalKeys: keys,
                 memoryUsage,
@@ -198,19 +198,19 @@ export class CacheManager {
     static cacheMiddleware(options: CacheOptions = {}) {
         return async (req: Request, res: Response, next: Function) => {
             const cacheKey = `req:${req.method}:${req.originalUrl}:${JSON.stringify(req.query)}`;
-            
+
             // Try to get from cache first
             const cacheManager = new CacheManager();
             const cached = await cacheManager.get<ApiResponse>(cacheKey, options);
-            
+
             if (cached) {
                 res.set('X-Cache', 'HIT');
                 return res.json(cached);
             }
-            
+
             // Intercept response to cache it
             const originalJson = res.json;
-            res.json = function(data: any) {
+            res.json = function (data: any) {
                 // Only cache successful responses
                 if (data && data.success !== false) {
                     cacheManager.set(cacheKey, data, options).catch((error: any) => {
@@ -220,7 +220,7 @@ export class CacheManager {
                 res.set('X-Cache', 'MISS');
                 return originalJson.call(this, data);
             };
-            
+
             next();
         };
     }
@@ -229,21 +229,21 @@ export class CacheManager {
     static cache(options: CacheOptions = {}) {
         return function (target: any, propertyName: string, descriptor: PropertyDescriptor) {
             const method = descriptor.value;
-            
+
             descriptor.value = async function (...args: any[]) {
                 const cacheKey = `${target.constructor.name}:${propertyName}:${JSON.stringify(args)}`;
                 const cacheManager = new CacheManager();
-                
+
                 // Try to get from cache
                 const cached = await cacheManager.get(cacheKey, options);
                 if (cached !== null) {
                     return cached;
                 }
-                
+
                 // Execute method and cache result
                 const result = await method.apply(this, args);
                 await cacheManager.set(cacheKey, result, options);
-                
+
                 return result;
             };
         };
@@ -256,15 +256,15 @@ export const CacheHelpers = {
     cacheApiResponse: (req: Request, res: Response, next: Function) => {
         const cacheManager = new CacheManager();
         const cacheKey = `api:${req.method}:${req.originalUrl}:${JSON.stringify(req.query)}`;
-        
+
         cacheManager.get(cacheKey).then(cached => {
             if (cached) {
                 res.set('X-Cache', 'HIT');
                 return res.json(cached);
             }
-            
+
             const originalJson = res.json;
-            res.json = function(data: any) {
+            res.json = function (data: any) {
                 if (data && data.success !== false) {
                     cacheManager.set(cacheKey, data, { ttl: 300 }).catch((error: any) => {
                         console.error('[Cache] Failed to cache API response:', error);
@@ -273,7 +273,7 @@ export const CacheHelpers = {
                 res.set('X-Cache', 'MISS');
                 return originalJson.call(this, data);
             };
-            
+
             next();
         }).catch((error: any) => {
             console.error('[Cache] Error in middleware:', error);
@@ -288,17 +288,17 @@ export const CacheHelpers = {
         options: CacheOptions = {}
     ): Promise<T> => {
         const cacheManager = new CacheManager();
-        
+
         // Try to get from cache
         const cached = await cacheManager.get<T>(key, options);
         if (cached !== null) {
             return cached;
         }
-        
+
         // Execute query and cache result
         const result = await query();
         await cacheManager.set(key, result, options);
-        
+
         return result;
     },
 
@@ -306,7 +306,7 @@ export const CacheHelpers = {
     invalidatePattern: async (pattern: string): Promise<void> => {
         const cacheManager = new CacheManager();
         const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
-        
+
         try {
             const keys = await redis.keys(`gravityos:${pattern}*`);
             if (keys.length > 0) {

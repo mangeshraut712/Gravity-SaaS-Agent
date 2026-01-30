@@ -1,6 +1,6 @@
 export type UserTier = 'FREE' | 'PRO' | 'ENTERPRISE';
 
-export interface UserProfle {
+export interface UserProfile {
     id: string;
     email: string;
     tier: UserTier;
@@ -10,7 +10,7 @@ export interface UserProfle {
 }
 
 export class GravityDB {
-    private users: Map<string, UserProfle> = new Map();
+    private users: Map<string, UserProfile> = new Map();
 
     constructor() {
         // Seed some demo users
@@ -19,18 +19,18 @@ export class GravityDB {
         this.createUser('dashboard-user', 'dashboard@example.com', 'PRO');
     }
 
-    async getUser(id: string): Promise<UserProfle | undefined> {
+    async getUser(id: string): Promise<UserProfile | undefined> {
         return this.users.get(id);
     }
 
-    async createUser(id: string, email: string, tier: UserTier = 'FREE'): Promise<UserProfle> {
-        const limits = {
+    async createUser(id: string, email: string, tier: UserTier = 'FREE'): Promise<UserProfile> {
+        const limits: Record<UserTier, number> = {
             FREE: 50000,
             PRO: 1000000,
             ENTERPRISE: 10000000
         };
 
-        const user: UserProfle = {
+        const user: UserProfile = {
             id,
             email,
             tier,

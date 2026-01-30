@@ -6,7 +6,8 @@
   "types": "./dist/index.d.ts",
   "dependencies": {},
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "vitest run"
   },
   "devDependencies": {
     "typescript": "^5.0.0",

@@ -1,626 +1,403 @@
-'use client';
+import Link from 'next/link';
+import { ArrowRight, CheckCircle2, MessageCircle, ShieldCheck, Zap } from 'lucide-react';
+import React from 'react';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-    Zap, Activity, Cpu, Settings, ArrowRight, Command,
-    BarChart2, Globe, Shield, TrendingUp, Users, MessageSquare,
-    Menu, X, Moon, Sun, Bell, Wifi, WifiOff, Server
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-    AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
-    LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
-    CartesianGrid
-} from 'recharts';
+const stats = [
+  { label: 'Agents Deployed', value: '1,000+' },
+  { label: 'Revenue Processed', value: '$500K+' },
+  { label: 'Average Rating', value: '4.9★' },
+];
 
-interface Message { 
-    role: 'user' | 'assistant'; 
-    text: string; 
-    timestamp?: Date;
-    id?: string;
-}
+const features = [
+  {
+    title: 'Deploy in Minutes',
+    description: 'Choose a template, customize, and launch. No engineering team required.',
+    icon: Zap,
+  },
+  {
+    title: 'Built-in Monetization',
+    description: 'Powered by Polar.sh so you can start charging from day one.',
+    icon: CheckCircle2,
+  },
+  {
+    title: 'Scale Effortlessly',
+    description: 'Multi-tenant architecture that handles 1 or 10,000 conversations.',
+    icon: ShieldCheck,
+  },
+  {
+    title: 'WhatsApp Integration',
+    description: 'Connect your WhatsApp Business API and chat where your customers already are.',
+    icon: MessageCircle,
+  },
+];
 
-interface SystemStats {
-    status: 'online' | 'offline' | 'degraded';
-    uptime: number;
-    activeSessions: number;
-    mcpTools: number;
-    memoryUsage: Record<string, number>;
-    userTier: string;
-    usagePercent: number;
-    errorRate?: number;
-    responseTime?: number;
-    cpuUsage?: number;
-}
+const templates = [
+  {
+    name: 'Customer Service Bot',
+    badge: 'Most Popular',
+    description: 'Answer FAQs, resolve issues, and escalate to humans when needed.',
+    emoji: '🛎️',
+  },
+  {
+    name: 'Sales Qualifier',
+    badge: 'High Converting',
+    description: 'Qualify leads, book meetings, and push qualified leads into your CRM.',
+    emoji: '💼',
+  },
+  {
+    name: 'Appointment Scheduler',
+    description: 'Book appointments, send reminders, and sync with your calendar.',
+    emoji: '📅',
+  },
+  {
+    name: 'FAQ Assistant',
+    description: 'Answer common questions based on your existing knowledge base.',
+    emoji: '❓',
+  },
+  {
+    name: 'Lead Capture Bot',
+    badge: 'New',
+    description: 'Collect contact info, validate emails, and grow your mailing list.',
+    emoji: '🎯',
+  },
+];
 
-interface ChannelStatus {
-    type: string;
-    status: 'connected' | 'disconnected' | 'error';
-    messageCount?: number;
-    errorCount?: number;
-}
+const pricing = [
+  {
+    name: 'Free',
+    price: '$0',
+    period: '/month',
+    highlight: false,
+    description: 'Perfect to validate your first agent idea.',
+    features: [
+      '1 agent',
+      '100 messages / month',
+      'Web chat only',
+      '"Powered by Gravity" branding',
+      'Community support',
+    ],
+  },
+  {
+    name: 'Pro',
+    price: '$49',
+    period: '/month',
+    highlight: true,
+    description: 'For solopreneurs and agencies launching serious agent businesses.',
+    features: [
+      '5 agents',
+      '5,000 messages / month',
+      'WhatsApp + Web + API',
+      'Remove branding',
+      'Custom domain',
+      'Priority support',
+      '14-day free trial',
+    ],
+  },
+  {
+    name: 'Business',
+    price: '$199',
+    period: '/month',
+    highlight: false,
+    description: 'For teams running multiple clients or high-volume agents.',
+    features: [
+      'Unlimited agents',
+      '25,000 messages / month',
+      'White-label everything',
+      'Dedicated support',
+      'Custom integrations',
+      'SLA guarantee',
+    ],
+  },
+];
 
-interface SkillStats {
-    id: string;
-    name: string;
-    category: string;
-    executionCount: number;
-    successRate: number;
-    averageLatency: number;
-}
-
-const COLORS = ['#8B5CF6', '#10B981', '#F59E0B', '#EF4444', '#3B82F6', '#EC4899'];
-
-export default function GravityOSDashboard() {
-    const [darkMode, setDarkMode] = useState(false);
-    const [sidebarOpen, setSidebarOpen] = useState(true);
-    const [activeTab, setActiveTab] = useState('overview');
-    const [timeRange, setTimeRange] = useState('1h');
-    
-    const [performanceData, setPerformanceData] = useState(() =>
-        Array.from({ length: 20 }, (_, i) => ({
-            time: new Date(Date.now() - (19 - i) * 5 * 60 * 1000).toLocaleTimeString(),
-            tokens: Math.floor(Math.random() * 5000) + 2000,
-            requests: Math.floor(Math.random() * 100) + 50,
-            errors: Math.floor(Math.random() * 10),
-            cpu: Math.floor(Math.random() * 80) + 20,
-            memory: Math.floor(Math.random() * 70) + 30
-        }))
-    );
-    
-    const [messages, setMessages] = useState<Message[]>([
-        { role: 'assistant', text: "🌌 Welcome to GravityOS v2.0 - Enterprise AI Platform", id: '1' },
-        { role: 'assistant', text: "All systems operational. Enhanced monitoring and security active.", id: '2' }
-    ]);
-
-    const [stats, setStats] = useState<SystemStats>({
-        status: 'offline',
-        activeSessions: 0,
-        mcpTools: 0,
-        uptime: 0,
-        userTier: 'ENTERPRISE',
-        usagePercent: 0,
-        memoryUsage: { rss: 0, heapUsed: 0, heapTotal: 0 },
-        cpuUsage: 0
-    });
-
-    const [channels, setChannels] = useState<ChannelStatus[]>([
-        { type: 'WhatsApp', status: 'connected', messageCount: 1234, errorCount: 2 },
-        { type: 'Telegram', status: 'connected', messageCount: 892, errorCount: 0 },
-        { type: 'Slack', status: 'connected', messageCount: 567, errorCount: 1 }
-    ]);
-
-    const [skills, setSkills] = useState<SkillStats[]>([
-        { id: 'web-search', name: 'Web Search', category: 'utility', executionCount: 342, successRate: 98.5, averageLatency: 1.2 },
-        { id: 'file-manager', name: 'File Manager', category: 'productivity', executionCount: 156, successRate: 99.2, averageLatency: 0.8 },
-        { id: 'automation', name: 'Automation', category: 'automation', executionCount: 89, successRate: 96.6, averageLatency: 2.1 },
-        { id: 'communication', name: 'Communication', category: 'communication', executionCount: 234, successRate: 97.8, averageLatency: 1.5 }
-    ]);
-
-    const [inputText, setInputText] = useState('');
-    const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
-    const [selectedModel, setSelectedModel] = useState('openrouter/anthropic/claude-sonnet-4-5');
-    const [isLoading, setIsLoading] = useState(false);
-
-    // API Calls
-    const fetchSystemStats = useCallback(async () => {
-        try {
-            const response = await fetch('http://localhost:3004/api/stats');
-            if (response.ok) {
-                const data = await response.json();
-                if (data.success) {
-                    setStats(prev => ({ 
-                        ...prev, 
-                        ...data.data.system, 
-                        status: 'online'
-                    }));
-                    setConnectionStatus('connected');
-                }
-            }
-        } catch (error) {
-            setConnectionStatus('error');
-        }
-    }, []);
-
-    useEffect(() => {
-        fetchSystemStats();
-        const interval = setInterval(fetchSystemStats, 5000);
-        return () => clearInterval(interval);
-    }, [fetchSystemStats]);
-
-    // Real-time data simulation
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setPerformanceData(prev => {
-                const newData = [...prev.slice(1)];
-                const lastTokens = prev[prev.length - 1].tokens;
-                newData.push({
-                    time: new Date().toLocaleTimeString(),
-                    tokens: Math.max(1000, lastTokens + (Math.random() - 0.5) * 1000),
-                    requests: Math.floor(Math.random() * 100) + 50,
-                    errors: Math.floor(Math.random() * 5),
-                    cpu: Math.floor(Math.random() * 80) + 20,
-                    memory: Math.floor(Math.random() * 70) + 30
-                });
-                return newData;
-            });
-        }, 3000);
-        return () => clearInterval(interval);
-    }, []);
-
-    const handleSendMessage = async () => {
-        if (!inputText.trim() || isLoading) return;
-        
-        const userMessage: Message = { 
-            role: 'user', 
-            text: inputText, 
-            timestamp: new Date(),
-            id: Date.now().toString()
-        };
-        
-        setMessages(prev => [...prev, userMessage]);
-        setInputText('');
-        setIsLoading(true);
-
-        try {
-            const response = await fetch('http://localhost:3004/api/chat/completions', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    messages: [{ role: 'user', content: inputText }],
-                    model: selectedModel,
-                    maxTokens: 1000
-                })
-            });
-
-            const data = await response.json();
-            
-            if (data.success) {
-                const assistantMessage: Message = {
-                    role: 'assistant',
-                    text: data.data.content,
-                    timestamp: new Date(),
-                    id: (Date.now() + 1).toString()
-                };
-                setMessages(prev => [...prev, assistantMessage]);
-            } else {
-                throw new Error(data.error || 'Failed to process message');
-            }
-        } catch (error) {
-            const errorMessage: Message = {
-                role: 'assistant',
-                text: `❌ Error: ${error instanceof Error ? error.message : 'Failed to process request'}`,
-                timestamp: new Date(),
-                id: (Date.now() + 1).toString()
-            };
-            setMessages(prev => [...prev, errorMessage]);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'online': case 'connected': return '#10B981';
-            case 'offline': case 'disconnected': return '#EF4444';
-            case 'degraded': case 'error': return '#F59E0B';
-            default: return '#6B7280';
-        }
-    };
-
-    const formatUptime = (seconds: number) => {
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        return `${hours}h ${minutes}m`;
-    };
-
-    const totalMessages = useMemo(() => 
-        channels.reduce((sum, ch) => sum + (ch.messageCount || 0), 0), [channels]);
-
-    return (
-        <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
-            <header className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-b px-6 py-4`}>
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                        <button
-                            onClick={() => setSidebarOpen(!sidebarOpen)}
-                            className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
-                        >
-                            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
-                        </button>
-                        <div className="flex items-center space-x-3">
-                            <div className="p-2 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg">
-                                <Zap size={24} className="text-white" />
-                            </div>
-                            <div>
-                                <h1 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                                    GravityOS Dashboard
-                                </h1>
-                                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                                    Enterprise AI Platform
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-2">
-                            {connectionStatus === 'connected' ? (
-                                <Wifi className="text-green-500" size={20} />
-                            ) : (
-                                <WifiOff className="text-red-500" size={20} />
-                            )}
-                            <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                                {connectionStatus === 'connected' ? 'Connected' : 'Disconnected'}
-                            </span>
-                        </div>
-                        
-                        <button
-                            onClick={() => setDarkMode(!darkMode)}
-                            className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
-                        >
-                            {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-                        </button>
-                    </div>
-                </div>
-            </header>
-
-            <div className="flex">
-                <aside className={`${sidebarOpen ? 'w-64' : 'w-0'} transition-all duration-300 ${darkMode ? 'bg-gray-800' : 'bg-white'} border-r ${darkMode ? 'border-gray-700' : 'border-gray-200'} overflow-hidden`}>
-                    <nav className="p-4 space-y-2">
-                        {[
-                            { id: 'overview', label: 'Overview', icon: BarChart2 },
-                            { id: 'channels', label: 'Channels', icon: Globe },
-                            { id: 'skills', label: 'Skills', icon: Command },
-                            { id: 'analytics', label: 'Analytics', icon: TrendingUp },
-                            { id: 'users', label: 'Users', icon: Users },
-                            { id: 'settings', label: 'Settings', icon: Settings }
-                        ].map(tab => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                                    activeTab === tab.id
-                                        ? 'bg-purple-600 text-white'
-                                        : darkMode ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-700'
-                                }`}
-                            >
-                                <tab.icon size={20} />
-                                <span>{tab.label}</span>
-                            </button>
-                        ))}
-                    </nav>
-                </aside>
-
-                <main className="flex-1 p-6">
-                    {activeTab === 'overview' && (
-                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                <motion.div whileHover={{ scale: 1.02 }} className={`p-6 rounded-xl ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className={`p-3 rounded-lg ${darkMode ? 'bg-green-900' : 'bg-green-100'}`}>
-                                            <Server className="text-green-600" size={24} />
-                                        </div>
-                                        <span className={`text-sm font-medium ${getStatusColor(stats.status)}`}>
-                                            {stats.status.toUpperCase()}
-                                        </span>
-                                    </div>
-                                    <h3 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                                        {formatUptime(stats.uptime)}
-                                    </h3>
-                                    <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Uptime</p>
-                                </motion.div>
-
-                                <motion.div whileHover={{ scale: 1.02 }} className={`p-6 rounded-xl ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className={`p-3 rounded-lg ${darkMode ? 'bg-blue-900' : 'bg-blue-100'}`}>
-                                            <Users className="text-blue-600" size={24} />
-                                        </div>
-                                        <TrendingUp className="text-green-500" size={20} />
-                                    </div>
-                                    <h3 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                                        {stats.activeSessions}
-                                    </h3>
-                                    <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Active Sessions</p>
-                                </motion.div>
-
-                                <motion.div whileHover={{ scale: 1.02 }} className={`p-6 rounded-xl ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className={`p-3 rounded-lg ${darkMode ? 'bg-purple-900' : 'bg-purple-100'}`}>
-                                            <MessageSquare className="text-purple-600" size={24} />
-                                        </div>
-                                        <span className="text-xs text-green-500">+12%</span>
-                                    </div>
-                                    <h3 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                                        {totalMessages.toLocaleString()}
-                                    </h3>
-                                    <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Total Messages</p>
-                                </motion.div>
-
-                                <motion.div whileHover={{ scale: 1.02 }} className={`p-6 rounded-xl ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className={`p-3 rounded-lg ${darkMode ? 'bg-orange-900' : 'bg-orange-100'}`}>
-                                            <Cpu className="text-orange-600" size={24} />
-                                        </div>
-                                        <span className={`text-sm font-medium ${stats.usagePercent > 80 ? 'text-red-500' : 'text-green-500'}`}>
-                                            {stats.usagePercent.toFixed(1)}%
-                                        </span>
-                                    </div>
-                                    <h3 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                                        {stats.userTier}
-                                    </h3>
-                                    <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Usage Plan</p>
-                                </motion.div>
-                            </div>
-
-                            <div className={`p-6 rounded-xl ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
-                                <div className="flex items-center justify-between mb-6">
-                                    <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                                        Performance Metrics
-                                    </h3>
-                                    <select 
-                                        value={timeRange}
-                                        onChange={(e) => setTimeRange(e.target.value)}
-                                        className={`px-3 py-2 rounded-lg ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'}`}
-                                    >
-                                        <option value="1h">Last Hour</option>
-                                        <option value="6h">Last 6 Hours</option>
-                                        <option value="24h">Last 24 Hours</option>
-                                        <option value="7d">Last 7 Days</option>
-                                    </select>
-                                </div>
-                                
-                                <div className="h-80">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <AreaChart data={performanceData}>
-                                            <defs>
-                                                <linearGradient id="colorTokens" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
-                                                    <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0}/>
-                                                </linearGradient>
-                                            </defs>
-                                            <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#374151' : '#E5E7EB'} />
-                                            <XAxis dataKey="time" stroke={darkMode ? '#9CA3AF' : '#6B7280'} />
-                                            <YAxis stroke={darkMode ? '#9CA3AF' : '#6B7280'} />
-                                            <Tooltip 
-                                                contentStyle={{ 
-                                                    backgroundColor: darkMode ? '#1F2937' : '#FFFFFF',
-                                                    border: 'none',
-                                                    borderRadius: '8px',
-                                                    color: darkMode ? '#F3F4F6' : '#111827'
-                                                }} 
-                                            />
-                                            <Area
-                                                type="monotone"
-                                                dataKey="tokens"
-                                                stroke="#8B5CF6"
-                                                fillOpacity={1}
-                                                fill="url(#colorTokens)"
-                                                strokeWidth={2}
-                                            />
-                                            <Line
-                                                type="monotone"
-                                                dataKey="requests"
-                                                stroke="#10B981"
-                                                strokeWidth={2}
-                                                dot={false}
-                                            />
-                                        </AreaChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-
-                    {activeTab === 'channels' && (
-                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                            <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                                Channel Status
-                            </h2>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                {channels.map((channel, index) => (
-                                    <motion.div
-                                        key={channel.type}
-                                        initial={{ opacity: 0, scale: 0.9 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ delay: index * 0.1 }}
-                                        className={`p-6 rounded-xl ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}
-                                    >
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                                                {channel.type}
-                                            </h3>
-                                            <div className={`w-3 h-3 rounded-full ${getStatusColor(channel.status)}`}></div>
-                                        </div>
-                                        
-                                        <div className="space-y-3">
-                                            <div className="flex justify-between">
-                                                <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Status</span>
-                                                <span className={`text-sm font-medium ${getStatusColor(channel.status)}`}>
-                                                    {channel.status.toUpperCase()}
-                                                </span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Messages</span>
-                                                <span className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                                                    {channel.messageCount?.toLocaleString()}
-                                                </span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Errors</span>
-                                                <span className={`text-sm font-medium text-red-500`}>
-                                                    {channel.errorCount}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        
-                                        <button className={`w-full mt-4 px-4 py-2 rounded-lg ${
-                                            darkMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-500 hover:bg-purple-600'
-                                        } text-white transition-colors`}>
-                                            Configure
-                                        </button>
-                                    </motion.div>
-                                ))}
-                            </div>
-                        </motion.div>
-                    )}
-
-                    {activeTab === 'skills' && (
-                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                            <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                                Skills Platform
-                            </h2>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {skills.map((skill, index) => (
-                                    <motion.div
-                                        key={skill.id}
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: index * 0.1 }}
-                                        className={`p-6 rounded-xl ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}
-                                    >
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                                                {skill.name}
-                                            </h3>
-                                            <span className={`px-2 py-1 text-xs rounded-full ${
-                                                skill.category === 'utility' ? 'bg-blue-100 text-blue-800' :
-                                                skill.category === 'productivity' ? 'bg-green-100 text-green-800' :
-                                                skill.category === 'automation' ? 'bg-purple-100 text-purple-800' :
-                                                'bg-orange-100 text-orange-800'
-                                            }`}>
-                                                {skill.category}
-                                            </span>
-                                        </div>
-                                        
-                                        <div className="space-y-3">
-                                            <div className="flex justify-between">
-                                                <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Executions</span>
-                                                <span className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                                                    {skill.executionCount}
-                                                </span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Success Rate</span>
-                                                <span className={`text-sm font-medium text-green-500`}>
-                                                    {skill.successRate.toFixed(1)}%
-                                                </span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Avg Latency</span>
-                                                <span className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                                                    {skill.averageLatency}s
-                                                </span>
-                                            </div>
-                                        </div>
-                                        
-                                        <div className="mt-4 w-full bg-gray-200 rounded-full h-2">
-                                            <div 
-                                                className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                                                style={{ width: `${skill.successRate}%` }}
-                                            ></div>
-                                        </div>
-                                    </motion.div>
-                                ))}
-                            </div>
-                        </motion.div>
-                    )}
-                </main>
-
-                <aside className={`w-96 ${darkMode ? 'bg-gray-800' : 'bg-white'} border-l ${darkMode ? 'border-gray-700' : 'border-gray-200'} flex flex-col`}>
-                    <div className={`p-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                        <div className="flex items-center justify-between mb-3">
-                            <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                                AI Assistant
-                            </h3>
-                            <select
-                                value={selectedModel}
-                                onChange={(e) => setSelectedModel(e.target.value)}
-                                className={`px-3 py-1 text-sm rounded-lg ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'}`}
-                            >
-                                <option value="openrouter/anthropic/claude-sonnet-4-5">Claude Sonnet 4.5</option>
-                                <option value="openrouter/anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
-                                <option value="openrouter/openai/gpt-4">GPT-4</option>
-                            </select>
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                            <div className={`w-2 h-2 rounded-full ${connectionStatus === 'connected' ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                            <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                                {connectionStatus === 'connected' ? 'Connected' : 'Disconnected'}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                        <AnimatePresence>
-                            {messages.map((message) => (
-                                <motion.div
-                                    key={message.id}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                                >
-                                    <div
-                                        className={`max-w-[80%] px-4 py-3 rounded-2xl ${
-                                            message.role === 'user'
-                                                ? 'bg-purple-600 text-white'
-                                                : darkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'
-                                        }`}
-                                    >
-                                        <p className="text-sm whitespace-pre-wrap">{message.text}</p>
-                                        {message.timestamp && (
-                                            <p className={`text-xs mt-1 ${
-                                                message.role === 'user' ? 'text-purple-200' : darkMode ? 'text-gray-400' : 'text-gray-500'
-                                            }`}>
-                                                {message.timestamp.toLocaleTimeString()}
-                                            </p>
-                                        )}
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
-                        
-                        {isLoading && (
-                            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-start">
-                                <div className={`px-4 py-3 rounded-2xl ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                                    <div className="flex space-x-1">
-                                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        )}
-                    </div>
-
-                    <div className={`p-4 border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                        <div className="flex space-x-2">
-                            <input
-                                type="text"
-                                value={inputText}
-                                onChange={(e) => setInputText(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                                placeholder="Type your message..."
-                                disabled={connectionStatus !== 'connected' || isLoading}
-                                className={`flex-1 px-4 py-3 rounded-lg ${
-                                    darkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'
-                                } focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50`}
-                            />
-                            <button
-                                onClick={handleSendMessage}
-                                disabled={connectionStatus !== 'connected' || isLoading || !inputText.trim()}
-                                className={`px-4 py-3 rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors`}
-                            >
-                                <ArrowRight size={20} />
-                            </button>
-                        </div>
-                    </div>
-                </aside>
+export default function LandingPage() {
+  return (
+    <div className="min-h-screen bg-white">
+      {/* Header/Navbar */}
+      <header className="fixed top-0 z-50 w-full border-b border-gray-100 bg-white/80 backdrop-blur-md">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+          <Link href="/" className="flex items-center gap-2 transition-transform hover:scale-105">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-500 shadow-lg shadow-violet-500/20">
+              <Zap className="h-6 w-6 text-white" />
             </div>
+            <span className="text-xl font-bold tracking-tight text-gray-900">
+              <span className="text-gradient-rainbow">Gravity</span>
+            </span>
+          </Link>
+
+          <nav className="hidden items-center gap-8 text-sm font-medium text-gray-500 md:flex">
+            <Link href="#features" className="transition-colors hover:text-violet-600">Features</Link>
+            <Link href="#templates" className="transition-colors hover:text-violet-600">Templates</Link>
+            <Link href="#pricing" className="transition-colors hover:text-violet-600">Pricing</Link>
+            <Link href="#how-it-works" className="transition-colors hover:text-violet-600">How it works</Link>
+          </nav>
+
+          <div className="flex items-center gap-4">
+            <Link href="/login" className="hidden text-sm font-medium text-gray-500 transition-colors hover:text-gray-900 md:block">
+              Log in
+            </Link>
+            <Link href="/signup" className="btn-primary flex items-center gap-2 !px-5 !py-2.5 text-sm">
+              Start free trial
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
         </div>
-    );
+      </header>
+
+      {/* Hero Section */}
+      <section className="overflow-hidden px-6 pt-32 pb-20 md:pt-48 md:pb-32">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
+            <div className="animate-slide-up">
+              <div className="inline-flex items-center gap-2 rounded-full bg-violet-100 px-4 py-1.5 text-xs font-semibold text-violet-600 ring-1 ring-violet-200">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-75"></span>
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-violet-500"></span>
+                </span>
+                Transform your business with AI
+              </div>
+
+              <h1 className="mt-8 text-5xl font-extrabold tracking-tight text-gray-900 sm:text-6xl lg:text-7xl">
+                Launch your AI agent business{" "}
+                <span className="text-gradient-rainbow">in under 5 minutes.</span>
+              </h1>
+
+              <p className="mt-8 max-w-2xl text-lg text-gray-500 leading-relaxed">
+                Gravity is the production-ready platform for agencies and creators
+                to deploy high-performance AI agents to WhatsApp, Web, and API
+                without writing a single line of code.
+              </p>
+
+              <div className="mt-10 flex flex-wrap items-center gap-4">
+                <Link href="/signup" className="btn-primary !px-8 !py-4 text-base">
+                  Get Started Free
+                </Link>
+                <Link href="#how-it-works" className="btn-secondary !px-8 !py-4 text-base">
+                  Watch Demo
+                </Link>
+              </div>
+
+              <div className="mt-12 grid grid-cols-3 gap-8 border-t border-gray-100 pt-8">
+                {stats.map((s) => (
+                  <div key={s.label}>
+                    <p className="text-2xl font-bold text-gradient-violet-indigo">{s.value}</p>
+                    <p className="text-sm text-gray-500">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Hero Mockup */}
+            <div className="relative animate-scale-in">
+              <div className="card relative p-2 shadow-2xl">
+                <div className="rounded-2xl bg-gray-50 p-6">
+                  <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-500" />
+                      <div>
+                        <p className="text-sm font-bold text-gray-900">Smart Concierge</p>
+                        <p className="text-[11px] text-teal-500 flex items-center gap-1">
+                          <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
+                          Online • WhatsApp Connected
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 space-y-4">
+                    <div className="flex justify-start">
+                      <div className="max-w-[80%] rounded-2xl bg-white border border-gray-100 px-4 py-3 text-sm text-gray-700">
+                        Hi! I need to book a consultation for next Tuesday.
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <div className="max-w-[80%] rounded-2xl bg-gradient-to-r from-violet-500 to-indigo-500 px-4 py-3 text-sm text-white shadow-lg shadow-violet-500/20">
+                        I can help with that! We have 10 AM and 2 PM available. Which works best?
+                      </div>
+                    </div>
+                    <div className="flex justify-start">
+                      <div className="max-w-[80%] rounded-2xl bg-white border border-gray-100 px-4 py-3 text-sm text-gray-700">
+                        10 AM sounds perfect.
+                      </div>
+                    </div>
+                    <div className="animate-pulse flex justify-end">
+                      <div className="max-w-[80%] rounded-2xl bg-gray-100 border border-gray-200 px-4 py-3 text-sm text-gray-500 italic">
+                        Agent is confirming...
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" className="mx-auto max-w-7xl px-6 py-24">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-gray-900 sm:text-5xl">
+            Everything you need for <span className="text-gradient-rainbow">AI Automation</span>
+          </h2>
+          <p className="mt-4 text-gray-500 text-lg">
+            Powerful tools to build, deploy, and scale your AI workforce.
+          </p>
+        </div>
+
+        <div className="mt-20 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+          {features.map((f, idx) => (
+            <div key={f.title} className={`feature-card p-8 stagger-${(idx % 4) + 1} animate-slide-up`}>
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100 text-violet-600 ring-1 ring-violet-200">
+                <f.icon className="h-6 w-6" />
+              </div>
+              <h3 className="mt-6 text-xl font-bold text-gray-900">{f.title}</h3>
+              <p className="mt-4 text-gray-500 leading-relaxed text-sm">{f.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Templates Section */}
+      <section id="templates" className="bg-gray-50 py-24">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="max-w-2xl">
+              <h2 className="text-3xl font-bold text-gray-900 sm:text-5xl">
+                Start with <span className="text-gradient-rainbow">Proven Templates</span>
+              </h2>
+              <p className="mt-4 text-gray-500 text-lg">
+                Don't start from scratch. Use our battle-tested templates to launch faster.
+              </p>
+            </div>
+            <Link href="/templates" className="btn-secondary whitespace-nowrap">
+              Explore All <ArrowRight className="ml-2 h-4 w-4 inline" />
+            </Link>
+          </div>
+
+          <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {templates.slice(0, 3).map((t) => (
+              <div key={t.name} className="card group overflow-hidden">
+                <div className="p-8">
+                  <div className="flex items-start justify-between">
+                    <span className="text-4xl">{t.emoji}</span>
+                    {t.badge && (
+                      <span className="badge badge-violet">{t.badge}</span>
+                    )}
+                  </div>
+                  <h3 className="mt-6 text-2xl font-bold text-gray-900">{t.name}</h3>
+                  <p className="mt-4 text-gray-500 text-sm leading-relaxed">{t.description}</p>
+                </div>
+                <div className="border-t border-gray-100 p-6 bg-gray-50 transition-colors group-hover:bg-gray-100">
+                  <Link href="/signup" className="flex items-center justify-center gap-2 text-sm font-bold text-gray-900">
+                    Deploy Now <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="mx-auto max-w-7xl px-6 py-24">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl font-bold text-gray-900 sm:text-5xl">
+            Simple, <span className="text-gradient-rainbow">Transparent</span> Pricing
+          </h2>
+          <p className="mt-4 text-gray-500 text-lg">
+            Scales with your business. No hidden fees.
+          </p>
+        </div>
+
+        <div className="grid gap-8 lg:grid-cols-3">
+          {pricing.map((tier) => (
+            <div key={tier.name} className={`relative flex flex-col p-8 rounded-3xl ${tier.highlight
+              ? 'bg-gradient-to-b from-violet-50 to-indigo-50 ring-2 ring-violet-200 shadow-xl'
+              : 'card'
+              }`}>
+              {tier.highlight && (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 text-[10px] font-bold uppercase tracking-wider text-white">
+                  Best Value
+                </div>
+              )}
+              <h3 className="text-xl font-bold text-gray-900">{tier.name}</h3>
+              <p className="mt-2 text-sm text-gray-500">{tier.description}</p>
+
+              <div className="mt-8 flex items-baseline gap-1">
+                <span className="text-5xl font-extrabold text-gray-900">{tier.price}</span>
+                <span className="text-gray-500">{tier.period}</span>
+              </div>
+
+              <ul className="mt-10 space-y-4 flex-1">
+                {tier.features.map((f) => (
+                  <li key={f} className="flex items-center gap-3 text-sm text-gray-600">
+                    <CheckCircle2 className="h-5 w-5 text-teal-500 flex-shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              <Link
+                href="/signup"
+                className={`mt-12 w-full text-center py-4 rounded-xl font-bold transition-all ${tier.highlight
+                  ? 'bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:shadow-xl hover:shadow-violet-500/40'
+                  : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                  }`}
+              >
+                {tier.name === 'Free' ? 'Get Started' : 'Start Trial'}
+              </Link>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="mx-auto max-w-7xl px-6 py-24">
+        <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-r from-violet-100 via-indigo-100 to-teal-100 p-12 md:p-24 text-center border border-gray-100">
+          <h2 className="text-4xl font-bold text-gray-900 sm:text-6xl max-w-4xl mx-auto leading-tight">
+            Ready to build your <span className="text-gradient-rainbow">AI Empire?</span>
+          </h2>
+          <p className="mt-8 text-xl text-gray-600 max-w-2xl mx-auto">
+            Join 1,000+ businesses automating their growth with Gravity.
+            No credit card required to start.
+          </p>
+          <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6">
+            <Link href="/signup" className="btn-primary !px-10 !py-5 text-lg w-full sm:w-auto">
+              Create Free Account
+            </Link>
+            <div className="flex -space-x-3 overflow-hidden">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="inline-block h-10 w-10 rounded-full ring-2 ring-white bg-gradient-to-br from-violet-400 to-indigo-400" />
+              ))}
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 ring-2 ring-white text-[10px] font-bold text-gray-700">
+                +1k
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-100 py-12">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="flex items-center gap-2">
+              <Zap className="h-6 w-6 text-violet-500" />
+              <span className="text-xl font-bold text-gray-900 tracking-tight"><span className="text-gradient-violet-indigo">Gravity</span></span>
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-10 text-sm font-medium text-gray-500">
+              <Link href="#" className="hover:text-violet-600 transition-colors">Twitter</Link>
+              <Link href="#" className="hover:text-violet-600 transition-colors">GitHub</Link>
+              <Link href="#" className="hover:text-violet-600 transition-colors">Discord</Link>
+              <Link href="#" className="hover:text-violet-600 transition-colors">Contact</Link>
+            </div>
+          </div>
+          <div className="mt-12 pt-8 border-t border-gray-100 text-center text-sm text-gray-400">
+            © 2026 Gravity AI Inc. All rights reserved. Built with ❤️ for the AI community.
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
 }

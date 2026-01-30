@@ -1,0 +1,8 @@
+{
+    "css.lint.unknownAtRules": "ignore",
+    "github-actions.workflows.validate": false,
+    "yaml.validation": false,
+    "yaml.schemas": {
+        "https://json.schemastore.org/github-workflow.json": "file:///Users/mangeshraut/Downloads/Gravity-SaaS-Agent/.github/workflows/*.yml"
+    }
+}
