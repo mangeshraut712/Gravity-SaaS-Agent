@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import React from 'react';
 import { Sparkles, Check, Zap, ArrowRight, Shield, Globe, MessageSquare, CreditCard } from 'lucide-react';
 import { supabaseClient } from '../../lib/supabaseClient';

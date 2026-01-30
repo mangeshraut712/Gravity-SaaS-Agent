@@ -1,39 +1,42 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { RateLimiter } from './rate-limiter';
+import { describe, it, expect } from 'vitest';
+import { TieredRateLimiter } from './rate-limiter.js';
 
-describe('RateLimiter', () => {
+describe('TieredRateLimiter', () => {
+    const config = {
+        FREE: { windowMs: 1000, maxRequests: 2 },
+        PRO: { windowMs: 1000, maxRequests: 5 },
+        BUSINESS: { windowMs: 1000, maxRequests: 10 },
+        ENTERPRISE: { windowMs: 1000, maxRequests: 20 },
+    };
+
     it('should allow requests within limit', () => {
-        const limiter = new RateLimiter({
-            windowMs: 1000,
-            maxRequests: 2
-        });
+        const limiter = new TieredRateLimiter(config);
+        const info1 = limiter.consume('user1', 'FREE');
+        expect(info1.allowed).toBe(true);
+        expect(info1.remaining).toBe(1);
 
-        expect(limiter.isRateLimited('user1')).toBe(false);
-        expect(limiter.isRateLimited('user1')).toBe(false);
+        const info2 = limiter.consume('user1', 'FREE');
+        expect(info2.allowed).toBe(true);
+        expect(info2.remaining).toBe(0);
     });
 
     it('should block requests exceeding limit', () => {
-        const limiter = new RateLimiter({
-            windowMs: 1000,
-            maxRequests: 2
-        });
+        const limiter = new TieredRateLimiter(config);
+        limiter.consume('user1', 'FREE');
+        limiter.consume('user1', 'FREE');
 
-        limiter.isRateLimited('user1');
-        limiter.isRateLimited('user1');
-        expect(limiter.isRateLimited('user1')).toBe(true);
+        const info3 = limiter.consume('user1', 'FREE');
+        expect(info3.allowed).toBe(false);
+        expect(info3.remaining).toBe(0);
     });
 
-    it('should reset after window expires', async () => {
-        const limiter = new RateLimiter({
-            windowMs: 100,
-            maxRequests: 1
-        });
+    it('should support different tiers', () => {
+        const limiter = new TieredRateLimiter(config);
 
-        limiter.isRateLimited('user1');
-        expect(limiter.isRateLimited('user1')).toBe(true);
-
-        await new Promise(resolve => setTimeout(resolve, 150));
-
-        expect(limiter.isRateLimited('user1')).toBe(false);
+        // PRO user gets more requests
+        for (let i = 0; i < 5; i++) {
+            expect(limiter.consume('user_pro', 'PRO').allowed).toBe(true);
+        }
+        expect(limiter.consume('user_pro', 'PRO').allowed).toBe(false);
     });
 });

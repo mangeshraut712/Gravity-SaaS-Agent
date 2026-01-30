@@ -27,6 +27,7 @@
   "devDependencies": {
     "@types/node": "^20.19.30",
     "concurrently": "^9.2.1",
+    "eslint": "^8.57.0",
     "prettier": "^3.0.0",
     "typescript": "^5.0.0",
     "vitest": "^1.6.1"

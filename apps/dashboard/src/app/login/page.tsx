@@ -63,7 +63,7 @@ export default function LoginPage() {
             </div>
 
             <div className="feature-card p-5">
-              <p className="text-sm font-semibold text-gray-900">Today's focus</p>
+              <p className="text-sm font-semibold text-gray-900">Today&apos;s focus</p>
               <p className="mt-2 text-sm text-gray-500">
                 24 active agents · 3k conversations · 97% resolution rate
               </p>
@@ -219,7 +219,7 @@ export default function LoginPage() {
               </div>
 
               <p className="mt-6 text-center text-sm text-gray-500">
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <Link
                   href="/signup"
                   className="font-semibold text-gray-900 hover:text-violet-600 transition-colors"

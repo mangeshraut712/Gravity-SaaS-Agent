@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from "react";
+export const dynamic = 'force-dynamic';
+
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
@@ -38,16 +40,18 @@ const templates = [
   { id: "appointment_scheduler", name: "Appointment Scheduler" },
   { id: "faq_assistant", name: "FAQ Assistant" },
   { id: "lead_capture", name: "Lead Capture Bot" },
-];
+] as const;
 
 const personalities = [
   { id: "friendly", name: "Friendly & Casual", emoji: "😊", description: "Warm, approachable, and conversational" },
   { id: "professional", name: "Professional & Formal", emoji: "💼", description: "Polished, business-appropriate tone" },
   { id: "technical", name: "Technical & Precise", emoji: "🤖", description: "Accurate, detailed, and specific" },
   { id: "fun", name: "Enthusiastic & Fun", emoji: "🎉", description: "Energetic, playful, and engaging" },
-];
+] as const;
 
-export default function NewAgentPage() {
+type PersonalityType = "friendly" | "professional" | "technical" | "fun";
+
+function NewAgentForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
@@ -59,8 +63,8 @@ export default function NewAgentPage() {
   // Form state
   const [formData, setFormData] = useState({
     name: "",
-    template_type: searchParams.get("template") || "customer_service",
-    personality: "friendly" as "friendly" | "professional" | "technical" | "fun",
+    template_type: (searchParams.get("template") || "customer_service") as string,
+    personality: "friendly" as PersonalityType,
     custom_instructions: "",
     knowledge_text: "",
     channels: {
@@ -75,15 +79,6 @@ export default function NewAgentPage() {
 
   const updateFormData = (updates: Partial<typeof formData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
-  };
-
-  const canProceed = () => {
-    switch (currentStep) {
-      case 1:
-        return formData.name.trim().length > 0;
-      default:
-        return true;
-    }
   };
 
   const handleDeploy = async () => {
@@ -101,334 +96,155 @@ export default function NewAgentPage() {
         knowledge_base: formData.knowledge_text ? [{ type: "text", content: formData.knowledge_text }] : [],
         channels: formData.channels,
         status: "active",
-        monetization_enabled: formData.monetization_enabled,
-        price_per_month: formData.price_per_month ? parseFloat(formData.price_per_month) : null,
-        free_trial_days: formData.free_trial_days,
       });
 
       if (error) throw error;
 
       router.push("/agents");
-    } catch (error: any) {
-      setError(error.message || "Failed to deploy agent");
+    } catch (err: any) {
+      setError(err.message || "Failed to deploy agent");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="p-6 lg:p-10 max-w-4xl mx-auto space-y-8 animate-slide-up">
+    <div className="p-6 lg:p-10 max-w-4xl mx-auto space-y-8 animate-slide-up bg-white min-h-screen">
       {/* Header */}
       <div className="flex flex-col gap-4">
-        <Button
-          variant="ghost"
-          onClick={() => router.back()}
-          className="w-fit -ml-4"
-        >
+        <Button variant="ghost" onClick={() => router.back()} className="w-fit -ml-4 hover:bg-gray-100">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Create New Agent</h1>
-          <p className="text-gray-400 mt-1">
-            Follow the steps to build and deploy your custom AI agent.
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Create New Agent</h1>
+          <p className="text-gray-500 mt-1">Deploy an expert agent in minutes.</p>
         </div>
       </div>
 
-      {/* Progress steps */}
-      <div className="card p-6">
-        <div className="flex items-center justify-between">
-          {steps.map((step, index) => (
-            <div key={step.id} className="flex items-center">
-              <div
-                className={cn(
-                  "flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all shadow-sm",
-                  currentStep >= step.id
-                    ? "border-purple-500 bg-purple-500 text-white shadow-purple-500/20"
-                    : "border-white/10 bg-white/5 text-gray-500"
-                )}
-              >
-                <step.icon className="h-5 w-5" />
-              </div>
-              {index < steps.length - 1 && (
-                <div
-                  className={cn(
-                    "h-0.5 w-12 sm:w-20 transition-all",
-                    currentStep > step.id ? "bg-purple-500" : "bg-white/10"
-                  )}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-        <div className="flex justify-between mt-3 px-1 text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">
-          {steps.map((step) => (
-            <span key={step.id} className={cn(
-              "w-10 text-center transition-colors",
-              currentStep >= step.id ? "text-purple-400" : ""
+      {/* Progress */}
+      <div className="flex items-center justify-between card p-6 border-gray-100">
+        {steps.map((step, idx) => (
+          <div key={step.id} className="flex items-center">
+            <div className={cn(
+              "h-10 w-10 rounded-full flex items-center justify-center border-2 transition-all",
+              currentStep >= step.id ? "bg-violet-600 border-violet-600 text-white" : "border-gray-100 bg-gray-50 text-gray-400"
             )}>
-              {step.name}
-            </span>
-          ))}
-        </div>
+              <step.icon className="h-5 w-5" />
+            </div>
+            {idx < steps.length - 1 && <div className={cn("h-0.5 w-12 sm:w-20 transition-all", currentStep > step.id ? "bg-violet-600" : "bg-gray-100")} />}
+          </div>
+        ))}
       </div>
 
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-400 text-sm">
-          {error}
-        </div>
-      )}
+      {error && <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm">{error}</div>}
 
-      {/* Step content */}
-      <div className="card p-8 min-h-[400px]">
-        {/* Step 1: Basic Setup */}
+      <div className="card p-8 min-h-[400px] border-gray-100 shadow-sm relative overflow-hidden">
         {currentStep === 1 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
-            <div>
-              <h2 className="text-xl font-bold text-white mb-2">Basic Setup</h2>
-              <p className="text-gray-400">
-                Identify your agent and choose a pre-configured template to get started.
-              </p>
-            </div>
-
+            <h2 className="text-xl font-bold text-gray-900">Basic Setup</h2>
             <div className="space-y-6">
-              <div className="space-y-3">
-                <Label htmlFor="name" className="text-gray-300">Agent Name</Label>
-                <Input
-                  id="name"
-                  placeholder="e.g., Customer Support Bot"
-                  value={formData.name}
-                  onChange={(e) => updateFormData({ name: e.target.value })}
-                  className="bg-white/[0.02]"
-                />
+              <div className="space-y-2">
+                <Label htmlFor="name">Agent Name</Label>
+                <Input id="name" placeholder="Support Bot" value={formData.name} onChange={(e) => updateFormData({ name: e.target.value })} className="bg-gray-50 border-gray-200" />
               </div>
-
-              <div className="space-y-4">
-                <Label className="text-gray-300">Choose a Template</Label>
-                <RadioGroup
-                  value={formData.template_type}
-                  onValueChange={(value) => updateFormData({ template_type: value })}
-                  className="grid gap-3"
-                >
-                  {templates.map((template) => (
-                    <label
-                      key={template.id}
-                      className={cn(
-                        "flex items-center space-x-3 p-4 rounded-xl border transition-all cursor-pointer",
-                        formData.template_type === template.id
-                          ? "border-purple-500 bg-purple-500/5"
-                          : "border-white/5 bg-white/[0.02] hover:bg-white/5"
-                      )}
-                    >
-                      <RadioGroupItem value={template.id} id={template.id} className="border-white/20 text-purple-500" />
-                      <span className={cn(
-                        "text-sm font-medium transition-colors",
-                        formData.template_type === template.id ? "text-white" : "text-gray-400"
-                      )}>{template.name}</span>
-                    </label>
+              <div className="space-y-3">
+                <Label>Template</Label>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {templates.map(t => (
+                    <div key={t.id} onClick={() => updateFormData({ template_type: t.id })} className={cn(
+                      "p-4 rounded-xl border-2 transition-all cursor-pointer",
+                      formData.template_type === t.id ? "border-violet-500 bg-violet-50" : "border-gray-100 hover:border-gray-200"
+                    )}>
+                      <p className="font-medium text-gray-900">{t.name}</p>
+                    </div>
                   ))}
-                </RadioGroup>
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Step 2: Personality */}
         {currentStep === 2 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
-            <div>
-              <h2 className="text-xl font-bold text-white mb-2">Personality & Tone</h2>
-              <p className="text-gray-400">
-                How should your agent talk? This defines its character and response style.
-              </p>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              {personalities.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => updateFormData({ personality: p.id as typeof formData.personality })}
-                  className={cn(
-                    "flex flex-col items-start p-6 rounded-2xl border transition-all text-left group",
-                    formData.personality === p.id
-                      ? "border-purple-500 bg-purple-500/5"
-                      : "border-white/5 bg-white/[0.02] hover:bg-white/5"
-                  )}
-                >
-                  <span className="text-3xl mb-4 group-hover:scale-110 transition-transform">{p.emoji}</span>
-                  <span className={cn(
-                    "font-bold transition-colors",
-                    formData.personality === p.id ? "text-white" : "text-gray-200"
-                  )}>{p.name}</span>
-                  <span className="text-sm text-gray-500 mt-1">{p.description}</span>
-                </button>
+            <h2 className="text-xl font-bold text-gray-900">Personality</h2>
+            <RadioGroup value={formData.personality} onValueChange={(v) => updateFormData({ personality: v as PersonalityType })} className="grid gap-4 sm:grid-cols-2">
+              {personalities.map(p => (
+                <div key={p.id} onClick={() => updateFormData({ personality: p.id as PersonalityType })} className={cn(
+                  "p-6 rounded-2xl border-2 transition-all cursor-pointer",
+                  formData.personality === p.id ? "border-violet-500 bg-violet-50" : "border-gray-100 hover:border-gray-200"
+                )}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <RadioGroupItem value={p.id} id={p.id} />
+                    <span className="text-2xl">{p.emoji}</span>
+                    <Label htmlFor={p.id} className="font-bold cursor-pointer">{p.name}</Label>
+                  </div>
+                  <p className="text-sm text-gray-500">{p.description}</p>
+                </div>
               ))}
-            </div>
-
-            <div className="space-y-3">
-              <Label htmlFor="instructions" className="text-gray-300">Custom Instructions (Optional)</Label>
-              <Textarea
-                id="instructions"
-                placeholder="Specific instructions: 'Never mention competitors', 'Always be slightly sarcastic'..."
-                value={formData.custom_instructions}
-                onChange={(e) => updateFormData({ custom_instructions: e.target.value })}
-                className="min-h-[120px] bg-white/[0.02]"
-              />
-              <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest text-right">
-                {formData.custom_instructions.length} / 2000
-              </p>
-            </div>
+            </RadioGroup>
           </div>
         )}
 
-        {/* Step 3: Knowledge Base */}
         {currentStep === 3 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
-            <div>
-              <h2 className="text-xl font-bold text-white mb-2">Knowledge Base</h2>
-              <p className="text-gray-400">
-                Give your agent the data it needs to provide accurate information.
-              </p>
+            <h2 className="text-xl font-bold text-gray-900">Knowledge</h2>
+            <div className="border-2 border-dashed border-gray-100 rounded-2xl p-12 text-center bg-gray-50">
+              <Upload className="h-10 w-10 mx-auto mb-4 text-gray-300" />
+              <p className="text-sm text-gray-500 font-medium">Click to upload training data or drag and drop</p>
+              <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">PDF, DOCX, TXT</p>
             </div>
-
-            <div className="border-2 border-dashed border-white/5 rounded-2xl p-12 text-center bg-white/[0.01]">
-              <Upload className="h-10 w-10 mx-auto mb-4 text-gray-600" />
-              <p className="font-bold text-white mb-1">Upload Source Documents</p>
-              <p className="text-xs text-gray-500 mb-6">
-                PDF, TXT, DOCX unsupported in preview.
-              </p>
-              <Button variant="outline" size="sm" disabled>
-                Browse Files
-              </Button>
-            </div>
-
-            <div className="space-y-3">
-              <Label htmlFor="knowledge" className="text-gray-300">Or Paste Source Text</Label>
-              <Textarea
-                id="knowledge"
-                placeholder="Paste your FAQ, product docs, or context here..."
-                value={formData.knowledge_text}
-                onChange={(e) => updateFormData({ knowledge_text: e.target.value })}
-                className="min-h-[200px] bg-white/[0.02]"
-              />
-            </div>
+            <Textarea
+              placeholder="Or paste knowledge text here..."
+              value={formData.knowledge_text}
+              onChange={(e) => updateFormData({ knowledge_text: e.target.value })}
+              className="min-h-[200px] bg-gray-50 border-gray-200"
+            />
           </div>
         )}
 
-        {/* Step 4: Channels */}
         {currentStep === 4 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
-            <div>
-              <h2 className="text-xl font-bold text-white mb-2">Deployment Channels</h2>
-              <p className="text-gray-400">
-                Choose where this agent should be active.
-              </p>
-            </div>
-
+            <h2 className="text-xl font-bold text-gray-900">Channels</h2>
             <div className="space-y-4">
-              {[
-                { id: 'web', name: 'Web Chat Widget', desc: 'Embed on your website', icon: MessageSquare, color: 'text-purple-400', always: true },
-                { id: 'whatsapp', name: 'WhatsApp Business', desc: 'Direct messaging', icon: MessageSquare, color: 'text-emerald-400' },
-                { id: 'api', name: 'REST API', desc: 'Custom integrations', icon: Zap, color: 'text-amber-400' },
-              ].map((channel) => (
-                <div key={channel.id} className="flex items-center justify-between p-6 rounded-2xl border border-white/5 bg-white/[0.02]">
-                  <div className="flex items-center gap-4">
-                    <div className={cn("h-12 w-12 rounded-xl bg-white/5 flex items-center justify-center", channel.color)}>
-                      <channel.icon className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-white">{channel.name}</p>
-                      <p className="text-xs text-gray-500">{channel.desc}</p>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={(formData.channels as any)[channel.id]}
-                    disabled={channel.always}
-                    onCheckedChange={(checked) =>
-                      !channel.always && updateFormData({ channels: { ...formData.channels, [channel.id]: checked } })
-                    }
-                  />
+              {['web', 'whatsapp', 'api'].map(ch => (
+                <div key={ch} className="flex items-center justify-between p-4 rounded-xl border border-gray-100 bg-gray-50">
+                  <div className="capitalize font-medium text-gray-900">{ch} Channel</div>
+                  <Switch checked={(formData.channels as any)[ch]} onCheckedChange={(v) => updateFormData({ channels: { ...formData.channels, [ch]: v } })} />
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Step 5: Review */}
         {currentStep === 5 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
-            <div>
-              <h2 className="text-xl font-bold text-white mb-2">Review & Deploy</h2>
-              <p className="text-gray-400">
-                Double check everything before firing up your agent.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-8 space-y-6">
-              <div className="grid grid-cols-2 gap-y-4 text-sm">
-                <span className="text-gray-500">Agent Name</span>
-                <span className="text-white font-medium text-right">{formData.name}</span>
-
-                <span className="text-gray-500">Template</span>
-                <span className="text-white font-medium text-right capitalize">{formData.template_type.replace(/_/g, " ")}</span>
-
-                <span className="text-gray-500">Personality</span>
-                <span className="text-white font-medium text-right capitalize">{formData.personality}</span>
-
-                <span className="text-gray-500">Enabled Channels</span>
-                <span className="text-white font-medium text-right">
-                  {Object.entries(formData.channels)
-                    .filter(([, v]) => v)
-                    .map(([k]) => k.toUpperCase())
-                    .join(", ")}
-                </span>
-              </div>
-            </div>
-
-            <div className="rounded-2xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/20 p-6 flex gap-4">
-              <div className="h-12 w-12 rounded-xl bg-purple-500 flex items-center justify-center shrink-0">
-                <Zap className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <p className="font-bold text-white">Almost there!</p>
-                <p className="text-sm text-gray-400 mt-1">
-                  Once deployed, your agent will be instantly available on all selected channels. You can edit these settings anytime.
-                </p>
-              </div>
+            <h2 className="text-xl font-bold text-gray-900">Ready to Deploy?</h2>
+            <div className="rounded-2xl bg-violet-50 border border-violet-100 p-8 text-center space-y-4">
+              <Zap className="h-12 w-12 mx-auto text-violet-600" />
+              <p className="text-gray-900 font-medium">Your agent &quot;{formData.name}&quot; is configured and ready for production.</p>
+              <p className="text-sm text-gray-500">System will automatically initialize model weights and set up API endpoints.</p>
             </div>
           </div>
         )}
 
-        {/* Navigation */}
-        <div className="flex justify-between mt-12 pt-8 border-t border-white/5">
-          <Button
-            variant="ghost"
-            onClick={() => setCurrentStep((prev) => prev - 1)}
-            disabled={currentStep === 1}
-            className="text-gray-500 hover:text-white"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Previous
-          </Button>
-
-          {currentStep < steps.length ? (
-            <Button
-              variant="premium"
-              onClick={() => setCurrentStep((prev) => prev + 1)}
-              disabled={!canProceed()}
-              className="px-8"
-            >
-              Next Step
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+        <div className="flex justify-between mt-12 pt-8 border-t border-gray-100">
+          <Button variant="ghost" onClick={() => setCurrentStep(s => s - 1)} disabled={currentStep === 1}>Previous</Button>
+          {currentStep < 5 ? (
+            <Button variant="premium" onClick={() => setCurrentStep(s => s + 1)} disabled={!formData.name}>Next Step</Button>
           ) : (
-            <Button variant="premium" onClick={handleDeploy} disabled={loading} className="px-10">
-              {loading ? "Deploying..." : "🚀 Deploy Now"}
-            </Button>
+            <Button variant="premium" onClick={handleDeploy} disabled={loading}>{loading ? "Deploying..." : "Launch Agent"}</Button>
           )}
         </div>
       </div>
     </div>
+  );
+}
+
+export default function NewAgentPage() {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-500 border-t-transparent" /></div>}>
+      <NewAgentForm />
+    </Suspense>
   );
 }
