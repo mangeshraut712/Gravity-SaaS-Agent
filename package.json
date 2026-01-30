@@ -1,28 +1,54 @@
 {
   "name": "@gravity/agentflow",
   "version": "1.0.0",
-  "description": "Multi-tenant AI agent SaaS platform built on GravityOS",
+  "description": "Production-ready multi-tenant AI agent SaaS platform",
   "private": true,
   "type": "module",
+  "author": "Gravity AI Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mangeshraut712/Gravity-SaaS-Agent.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mangeshraut712/Gravity-SaaS-Agent/issues"
+  },
+  "homepage": "https://github.com/mangeshraut712/Gravity-SaaS-Agent#readme",
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently \"npm run dev -w @gravity/gateway\" \"npm run dev -w @gravity/dashboard\"",
+    "dev": "concurrently -n \"gateway,dashboard\" -c \"cyan,magenta\" \"npm run dev -w @gravity/gateway\" \"npm run dev -w @gravity/dashboard\"",
+    "dev:dashboard": "npm run dev -w @gravity/dashboard",
+    "dev:gateway": "npm run dev -w @gravity/gateway",
     "build": "npm run build --workspaces --if-present",
+    "build:dashboard": "npm run build -w @gravity/dashboard",
+    "build:gateway": "npm run build -w @gravity/gateway",
     "start": "concurrently \"npm run start -w @gravity/gateway\" \"npm run start -w @gravity/dashboard\"",
+    "start:dashboard": "npm run start -w @gravity/dashboard",
+    "start:gateway": "npm run start -w @gravity/gateway",
     "lint": "npm run lint --workspaces --if-present",
+    "lint:fix": "npm run lint --workspaces --if-present -- --fix",
     "test": "npm run test --workspaces --if-present",
     "test:watch": "npm run test:watch --workspaces --if-present",
     "test:coverage": "npm run test:coverage --workspaces --if-present",
-    "clean": "rm -rf node_modules */node_modules */*/node_modules */dist */*/dist",
+    "test:ci": "npm run test:coverage --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
+    "clean": "rm -rf node_modules */node_modules */*/node_modules */dist */*/dist */.next",
+    "clean:cache": "rm -rf .next */. next */*/. next node_modules/.cache",
     "docker:build": "docker-compose build",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
-    "typecheck": "npm run typecheck --workspaces --if-present",
-    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\""
+    "docker:logs": "docker-compose logs -f",
+    "docker:restart": "docker-compose restart",
+    "prepare": "node -e \"try { require('husky').install() } catch (e) {if (e.code !== 'MODULE_NOT_FOUND') throw e}\"",
+    "postinstall": "echo '✅ Dependencies installed successfully!'",
+    "validate": "npm run typecheck && npm run lint && npm run test",
+    "precommit": "npm run lint && npm run typecheck",
+    "prepush": "npm run validate"
   },
   "devDependencies": {
     "@types/node": "^20.19.30",
@@ -34,7 +60,18 @@
   },
   "engines": {
     "node": ">=18.0.0",
-    "pnpm": ">=9.0.0"
+    "npm": ">=9.0.0"
   },
-  "packageManager": "pnpm@9.0.0"
+  "keywords": [
+    "ai",
+    "agent",
+    "saas",
+    "chatbot",
+    "whatsapp",
+    "telegram",
+    "anthropic",
+    "nextjs",
+    "express",
+    "supabase"
+  ]
 }
