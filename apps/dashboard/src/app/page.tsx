@@ -73,7 +73,7 @@ const pricing = [
       '1 agent',
       '100 messages / month',
       'Web chat only',
-      '"Powered by AgentFlow" branding',
+      '"Powered by Gravity" branding',
       'Community support',
     ],
   },
@@ -112,28 +112,28 @@ const pricing = [
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-transparent">
+    <div className="min-h-screen bg-white">
       {/* Header/Navbar */}
-      <header className="fixed top-0 z-50 w-full border-b border-white/5 bg-gray-950/50 backdrop-blur-md">
+      <header className="fixed top-0 z-50 w-full border-b border-gray-100 bg-white/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2 transition-transform hover:scale-105">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-blue-600 shadow-lg shadow-purple-500/20">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-500 shadow-lg shadow-violet-500/20">
               <Zap className="h-6 w-6 text-white" />
             </div>
-            <span className="text-xl font-bold tracking-tight text-white">
-              AgentFlow
+            <span className="text-xl font-bold tracking-tight text-gray-900">
+              <span className="text-gradient-rainbow">Gravity</span>
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-8 text-sm font-medium text-gray-400 md:flex">
-            <Link href="#features" className="transition-colors hover:text-white">Features</Link>
-            <Link href="#templates" className="transition-colors hover:text-white">Templates</Link>
-            <Link href="#pricing" className="transition-colors hover:text-white">Pricing</Link>
-            <Link href="#how-it-works" className="transition-colors hover:text-white">How it works</Link>
+          <nav className="hidden items-center gap-8 text-sm font-medium text-gray-500 md:flex">
+            <Link href="#features" className="transition-colors hover:text-violet-600">Features</Link>
+            <Link href="#templates" className="transition-colors hover:text-violet-600">Templates</Link>
+            <Link href="#pricing" className="transition-colors hover:text-violet-600">Pricing</Link>
+            <Link href="#how-it-works" className="transition-colors hover:text-violet-600">How it works</Link>
           </nav>
 
           <div className="flex items-center gap-4">
-            <Link href="/login" className="hidden text-sm font-medium text-gray-400 transition-colors hover:text-white md:block">
+            <Link href="/login" className="hidden text-sm font-medium text-gray-500 transition-colors hover:text-gray-900 md:block">
               Log in
             </Link>
             <Link href="/signup" className="btn-primary flex items-center gap-2 !px-5 !py-2.5 text-sm">
@@ -145,25 +145,25 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden px-6 pt-32 pb-20 md:pt-48 md:pb-32">
+      <section className="overflow-hidden px-6 pt-32 pb-20 md:pt-48 md:pb-32">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
             <div className="animate-slide-up">
-              <div className="inline-flex items-center gap-2 rounded-full bg-purple-500/10 px-4 py-1.5 text-xs font-semibold text-purple-400 ring-1 ring-purple-500/20 backdrop-blur-xl">
+              <div className="inline-flex items-center gap-2 rounded-full bg-violet-100 px-4 py-1.5 text-xs font-semibold text-violet-600 ring-1 ring-violet-200">
                 <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-purple-400 opacity-75"></span>
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-purple-500"></span>
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-75"></span>
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-violet-500"></span>
                 </span>
                 Transform your business with AI
               </div>
 
-              <h1 className="mt-8 text-5xl font-extrabold tracking-tight text-white sm:text-6xl lg:text-7xl">
+              <h1 className="mt-8 text-5xl font-extrabold tracking-tight text-gray-900 sm:text-6xl lg:text-7xl">
                 Launch your AI agent business{" "}
-                <span className="gradient-text">in under 5 minutes.</span>
+                <span className="text-gradient-rainbow">in under 5 minutes.</span>
               </h1>
 
-              <p className="mt-8 max-w-2xl text-lg text-gray-400 leading-relaxed">
-                AgentFlow is the production-ready platform for agencies and creators
+              <p className="mt-8 max-w-2xl text-lg text-gray-500 leading-relaxed">
+                Gravity is the production-ready platform for agencies and creators
                 to deploy high-performance AI agents to WhatsApp, Web, and API
                 without writing a single line of code.
               </p>
@@ -177,10 +177,10 @@ export default function LandingPage() {
                 </Link>
               </div>
 
-              <div className="mt-12 grid grid-cols-3 gap-8 border-t border-white/10 pt-8">
+              <div className="mt-12 grid grid-cols-3 gap-8 border-t border-gray-100 pt-8">
                 {stats.map((s) => (
                   <div key={s.label}>
-                    <p className="text-2xl font-bold text-white">{s.value}</p>
+                    <p className="text-2xl font-bold text-gradient-violet-indigo">{s.value}</p>
                     <p className="text-sm text-gray-500">{s.label}</p>
                   </div>
                 ))}
@@ -189,16 +189,15 @@ export default function LandingPage() {
 
             {/* Hero Mockup */}
             <div className="relative animate-scale-in">
-              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-tr from-purple-500/20 to-blue-500/20 blur-2xl" />
-              <div className="glass-card relative rounded-3xl p-2 shadow-2xl">
-                <div className="rounded-2xl bg-gray-950 p-6">
-                  <div className="flex items-center justify-between border-b border-white/5 pb-4">
+              <div className="card relative p-2 shadow-2xl">
+                <div className="rounded-2xl bg-gray-50 p-6">
+                  <div className="flex items-center justify-between border-b border-gray-100 pb-4">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-600" />
+                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-500" />
                       <div>
-                        <p className="text-sm font-bold text-white">Smart Concierge</p>
-                        <p className="text-[11px] text-emerald-400 flex items-center gap-1">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                        <p className="text-sm font-bold text-gray-900">Smart Concierge</p>
+                        <p className="text-[11px] text-teal-500 flex items-center gap-1">
+                          <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
                           Online • WhatsApp Connected
                         </p>
                       </div>
@@ -207,22 +206,22 @@ export default function LandingPage() {
 
                   <div className="mt-6 space-y-4">
                     <div className="flex justify-start">
-                      <div className="max-w-[80%] rounded-2xl bg-white/5 px-4 py-3 text-sm text-gray-300">
+                      <div className="max-w-[80%] rounded-2xl bg-white border border-gray-100 px-4 py-3 text-sm text-gray-700">
                         Hi! I need to book a consultation for next Tuesday.
                       </div>
                     </div>
                     <div className="flex justify-end">
-                      <div className="max-w-[80%] rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-4 py-3 text-sm text-white shadow-lg shadow-purple-500/20">
+                      <div className="max-w-[80%] rounded-2xl bg-gradient-to-r from-violet-500 to-indigo-500 px-4 py-3 text-sm text-white shadow-lg shadow-violet-500/20">
                         I can help with that! We have 10 AM and 2 PM available. Which works best?
                       </div>
                     </div>
                     <div className="flex justify-start">
-                      <div className="max-w-[80%] rounded-2xl bg-white/5 px-4 py-3 text-sm text-gray-300">
+                      <div className="max-w-[80%] rounded-2xl bg-white border border-gray-100 px-4 py-3 text-sm text-gray-700">
                         10 AM sounds perfect.
                       </div>
                     </div>
                     <div className="animate-pulse flex justify-end">
-                      <div className="max-w-[80%] rounded-2xl bg-white/10 px-4 py-3 text-sm text-gray-500 italic">
+                      <div className="max-w-[80%] rounded-2xl bg-gray-100 border border-gray-200 px-4 py-3 text-sm text-gray-500 italic">
                         Agent is confirming...
                       </div>
                     </div>
@@ -237,36 +236,36 @@ export default function LandingPage() {
       {/* Features Section */}
       <section id="features" className="mx-auto max-w-7xl px-6 py-24">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-white sm:text-5xl">
-            Everything you need for <span className="gradient-text">AI Automation</span>
+          <h2 className="text-3xl font-bold text-gray-900 sm:text-5xl">
+            Everything you need for <span className="text-gradient-rainbow">AI Automation</span>
           </h2>
-          <p className="mt-4 text-gray-400 text-lg">
+          <p className="mt-4 text-gray-500 text-lg">
             Powerful tools to build, deploy, and scale your AI workforce.
           </p>
         </div>
 
         <div className="mt-20 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
           {features.map((f, idx) => (
-            <div key={f.title} className={`card p-8 stagger-${(idx % 4) + 1} animate-slide-up`}>
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400 ring-1 ring-purple-500/20">
+            <div key={f.title} className={`feature-card p-8 stagger-${(idx % 4) + 1} animate-slide-up`}>
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100 text-violet-600 ring-1 ring-violet-200">
                 <f.icon className="h-6 w-6" />
               </div>
-              <h3 className="mt-6 text-xl font-bold text-white">{f.title}</h3>
-              <p className="mt-4 text-gray-400 leading-relaxed text-sm">{f.description}</p>
+              <h3 className="mt-6 text-xl font-bold text-gray-900">{f.title}</h3>
+              <p className="mt-4 text-gray-500 leading-relaxed text-sm">{f.description}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Templates Section */}
-      <section id="templates" className="bg-white/5 py-24">
+      <section id="templates" className="bg-gray-50 py-24">
         <div className="mx-auto max-w-7xl px-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="max-w-2xl">
-              <h2 className="text-3xl font-bold text-white sm:text-5xl">
-                Start with <span className="gradient-text">Proven Templates</span>
+              <h2 className="text-3xl font-bold text-gray-900 sm:text-5xl">
+                Start with <span className="text-gradient-rainbow">Proven Templates</span>
               </h2>
-              <p className="mt-4 text-gray-400 text-lg">
+              <p className="mt-4 text-gray-500 text-lg">
                 Don't start from scratch. Use our battle-tested templates to launch faster.
               </p>
             </div>
@@ -282,14 +281,14 @@ export default function LandingPage() {
                   <div className="flex items-start justify-between">
                     <span className="text-4xl">{t.emoji}</span>
                     {t.badge && (
-                      <span className="badge badge-primary">{t.badge}</span>
+                      <span className="badge badge-violet">{t.badge}</span>
                     )}
                   </div>
-                  <h3 className="mt-6 text-2xl font-bold text-white">{t.name}</h3>
-                  <p className="mt-4 text-gray-400 text-sm leading-relaxed">{t.description}</p>
+                  <h3 className="mt-6 text-2xl font-bold text-gray-900">{t.name}</h3>
+                  <p className="mt-4 text-gray-500 text-sm leading-relaxed">{t.description}</p>
                 </div>
-                <div className="border-t border-white/5 p-6 bg-white/2 transition-colors group-hover:bg-white/5">
-                  <Link href="/signup" className="flex items-center justify-center gap-2 text-sm font-bold text-white">
+                <div className="border-t border-gray-100 p-6 bg-gray-50 transition-colors group-hover:bg-gray-100">
+                  <Link href="/signup" className="flex items-center justify-center gap-2 text-sm font-bold text-gray-900">
                     Deploy Now <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
@@ -302,10 +301,10 @@ export default function LandingPage() {
       {/* Pricing Section */}
       <section id="pricing" className="mx-auto max-w-7xl px-6 py-24">
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-white sm:text-5xl">
-            Simple, <span className="gradient-text">Transparent</span> Pricing
+          <h2 className="text-3xl font-bold text-gray-900 sm:text-5xl">
+            Simple, <span className="text-gradient-rainbow">Transparent</span> Pricing
           </h2>
-          <p className="mt-4 text-gray-400 text-lg">
+          <p className="mt-4 text-gray-500 text-lg">
             Scales with your business. No hidden fees.
           </p>
         </div>
@@ -313,26 +312,26 @@ export default function LandingPage() {
         <div className="grid gap-8 lg:grid-cols-3">
           {pricing.map((tier) => (
             <div key={tier.name} className={`relative flex flex-col p-8 rounded-3xl ${tier.highlight
-                ? 'bg-gradient-to-b from-gray-900 to-gray-950 ring-2 ring-purple-500 shadow-2xl shadow-purple-500/20'
-                : 'card'
+              ? 'bg-gradient-to-b from-violet-50 to-indigo-50 ring-2 ring-violet-200 shadow-xl'
+              : 'card'
               }`}>
               {tier.highlight && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 text-[10px] font-bold uppercase tracking-wider text-white">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 text-[10px] font-bold uppercase tracking-wider text-white">
                   Best Value
                 </div>
               )}
-              <h3 className="text-xl font-bold text-white">{tier.name}</h3>
+              <h3 className="text-xl font-bold text-gray-900">{tier.name}</h3>
               <p className="mt-2 text-sm text-gray-500">{tier.description}</p>
 
               <div className="mt-8 flex items-baseline gap-1">
-                <span className="text-5xl font-extrabold text-white">{tier.price}</span>
+                <span className="text-5xl font-extrabold text-gray-900">{tier.price}</span>
                 <span className="text-gray-500">{tier.period}</span>
               </div>
 
               <ul className="mt-10 space-y-4 flex-1">
                 {tier.features.map((f) => (
-                  <li key={f} className="flex items-center gap-3 text-sm text-gray-300">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-500 flex-shrink-0" />
+                  <li key={f} className="flex items-center gap-3 text-sm text-gray-600">
+                    <CheckCircle2 className="h-5 w-5 text-teal-500 flex-shrink-0" />
                     {f}
                   </li>
                 ))}
@@ -341,8 +340,8 @@ export default function LandingPage() {
               <Link
                 href="/signup"
                 className={`mt-12 w-full text-center py-4 rounded-xl font-bold transition-all ${tier.highlight
-                    ? 'bg-gradient-to-r from-purple-500 to-blue-600 text-white hover:shadow-xl hover:shadow-purple-500/40'
-                    : 'bg-white/5 text-white hover:bg-white/10'
+                  ? 'bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:shadow-xl hover:shadow-violet-500/40'
+                  : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
                   }`}
               >
                 {tier.name === 'Free' ? 'Get Started' : 'Start Trial'}
@@ -354,13 +353,12 @@ export default function LandingPage() {
 
       {/* CTA Section */}
       <section className="mx-auto max-w-7xl px-6 py-24">
-        <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-r from-purple-900/40 via-blue-900/40 to-emerald-900/40 p-12 md:p-24 text-center border border-white/10">
-          <div className="absolute inset-0 bg-gray-950/40 backdrop-blur-3xl -z-10" />
-          <h2 className="text-4xl font-bold text-white sm:text-6xl max-w-4xl mx-auto leading-tight">
-            Ready to build your <span className="gradient-text">AI Empire?</span>
+        <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-r from-violet-100 via-indigo-100 to-teal-100 p-12 md:p-24 text-center border border-gray-100">
+          <h2 className="text-4xl font-bold text-gray-900 sm:text-6xl max-w-4xl mx-auto leading-tight">
+            Ready to build your <span className="text-gradient-rainbow">AI Empire?</span>
           </h2>
-          <p className="mt-8 text-xl text-gray-300 max-w-2xl mx-auto">
-            Join 1,000+ businesses automating their growth with AgentFlow.
+          <p className="mt-8 text-xl text-gray-600 max-w-2xl mx-auto">
+            Join 1,000+ businesses automating their growth with Gravity.
             No credit card required to start.
           </p>
           <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6">
@@ -369,9 +367,9 @@ export default function LandingPage() {
             </Link>
             <div className="flex -space-x-3 overflow-hidden">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="inline-block h-10 w-10 rounded-full ring-2 ring-gray-900 bg-gray-800" />
+                <div key={i} className="inline-block h-10 w-10 rounded-full ring-2 ring-white bg-gradient-to-br from-violet-400 to-indigo-400" />
               ))}
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-800 ring-2 ring-gray-900 text-[10px] font-bold text-white">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 ring-2 ring-white text-[10px] font-bold text-gray-700">
                 +1k
               </div>
             </div>
@@ -380,23 +378,23 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/5 py-12">
+      <footer className="border-t border-gray-100 py-12">
         <div className="mx-auto max-w-7xl px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-8">
             <div className="flex items-center gap-2">
-              <Zap className="h-6 w-6 text-purple-500" />
-              <span className="text-xl font-bold text-white tracking-tight">AgentFlow</span>
+              <Zap className="h-6 w-6 text-violet-500" />
+              <span className="text-xl font-bold text-gray-900 tracking-tight"><span className="text-gradient-violet-indigo">Gravity</span></span>
             </div>
 
             <div className="flex flex-wrap justify-center gap-10 text-sm font-medium text-gray-500">
-              <Link href="#" className="hover:text-white transition-colors">Twitter</Link>
-              <Link href="#" className="hover:text-white transition-colors">GitHub</Link>
-              <Link href="#" className="hover:text-white transition-colors">Discord</Link>
-              <Link href="#" className="hover:text-white transition-colors">Contact</Link>
+              <Link href="#" className="hover:text-violet-600 transition-colors">Twitter</Link>
+              <Link href="#" className="hover:text-violet-600 transition-colors">GitHub</Link>
+              <Link href="#" className="hover:text-violet-600 transition-colors">Discord</Link>
+              <Link href="#" className="hover:text-violet-600 transition-colors">Contact</Link>
             </div>
           </div>
-          <div className="mt-12 pt-8 border-t border-white/5 text-center text-sm text-gray-600">
-            © 2026 AgentFlow AI Inc. All rights reserved. Built with ❤️ for the AI community.
+          <div className="mt-12 pt-8 border-t border-gray-100 text-center text-sm text-gray-400">
+            © 2026 Gravity AI Inc. All rights reserved. Built with ❤️ for the AI community.
           </div>
         </div>
       </footer>

@@ -1,23 +1,23 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import { Sora } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import React from 'react';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 
-const sora = Sora({
+const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-sans',
 });
 
 export const metadata: Metadata = {
-  title: 'AgentFlow – Launch AI Agents in 5 Minutes',
+  title: 'Gravity – Launch AI Agents in 5 Minutes',
   description:
-    'AgentFlow is the fastest way to launch production-ready AI agents for your business. Deploy to WhatsApp, web, or API in minutes.',
+    'Gravity is the fastest way to launch production-ready AI agents for your business. Deploy to WhatsApp, web, or API in minutes.',
   keywords: ['AI', 'agent', 'chatbot', 'SaaS', 'automation', 'WhatsApp'],
-  authors: [{ name: 'AgentFlow' }],
+  authors: [{ name: 'Gravity' }],
   openGraph: {
-    title: 'AgentFlow – Launch AI Agents in 5 Minutes',
+    title: 'Gravity – Launch AI Agents in 5 Minutes',
     description: 'Deploy production-ready AI agents for your business',
     type: 'website',
   },
@@ -30,7 +30,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${sora.variable} ${sora.className}`} suppressHydrationWarning>
+      <body className={`${inter.variable} ${inter.className}`} suppressHydrationWarning>
         <ErrorBoundary>{children}</ErrorBoundary>
       </body>
     </html>

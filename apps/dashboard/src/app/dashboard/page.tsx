@@ -2,35 +2,6 @@
 
 import Link from 'next/link';
 import React from 'react';
-
-const mockAgents = [
-  {
-    name: 'Customer Support Bot',
-    status: 'Active',
-    messagesToday: 87,
-    lastActive: '5 min ago',
-  },
-  {
-    name: 'Lead Qualifier – Landing Page',
-    status: 'Active',
-    messagesToday: 42,
-    lastActive: '18 min ago',
-  },
-  {
-    name: 'Appointment Scheduler – Studio',
-    status: 'Paused',
-    messagesToday: 0,
-    lastActive: 'Yesterday',
-  },
-];
-
-const mockActivity = [
-  'New conversation started on WhatsApp',
-  'Payment received – Pro plan',
-  'Agent “Lead Qualifier” deployed to web widget',
-  'Conversation escalated to human agent',
-];
-
 import {
   Plus,
   Search,
@@ -210,7 +181,7 @@ export default function DashboardPage() {
               {mockActivity.map((activity, i) => (
                 <div key={i} className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.03] transition-colors group">
                   <div className={`mt-1 h-2 w-2 rounded-full shrink-0 ${activity.type === 'success' ? 'bg-emerald-500' :
-                      activity.type === 'warning' ? 'bg-orange-500' : 'bg-blue-500'
+                    activity.type === 'warning' ? 'bg-orange-500' : 'bg-blue-500'
                     }`} />
                   <div className="flex-1 space-y-1">
                     <p className="text-sm text-gray-200 group-hover:text-white transition-colors">{activity.text}</p>
