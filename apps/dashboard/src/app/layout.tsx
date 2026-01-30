@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import React from 'react';
 import { ErrorBoundary } from '../components/ErrorBoundary';
-import { AuthProvider } from '../hooks';
+import { AuthProvider } from '../hooks/useAuth';
 
 const inter = Inter({
   subsets: ['latin'],
