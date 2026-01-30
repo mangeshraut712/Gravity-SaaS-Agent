@@ -56,7 +56,7 @@ export default function ForgotPasswordPage() {
               Reset your password
             </h1>
             <p className="mt-3 text-sm text-slate-500">
-              Enter the email connected to your AgentFlow account.
+              Enter the email connected to your Gravity account.
             </p>
           </div>
 
