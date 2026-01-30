@@ -48,7 +48,12 @@
     "postinstall": "echo '✅ Dependencies installed successfully!'",
     "validate": "npm run typecheck && npm run lint && npm run test",
     "precommit": "npm run lint && npm run typecheck",
-    "prepush": "npm run validate"
+    "prepush": "npm run validate",
+    "clean:all": "npm run clean && npm run clean:cache && npm cache clean --force",
+    "size": "du -sh node_modules apps/dashboard/.next 2>/dev/null || echo 'Build folders not found'",
+    "analyze": "ANALYZE=true npm run build:dashboard",
+    "health": "npm outdated && npm audit",
+    "optimize": "npm run clean:all && npm install && npm run build"
   },
   "devDependencies": {
     "@types/node": "^20.19.30",

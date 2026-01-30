@@ -5,7 +5,7 @@ export default defineConfig({
     test: {
         globals: true,
         environment: 'node',
-        setupFiles: [path.resolve(__dirname, './test/setup.ts')],
+        setupFiles: [path.resolve(__dirname, './tests/setup.ts')],
         coverage: {
             provider: 'v8',
             reporter: ['text', 'json', 'lcov'],
