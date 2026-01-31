@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import React, { useState } from 'react';
-import { supabaseClient } from '../../lib';
+import { Sparkles, ArrowLeft, Mail, CheckCircle } from 'lucide-react';
+import { supabaseClient } from '@/lib';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -41,70 +42,104 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900">
-      <div className="pointer-events-none absolute -top-24 right-12 h-72 w-72 rounded-full bg-emerald-300/30 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-10 left-10 h-80 w-80 rounded-full bg-sky-300/30 blur-3xl" />
-      <div className="pointer-events-none absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-200/40 blur-3xl" />
+    <div className="min-h-screen bg-white flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md">
+        {/* Back Link */}
+        <Link
+          href="/login"
+          className="inline-flex items-center gap-2 text-gray-600 hover:text-black transition-colors mb-8 group"
+        >
+          <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+          Back to login
+        </Link>
 
-      <div className="relative flex min-h-screen items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white/90 p-8 shadow-xl shadow-slate-200/60">
-          <div className="mb-6 text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-              Password reset
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold text-slate-900">
-              Reset your password
-            </h1>
-            <p className="mt-3 text-sm text-slate-500">
-              Enter the email connected to your Gravity account.
-            </p>
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-3 mb-10">
+          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
+            <Sparkles className="h-6 w-6 text-white" />
           </div>
+          <div>
+            <span className="text-2xl font-black text-black tracking-tight">Gravity</span>
+            <span className="text-[10px] text-violet-600 block uppercase tracking-[0.2em] font-bold -mt-1">AI Agents</span>
+          </div>
+        </Link>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-slate-600">
-                Email
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10"
-                placeholder="you@company.com"
-              />
+        {/* Reset Card */}
+        <div className="p-8 rounded-3xl bg-white border border-gray-200 shadow-xl">
+          {sent && !error ? (
+            <div className="text-center py-6">
+              <div className="h-16 w-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6">
+                <CheckCircle className="h-8 w-8 text-emerald-600" />
+              </div>
+              <h1 className="text-2xl font-bold text-black mb-3">Check your inbox</h1>
+              <p className="text-gray-600 mb-8">
+                We&apos;ve sent a password reset link to<br />
+                <span className="text-black font-medium">{email}</span>
+              </p>
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center h-12 px-8 rounded-xl bg-gray-100 border border-gray-200 text-black font-medium hover:bg-gray-200 transition-all"
+              >
+                Return to login
+              </Link>
             </div>
+          ) : (
+            <>
+              <div className="text-center mb-8">
+                <h1 className="text-2xl font-bold text-black">Reset your password</h1>
+                <p className="text-gray-600 mt-2">Enter the email connected to your Gravity account</p>
+              </div>
 
-            {error && (
-              <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700" role="alert">
-                {error}
-              </p>
-            )}
-            {sent && !error && (
-              <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700" role="status">
-                Reset link sent. Please check your inbox.
-              </p>
-            )}
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-black">Email address</label>
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full h-12 pl-12 pr-4 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder:text-gray-400 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
+                      placeholder="you@company.com"
+                    />
+                  </div>
+                </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex h-12 w-full items-center justify-center rounded-xl bg-slate-900 text-sm font-semibold text-white shadow-lg shadow-slate-900/20 transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/20 disabled:cursor-not-allowed disabled:bg-slate-400"
-            >
-              {loading ? 'Sending reset link…' : 'Send reset link'}
-            </button>
-          </form>
+                {error && (
+                  <div className="flex items-start gap-3 p-4 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
+                    <svg className="h-5 w-5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{error}</span>
+                  </div>
+                )}
 
-          <p className="mt-6 text-center text-sm text-slate-500">
-            Remembered your password?{' '}
-            <Link
-              href="/login"
-              className="font-semibold text-slate-900 underline decoration-emerald-400/60 underline-offset-4 transition hover:text-emerald-700"
-            >
-              Go back to login
-            </Link>
-          </p>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-12 rounded-xl bg-black text-white font-bold hover:bg-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    'Send reset link'
+                  )}
+                </button>
+              </form>
+            </>
+          )}
         </div>
+
+        <p className="mt-8 text-center text-sm text-gray-500">
+          Remember your password?{' '}
+          <Link href="/login" className="font-semibold text-violet-600 hover:text-violet-700 transition-colors">
+            Sign in
+          </Link>
+        </p>
       </div>
     </div>
   );

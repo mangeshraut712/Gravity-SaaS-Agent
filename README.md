@@ -82,6 +82,34 @@ Gravity is a **production-ready, multi-tenant AI agent SaaS platform** that enab
 
 ---
 
+## 🎨 UI/UX Design (2026 Edition)
+
+The dashboard features a **modern 2026-style design** with:
+
+### ✨ Design Highlights
+
+- **Clean White Theme** - Solid white backgrounds with black text for maximum readability
+- **Violet Accents** - Consistent violet-600 color for buttons, links, and active states
+- **Glassmorphic Elements** - Subtle glass effects on cards and modals
+- **Premium Typography** - Inter font with proper hierarchy and tracking
+- **Smooth Animations** - Framer Motion-powered micro-interactions
+- **Responsive Layout** - Mobile-first design with adaptive components
+
+### 📱 Pages Included
+
+| Page | Description |
+|------|-------------|
+| **Landing Page** | Marketing homepage with hero, features, pricing |
+| **Login/Signup** | Clean authentication forms with OAuth support |
+| **Dashboard** | Metrics overview with activity feed |
+| **Agents** | Agent management with CRUD operations |
+| **Agent Builder** | Multi-step wizard for creating AI agents |
+| **Analytics** | Charts and performance metrics |
+| **Billing** | Subscription management portal |
+| **Settings** | User preferences and account settings |
+
+---
+
 ## 🏗️ Architecture
 
 ```

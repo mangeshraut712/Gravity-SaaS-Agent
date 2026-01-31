@@ -1,6 +1,10 @@
-'use client';
+"use client";
 
-export const dynamic = 'force-dynamic';
+
+
+
+
+
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -16,8 +20,8 @@ import {
   Zap,
   MessageSquare
 } from "lucide-react";
-import { cn, supabaseClient } from "../../../lib";
-import { useAuth } from "../../../hooks";
+import { cn, supabaseClient } from "@/lib";
+import { useAuth } from "@/hooks";
 import {
   Button,
   Input,
@@ -26,7 +30,7 @@ import {
   RadioGroupItem,
   Switch,
   Textarea,
-} from "../../../components/ui";
+} from "@/components/ui";
 
 const steps = [
   { id: 1, name: "Basic Setup", icon: Bot },
@@ -119,8 +123,8 @@ function NewAgentForm() {
           Back
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Create New Agent</h1>
-          <p className="text-gray-500 mt-1">Deploy an expert agent in minutes.</p>
+          <h1 className="text-3xl font-bold text-black tracking-tight">Create New Agent</h1>
+          <p className="text-black/60 mt-1">Deploy an expert agent in minutes.</p>
         </div>
       </div>
 
@@ -130,7 +134,7 @@ function NewAgentForm() {
           <div key={step.id} className="flex items-center">
             <div className={cn(
               "h-10 w-10 rounded-full flex items-center justify-center border-2 transition-all",
-              currentStep >= step.id ? "bg-violet-600 border-violet-600 text-white" : "border-gray-100 bg-gray-50 text-gray-400"
+              currentStep >= step.id ? "bg-violet-600 border-violet-600 text-white" : "border-gray-100 bg-gray-50 text-black/50"
             )}>
               <step.icon className="h-5 w-5" />
             </div>
@@ -144,7 +148,7 @@ function NewAgentForm() {
       <div className="card p-8 min-h-[400px] border-gray-100 shadow-sm relative overflow-hidden">
         {currentStep === 1 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
-            <h2 className="text-xl font-bold text-gray-900">Basic Setup</h2>
+            <h2 className="text-xl font-bold text-black">Basic Setup</h2>
             <div className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="name">Agent Name</Label>
@@ -158,7 +162,7 @@ function NewAgentForm() {
                       "p-4 rounded-xl border-2 transition-all cursor-pointer",
                       formData.template_type === t.id ? "border-violet-500 bg-violet-50" : "border-gray-100 hover:border-gray-200"
                     )}>
-                      <p className="font-medium text-gray-900">{t.name}</p>
+                      <p className="font-medium text-black">{t.name}</p>
                     </div>
                   ))}
                 </div>
@@ -169,7 +173,7 @@ function NewAgentForm() {
 
         {currentStep === 2 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
-            <h2 className="text-xl font-bold text-gray-900">Personality</h2>
+            <h2 className="text-xl font-bold text-black">Personality</h2>
             <RadioGroup value={formData.personality} onValueChange={(v) => updateFormData({ personality: v as PersonalityType })} className="grid gap-4 sm:grid-cols-2">
               {personalities.map(p => (
                 <div key={p.id} onClick={() => updateFormData({ personality: p.id as PersonalityType })} className={cn(
@@ -181,7 +185,7 @@ function NewAgentForm() {
                     <span className="text-2xl">{p.emoji}</span>
                     <Label htmlFor={p.id} className="font-bold cursor-pointer">{p.name}</Label>
                   </div>
-                  <p className="text-sm text-gray-500">{p.description}</p>
+                  <p className="text-sm text-black/60">{p.description}</p>
                 </div>
               ))}
             </RadioGroup>
@@ -190,11 +194,11 @@ function NewAgentForm() {
 
         {currentStep === 3 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
-            <h2 className="text-xl font-bold text-gray-900">Knowledge</h2>
+            <h2 className="text-xl font-bold text-black">Knowledge</h2>
             <div className="border-2 border-dashed border-gray-100 rounded-2xl p-12 text-center bg-gray-50">
-              <Upload className="h-10 w-10 mx-auto mb-4 text-gray-300" />
-              <p className="text-sm text-gray-500 font-medium">Click to upload training data or drag and drop</p>
-              <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">PDF, DOCX, TXT</p>
+              <Upload className="h-10 w-10 mx-auto mb-4 text-black/40" />
+              <p className="text-sm text-black/60 font-medium">Click to upload training data or drag and drop</p>
+              <p className="text-[10px] text-black/50 mt-1 uppercase font-bold tracking-widest">PDF, DOCX, TXT</p>
             </div>
             <Textarea
               placeholder="Or paste knowledge text here..."
@@ -207,11 +211,11 @@ function NewAgentForm() {
 
         {currentStep === 4 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
-            <h2 className="text-xl font-bold text-gray-900">Channels</h2>
+            <h2 className="text-xl font-bold text-black">Channels</h2>
             <div className="space-y-4">
               {['web', 'whatsapp', 'api'].map(ch => (
                 <div key={ch} className="flex items-center justify-between p-4 rounded-xl border border-gray-100 bg-gray-50">
-                  <div className="capitalize font-medium text-gray-900">{ch} Channel</div>
+                  <div className="capitalize font-medium text-black">{ch} Channel</div>
                   <Switch checked={(formData.channels as any)[ch]} onCheckedChange={(v) => updateFormData({ channels: { ...formData.channels, [ch]: v } })} />
                 </div>
               ))}
@@ -221,11 +225,11 @@ function NewAgentForm() {
 
         {currentStep === 5 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
-            <h2 className="text-xl font-bold text-gray-900">Ready to Deploy?</h2>
+            <h2 className="text-xl font-bold text-black">Ready to Deploy?</h2>
             <div className="rounded-2xl bg-violet-50 border border-violet-100 p-8 text-center space-y-4">
               <Zap className="h-12 w-12 mx-auto text-violet-600" />
-              <p className="text-gray-900 font-medium">Your agent &quot;{formData.name}&quot; is configured and ready for production.</p>
-              <p className="text-sm text-gray-500">System will automatically initialize model weights and set up API endpoints.</p>
+              <p className="text-black font-medium">Your agent &quot;{formData.name}&quot; is configured and ready for production.</p>
+              <p className="text-sm text-black/60">System will automatically initialize model weights and set up API endpoints.</p>
             </div>
           </div>
         )}

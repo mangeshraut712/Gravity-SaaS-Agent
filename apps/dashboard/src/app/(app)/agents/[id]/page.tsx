@@ -1,4 +1,8 @@
-'use client';
+"use client";
+
+
+
+
 
 import { Suspense, useEffect, useState, use } from "react";
 import Link from "next/link";
@@ -17,8 +21,8 @@ import {
     Activity,
     ChevronRight
 } from "lucide-react";
-import { supabaseClient } from "../../../lib";
-import { useAuth } from "../../../hooks";
+import { supabaseClient } from "@/lib";
+import { useAuth } from "@/hooks";
 import {
   Badge,
   Button,
@@ -28,7 +32,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "../../../components/ui";
+} from "@/components/ui";
 
 interface Agent {
     id: string;
@@ -133,9 +137,9 @@ function AgentDetailContent({ params }: { params: Promise<{ id: string }> }) {
     if (!agent) {
         return (
             <div className="p-10 text-center space-y-4">
-                <Bot className="h-16 w-16 mx-auto text-gray-400" />
-                <h2 className="text-2xl font-bold text-gray-900">Agent not found</h2>
-                <p className="text-gray-500">This agent doesn&apos;t exist or you don&apos;t have access.</p>
+                <Bot className="h-16 w-16 mx-auto text-black/50" />
+                <h2 className="text-2xl font-bold text-black">Agent not found</h2>
+                <p className="text-black/60">This agent doesn&apos;t exist or you don&apos;t have access.</p>
                 <Link href="/agents">
                     <Button variant="outline">Back to Agents</Button>
                 </Link>
@@ -148,7 +152,7 @@ function AgentDetailContent({ params }: { params: Promise<{ id: string }> }) {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-4">
-                    <Button variant="ghost" onClick={() => router.back()} className="-ml-4 text-gray-400 hover:text-gray-900 overflow-hidden">
+                    <Button variant="ghost" onClick={() => router.back()} className="-ml-4 text-black/50 hover:text-black overflow-hidden">
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back to workforce
                     </Button>
@@ -158,12 +162,12 @@ function AgentDetailContent({ params }: { params: Promise<{ id: string }> }) {
                         </div>
                         <div>
                             <div className="flex items-center gap-3">
-                                <h1 className="text-3xl font-bold text-gray-900 tracking-tight">{agent.name}</h1>
+                                <h1 className="text-3xl font-bold text-black tracking-tight">{agent.name}</h1>
                                 <Badge variant={agent.status === 'active' ? 'success' : 'warning'}>
                                     {agent.status}
                                 </Badge>
                             </div>
-                            <p className="text-gray-500 mt-1 font-medium capitalize">
+                            <p className="text-black/60 mt-1 font-medium capitalize">
                                 {agent.template_type.replace(/_/g, " ")} • {agent.personality}
                             </p>
                         </div>
@@ -172,7 +176,7 @@ function AgentDetailContent({ params }: { params: Promise<{ id: string }> }) {
 
                 <div className="flex items-center gap-3">
                     <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-gray-50 border border-gray-100 shadow-sm">
-                        <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
+                        <span className="text-xs font-bold uppercase tracking-widest text-black/50">
                             {agent.status === 'active' ? 'Agent Live' : 'Agent Paused'}
                         </span>
                         <Switch checked={agent.status === 'active'} onCheckedChange={toggleStatus} />
@@ -185,10 +189,10 @@ function AgentDetailContent({ params }: { params: Promise<{ id: string }> }) {
 
             <Tabs defaultValue="overview" className="space-y-8">
                 <TabsList className="bg-transparent border-b border-gray-100 rounded-none p-0 h-auto gap-4">
-                    <TabsTrigger value="overview" className="rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 px-2 pb-3 text-gray-400">Overview</TabsTrigger>
-                    <TabsTrigger value="conversations" className="rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 px-2 pb-3 text-gray-400">Conversations</TabsTrigger>
-                    <TabsTrigger value="analytics" className="rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 px-2 pb-3 text-gray-400">Analytics</TabsTrigger>
-                    <TabsTrigger value="settings" className="rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 px-2 pb-3 text-gray-400">Settings</TabsTrigger>
+                    <TabsTrigger value="overview" className="rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 px-2 pb-3 text-black/50">Overview</TabsTrigger>
+                    <TabsTrigger value="conversations" className="rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 px-2 pb-3 text-black/50">Conversations</TabsTrigger>
+                    <TabsTrigger value="analytics" className="rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 px-2 pb-3 text-black/50">Analytics</TabsTrigger>
+                    <TabsTrigger value="settings" className="rounded-none border-b-2 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 px-2 pb-3 text-black/50">Settings</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview" className="space-y-10 animate-slide-up">
@@ -203,16 +207,16 @@ function AgentDetailContent({ params }: { params: Promise<{ id: string }> }) {
                         {/* API Integration */}
                         <div className="card p-8 space-y-6 border-gray-100 shadow-sm">
                             <div>
-                                <h3 className="text-lg font-bold text-gray-900 mb-1">API Integration</h3>
-                                <p className="text-sm text-gray-500">Use this key to integrate this agent into your own applications.</p>
+                                <h3 className="text-lg font-bold text-black mb-1">API Integration</h3>
+                                <p className="text-sm text-black/60">Use this key to integrate this agent into your own applications.</p>
                             </div>
 
                             <div className="flex items-center gap-3">
-                                <div className="flex-1 rounded-xl bg-gray-50 border border-gray-200 px-4 h-12 flex items-center font-mono text-sm text-gray-600">
+                                <div className="flex-1 rounded-xl bg-gray-50 border border-gray-200 px-4 h-12 flex items-center font-mono text-sm text-black/70">
                                     {agent.api_key ? (copied ? "Copied!" : "••••••••••••••••••••••••••••••••") : "Not Generated"}
                                 </div>
                                 <Button variant="outline" size="icon" className="h-12 w-12" onClick={copyApiKey}>
-                                    {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4 text-gray-400" />}
+                                    {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4 text-black/50" />}
                                 </Button>
                             </div>
 
@@ -226,14 +230,14 @@ function AgentDetailContent({ params }: { params: Promise<{ id: string }> }) {
                         {/* Deployment Mode */}
                         <div className="card p-8 space-y-6 border-gray-100 shadow-sm">
                             <div>
-                                <h3 className="text-lg font-bold text-gray-900 mb-1">Deployment Status</h3>
-                                <p className="text-sm text-gray-500">Current active channels for this agent.</p>
+                                <h3 className="text-lg font-bold text-black mb-1">Deployment Status</h3>
+                                <p className="text-sm text-black/60">Current active channels for this agent.</p>
                             </div>
 
                             <div className="space-y-3">
                                 {Object.entries(agent.channels).map(([k, v]) => (
                                     <div key={k} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100">
-                                        <span className="text-sm font-medium text-gray-600 capitalize">{k} Channel</span>
+                                        <span className="text-sm font-medium text-black/70 capitalize">{k} Channel</span>
                                         <Badge variant={v ? 'success' : 'outline'}>{v ? 'Enabled' : 'Disabled'}</Badge>
                                     </div>
                                 ))}
@@ -244,9 +248,9 @@ function AgentDetailContent({ params }: { params: Promise<{ id: string }> }) {
 
                 <TabsContent value="conversations" className="animate-slide-up">
                     <div className="card p-20 text-center border-gray-100 shadow-sm">
-                        <MessageSquare className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">No active conversations</h3>
-                        <p className="text-gray-500 max-w-sm mx-auto">
+                        <MessageSquare className="h-12 w-12 mx-auto text-black/40 mb-4" />
+                        <h3 className="text-xl font-bold text-black mb-2">No active conversations</h3>
+                        <p className="text-black/60 max-w-sm mx-auto">
                             Once users start interacting with your agent across any channel, their chat history will appear here.
                         </p>
                     </div>
@@ -254,9 +258,9 @@ function AgentDetailContent({ params }: { params: Promise<{ id: string }> }) {
 
                 <TabsContent value="analytics" className="animate-slide-up">
                     <div className="card p-20 text-center border-gray-100 shadow-sm">
-                        <BarChart3 className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">Analytics gathering data</h3>
-                        <p className="text-gray-500 max-w-sm mx-auto">
+                        <BarChart3 className="h-12 w-12 mx-auto text-black/40 mb-4" />
+                        <h3 className="text-xl font-bold text-black mb-2">Analytics gathering data</h3>
+                        <p className="text-black/60 max-w-sm mx-auto">
                             Fine-grained performance charts and user sentiment analysis will be available once your agent has handled at least 50 messages.
                         </p>
                     </div>
@@ -264,11 +268,11 @@ function AgentDetailContent({ params }: { params: Promise<{ id: string }> }) {
 
                 <TabsContent value="settings" className="animate-slide-up">
                     <div className="card p-8 border-gray-100 shadow-sm">
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">Core Model Settings</h3>
+                        <h3 className="text-lg font-bold text-black mb-4">Core Model Settings</h3>
                         <div className="space-y-6 max-w-xl">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-500">System Instructions</label>
-                                <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 text-sm text-gray-600 leading-relaxed italic">
+                                <label className="text-sm font-medium text-black/60">System Instructions</label>
+                                <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 text-sm text-black/70 leading-relaxed italic">
                                     {agent.personality === 'friendly' ? "Be warm and welcoming..." : "Be efficient and professional..."}
                                 </div>
                             </div>

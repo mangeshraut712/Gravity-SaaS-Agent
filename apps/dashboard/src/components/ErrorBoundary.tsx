@@ -76,10 +76,10 @@ export class ErrorBoundary extends Component<Props, State> {
                                     />
                                 </svg>
                             </div>
-                            <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+                            <h2 className="mt-6 text-3xl font-extrabold text-black">
                                 Something went wrong
                             </h2>
-                            <p className="mt-2 text-sm text-gray-600">
+                            <p className="mt-2 text-sm text-black/70">
                                 We apologize for the inconvenience. Please try refreshing the page.
                             </p>
                         </div>
@@ -103,7 +103,7 @@ export class ErrorBoundary extends Component<Props, State> {
                             </button>
                             <button
                                 onClick={() => window.location.reload()}
-                                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-black/80 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                             >
                                 Refresh Page
                             </button>

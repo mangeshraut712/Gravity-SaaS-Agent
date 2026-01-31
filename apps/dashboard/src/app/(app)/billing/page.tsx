@@ -1,17 +1,16 @@
-'use client';
-
-export const dynamic = 'force-dynamic';
+"use client";
 
 import React from 'react';
 import { Sparkles, Check, Zap, ArrowRight, Shield, Globe, MessageSquare, CreditCard } from 'lucide-react';
 import {
   buildPolarCheckoutUrl,
+  cn,
   getPlanLimits,
   getUsageSnapshotForCurrentUser,
   supabaseClient,
   type SubscriptionTier,
-} from '../../lib';
-import { Badge, Button } from '../../components/ui';
+} from '@/lib';
+import { Badge, Button } from '@/components/ui';
 
 const plans = [
   {
@@ -77,35 +76,35 @@ export default function BillingPage() {
   const businessCheckout = buildPolarCheckoutUrl('business', email);
 
   return (
-    <div className="p-6 lg:p-10 space-y-12 animate-slide-up">
+    <div className="p-6 lg:p-10 space-y-12 animate-slide-up selection:bg-violet-500/30 text-black">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">Subscription & Usage</h1>
-        <p className="text-gray-400 mt-1">
+        <h1 className="text-3xl font-bold tracking-tight">Subscription & Usage</h1>
+        <p className="text-black/60 mt-1">
           Scale your AI workforce as your business grows.
         </p>
       </div>
 
       {/* Usage Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="card p-8 space-y-6">
+        <div className="card p-8 space-y-6 border-black/10 bg-black/[0.02]">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Active Plan</p>
-              <h2 className="text-2xl font-bold text-white capitalize mt-1">{tier}</h2>
+              <p className="text-xs font-bold text-black/60 uppercase tracking-widest">Active Plan</p>
+              <h2 className="text-2xl font-bold text-black capitalize mt-1">{tier}</h2>
             </div>
-            <Badge variant="success" className="h-8 px-4">Active</Badge>
+            <Badge variant="success" className="h-8 px-4 font-bold !bg-emerald-500/10 !text-emerald-600 border border-emerald-500/20">Active</Badge>
           </div>
 
           <div className="space-y-6">
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Agents Deployed</span>
-                <span className="text-white font-bold">{agentsUsed} / {limits.maxAgents}</span>
+                <span className="text-black/60 font-medium">Agents Deployed</span>
+                <span className="text-black font-bold">{agentsUsed} / {limits.maxAgents}</span>
               </div>
-              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+              <div className="h-2 w-full bg-black/10 rounded-full overflow-hidden shadow-inner">
                 <div
-                  className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"
+                  className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full"
                   style={{ width: `${(agentsUsed / limits.maxAgents) * 100}%` }}
                 />
               </div>
@@ -113,12 +112,12 @@ export default function BillingPage() {
 
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Monthly Message Credits</span>
-                <span className="text-white font-bold">{messagesUsed.toLocaleString()} / {limits.maxMessagesPerMonth.toLocaleString()}</span>
+                <span className="text-black/60 font-medium">Monthly Message Credits</span>
+                <span className="text-black font-bold">{messagesUsed.toLocaleString()} / {limits.maxMessagesPerMonth.toLocaleString()}</span>
               </div>
-              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+              <div className="h-2 w-full bg-black/10 rounded-full overflow-hidden shadow-inner">
                 <div
-                  className="h-full bg-emerald-500 rounded-full"
+                  className="h-full bg-emerald-500/80 rounded-full"
                   style={{ width: `${(messagesUsed / limits.maxMessagesPerMonth) * 100}%` }}
                 />
               </div>
@@ -126,18 +125,21 @@ export default function BillingPage() {
           </div>
         </div>
 
-        <div className="card p-8 bg-gradient-to-br from-purple-500/10 to-blue-600/10 border-purple-500/20 flex flex-col justify-between">
-          <div className="space-y-2">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-purple-400" />
+        <div className="card p-8 bg-gradient-to-br from-violet-500/10 to-indigo-600/10 border-violet-500/20 flex flex-col justify-between shadow-2xl relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <Zap className="h-32 w-32 text-violet-600" />
+          </div>
+          <div className="space-y-2 relative z-10">
+            <h3 className="text-xl font-bold text-black flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-violet-600" />
               Upgrade to unlock Pro
             </h3>
-            <p className="text-sm text-gray-400">
-              Get WhatsApp Business integration, REST API access, and 5x more message capacity.
+            <p className="text-sm text-black/60 leading-relaxed font-medium">
+              Get WhatsApp Business integration, REST API access, and 5x more message capacity to supercharge your growth.
             </p>
           </div>
-          <div className="pt-6">
-            <Button variant="premium" className="w-full gap-2">
+          <div className="pt-6 relative z-10">
+            <Button variant="premium" className="w-full gap-2 !h-12 font-bold uppercase tracking-widest text-[11px]">
               View Pro Features <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
@@ -147,29 +149,29 @@ export default function BillingPage() {
       {/* Plan Selections */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {plans.map((plan) => (
-          <div key={plan.id} className={`card p-8 flex flex-col transition-all hover:translate-y-[-4px] ${plan.popular ? 'border-purple-500/50 shadow-2xl shadow-purple-500/10 scale-105' : ''}`}>
+          <div key={plan.id} className={`card p-8 flex flex-col transition-all hover:translate-y-[-8px] hover:border-black/10 ${plan.popular ? 'border-violet-500/30' : 'border-black/10'} bg-black/[0.02] relative overflow-hidden`}>
             {plan.popular && (
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                <Badge variant="default" className="h-8 shadow-lg bg-gradient-to-r from-violet-500 to-indigo-500 text-white">Most Popular</Badge>
+              <div className="absolute -top-1 left-1/2 -translate-x-1/2">
+                <div className="bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-1.5 rounded-b-xl text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-xl">Most Popular</div>
               </div>
             )}
-            <div className="mb-8">
-              <h3 className="text-xl font-bold text-white">{plan.name}</h3>
-              <p className="text-sm text-gray-500 mt-1">{plan.desc}</p>
+            <div className="mb-8 mt-4">
+              <h3 className="text-2xl font-bold text-black tracking-tight">{plan.name}</h3>
+              <p className="text-sm text-black/60 mt-2 font-medium">{plan.desc}</p>
             </div>
 
             <div className="mb-8">
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-bold text-white">{plan.price}</span>
-                <span className="text-gray-500">/mo</span>
+                <span className="text-5xl font-bold text-black tracking-tighter">{plan.price}</span>
+                <span className="text-black/60 font-bold text-lg">/mo</span>
               </div>
             </div>
 
-            <ul className="space-y-4 mb-10 flex-1">
+            <ul className="space-y-5 mb-12 flex-1">
               {plan.features.map((f) => (
-                <li key={f} className="flex items-center gap-3 text-sm text-gray-300">
-                  <div className="h-5 w-5 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
-                    <Check className="h-3 w-3 text-emerald-500" />
+                <li key={f} className="flex items-start gap-3 text-sm text-black/70 font-medium">
+                  <div className="h-5 w-5 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <Check className="h-3 w-3 text-emerald-600" />
                   </div>
                   {f}
                 </li>
@@ -178,7 +180,7 @@ export default function BillingPage() {
 
             <Button
               variant={plan.popular ? 'premium' : tier === plan.id ? 'outline' : 'default'}
-              className="w-full"
+              className={cn("w-full !h-12 font-bold uppercase tracking-widest text-[10px]", tier === plan.id && "!border-black/10 !bg-black/5 !text-black/60 cursor-not-allowed")}
               asChild={tier !== plan.id && !!(plan.id === 'pro' ? proCheckout : plan.id === 'business' ? businessCheckout : null)}
               disabled={tier === plan.id}
             >
@@ -196,17 +198,17 @@ export default function BillingPage() {
       </div>
 
       {/* Payment Security */}
-      <div className="flex flex-col md:flex-row items-center justify-center gap-8 text-gray-500 text-sm py-10">
-        <div className="flex items-center gap-2">
-          <Shield className="h-4 w-4" />
+      <div className="flex flex-col md:flex-row items-center justify-center gap-10 text-black/60 text-xs font-bold uppercase tracking-widest py-12 opacity-60">
+        <div className="flex items-center gap-3">
+          <Shield className="h-4 w-4 text-emerald-500" />
           Secure SSL Encryption
         </div>
-        <div className="flex items-center gap-2">
-          <CreditCard className="h-4 w-4" />
+        <div className="flex items-center gap-3">
+          <CreditCard className="h-4 w-4 text-violet-500" />
           Powered by Polar.sh
         </div>
-        <div className="flex items-center gap-2">
-          <Globe className="h-4 w-4" />
+        <div className="flex items-center gap-3">
+          <Globe className="h-4 w-4 text-indigo-500" />
           200+ Countries supported
         </div>
       </div>

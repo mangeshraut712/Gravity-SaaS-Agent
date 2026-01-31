@@ -3,49 +3,37 @@
 @tailwind utilities;
 
 :root {
-  /* 2026 Color System - Enhanced Contrast */
-  --foreground-primary: #0f172a;
-  --foreground-secondary: #475569;
-  --foreground-tertiary: #94a3b8;
+  /* 2026 Color System - High Contrast Light */
+  --foreground-primary: #000000;
+  --foreground-secondary: rgba(0, 0, 0, 0.72);
+  --foreground-tertiary: rgba(0, 0, 0, 0.55);
   --background: #ffffff;
   --background-secondary: #f8fafc;
   --background-tertiary: #f1f5f9;
 
-  /* Accent Colors - Vibrant 2026 Palette */
+  /* Accent Colors - Ultra Vibrant 2026 Palette */
   --accent-violet: #8b5cf6;
   --accent-violet-light: #a78bfa;
   --accent-indigo: #6366f1;
   --accent-indigo-light: #818cf8;
-  --accent-purple: #9333ea;
-  --accent-fuchsia: #d946ef;
-  --accent-pink: #ec4899;
-  --accent-rose: #f43f5e;
-  --accent-orange: #f97316;
-  --accent-amber: #f59e0b;
   --accent-emerald: #10b981;
   --accent-teal: #14b8a6;
   --accent-cyan: #06b6d4;
-  --accent-sky: #0ea5e9;
 
-  /* Glassmorphism */
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.18);
-  --glass-shadow: rgba(0, 0, 0, 0.1);
+  /* Glassmorphism - Light Mode Optimized */
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-shadow: rgba(0, 0, 0, 0.12);
 
-  /* Shadows - Layered Depth */
+  /* Shadows - Subtle Depth */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.12), 0 8px 10px -6px rgb(0 0 0 / 0.12);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.18);
 
-  /* Border Radius - Fluid Scale */
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.25rem;
-  --radius-2xl: 1.5rem;
-  --radius-3xl: 2rem;
+  /* Utils */
+  --radius-xl: 1rem;
 }
 
 * {
@@ -236,15 +224,15 @@ body {
 /* Card styles */
 .card {
   @apply rounded-2xl transition-all duration-300;
-  background: var(--background);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+  background: var(--background-secondary);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-md);
 }
 
 .card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(139, 92, 246, 0.12);
-  border-color: rgba(139, 92, 246, 0.2);
+  box-shadow: 0 12px 40px rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.3);
 }
 
 /* Button styles */
@@ -306,21 +294,24 @@ body {
 }
 
 /* Input styles */
-.input-field {
+.input-field,
+.input-modern {
   @apply w-full px-4 py-3 rounded-xl transition-all duration-300;
   background: var(--background-secondary);
   border: 1.5px solid rgba(0, 0, 0, 0.08);
   color: var(--foreground-primary);
 }
 
-.input-field:focus {
+.input-field:focus,
+.input-modern:focus {
   outline: none;
   border-color: #8b5cf6;
   box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
 }
 
-.input-field::placeholder {
-  color: rgba(0, 0, 0, 0.4);
+.input-field::placeholder,
+.input-modern::placeholder {
+  color: rgba(0, 0, 0, 0.5);
 }
 
 /* Loading states */
@@ -471,7 +462,7 @@ body {
 /* Sidebar styles */
 .sidebar {
   background: var(--background);
-  border-right: 1px solid rgba(0, 0, 0, 0.06);
+  border-right: 1px solid var(--glass-border);
 }
 
 .sidebar-link {
