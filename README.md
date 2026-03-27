@@ -615,3 +615,21 @@ Built with amazing open-source technologies:
 [⬆ Back to Top](#-gravity-ai-agent-platform)
 
 </div>
+
+---
+
+<!-- codex:project-diagram:start -->
+
+## Project Diagram
+
+```mermaid
+flowchart LR
+    A["Browser"] --> B["Frontend"]
+    B --> C["Backend / API"]
+    C --> D["Data / Services"]
+    B -. feedback .-> A
+```
+
+_Main application path from user interface through backend services._
+
+<!-- codex:project-diagram:end -->
