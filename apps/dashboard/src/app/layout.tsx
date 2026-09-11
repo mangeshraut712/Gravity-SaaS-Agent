@@ -14,7 +14,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'Gravity – Launch AI Agents in 5 Minutes',
   description:
-    'Gravity is the fastest way to launch production-ready AI agents for your business. Deploy to WhatsApp, web, or API in minutes.',
+    'Gravity is a 2026 multi-tenant AI agent SaaS. Deploy production-ready agents to WhatsApp, web, or API in minutes.',
   keywords: ['AI', 'agent', 'chatbot', 'SaaS', 'automation', 'WhatsApp'],
   authors: [{ name: 'Gravity' }],
   openGraph: {

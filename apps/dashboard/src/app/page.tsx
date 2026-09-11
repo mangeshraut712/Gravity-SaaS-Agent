@@ -132,7 +132,7 @@ function HeroSection() {
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-50 border border-violet-200 mb-8"
                 >
                     <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-sm font-medium text-gray-700">Now with GPT-4o & Claude 3.5 Support</span>
+                    <span className="text-sm font-medium text-gray-700">2026 stack: Claude 4 & GPT-4.1</span>
                 </motion.div>
 
                 {/* Main Heading */}

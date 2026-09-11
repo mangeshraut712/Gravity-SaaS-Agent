@@ -11,6 +11,18 @@
 
 [Features](#-features) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Architecture](#-architecture) • [Contributing](#-contributing)
 
+<br />
+
+<img src="docs/screenshots/landing-hero.png" alt="Gravity landing page — Launch AI Agents in 5 Minutes" width="900" />
+
+<p>
+<img src="docs/screenshots/dashboard.png" alt="Gravity operator dashboard with live agent metrics" width="440" />
+&nbsp;
+<img src="docs/screenshots/templates.png" alt="Gravity agent template library" width="440" />
+</p>
+
+<sub>Captured from the running Next.js dashboard (landing, operator home, template library).</sub>
+
 </div>
 
 ---
@@ -34,7 +46,7 @@ Gravity is a **production-ready, multi-tenant AI agent SaaS platform** that enab
 
 - **Template Library** - Pre-built agents for common use cases (Customer Support, Sales, FAQ, Appointments)
 - **Custom Agents** - Build agents with custom prompts, knowledge bases, and behaviors
-- **Multi-Model Support** - Anthropic Claude, OpenAI, and OpenRouter integration
+- **Multi-Model Support** - Claude 4, GPT-4.1, and OpenRouter integration
 - **Context Management** - Advanced conversation memory and context handling
 - **Skills System** - Extensible skill framework (web search, file management, integrations)
 
@@ -172,9 +184,9 @@ The dashboard features a **modern 2026-style design** with:
 - **RLS:** Row Level Security enabled
 
 #### AI/LLM
-- **Primary:** Anthropic Claude (3.5 Sonnet)
+- **Primary:** Anthropic Claude 4
 - **Fallback:** OpenRouter (multiple models)
-- **Optional:** OpenAI GPT-4
+- **Optional:** OpenAI GPT-4.1
 
 #### DevOps
 - **CI/CD:** GitHub Actions
@@ -306,6 +318,7 @@ Gravity-SaaS-Agent/
 │   └── schema.sql            # Database schema & RLS policies
 │
 ├── docs/                     # Documentation
+│   ├── screenshots/         # Product screenshots (README / portfolio)
 │   ├── DEPLOYMENT.md         # Deployment guides
 │   └── IMPROVEMENTS.md       # Recent improvements
 │
