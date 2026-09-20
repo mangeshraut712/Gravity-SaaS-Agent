@@ -12,8 +12,11 @@ export function getPlanLimits(tier: SubscriptionTier): PlanLimits {
     case 'business':
       return { maxAgents: 10_000, maxMessagesPerMonth: 1_000_000 };
     case 'free':
-    default:
       return { maxAgents: 1, maxMessagesPerMonth: 100 };
+    default: {
+      const _exhaustive: never = tier;
+      return _exhaustive;
+    }
   }
 }
 

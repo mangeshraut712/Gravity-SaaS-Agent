@@ -467,8 +467,10 @@ docker-compose up -d
 
 # Services:
 # - Dashboard: http://localhost:3000
-# - Gateway: http://localhost:3003
+# - Gateway: http://localhost:3001 (docker-compose sets PORT=3001)
 # - Redis: localhost:6379 (optional)
+#
+# Local `npm run dev` still serves the gateway on http://localhost:3003.
 ```
 
 > 📖 **Full deployment guide:** [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)

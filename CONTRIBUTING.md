@@ -50,6 +50,10 @@ We are committed to providing a welcoming and inspiring community for all. Pleas
    npm run dev
    ```
 
+   Dashboard: http://localhost:3000 · Gateway: http://localhost:3003
+
+   Docker Compose maps the gateway to **3001** (`PORT=3001` in `docker-compose.yml`). Use the port that matches how you started the stack.
+
 ## Development Workflow
 
 ### Branch Strategy
@@ -190,11 +194,9 @@ refactor(gateway): simplify caching logic
    git rebase main
    ```
 
-2. **Run tests**
+2. **Run validation** (typecheck + lint + test)
    ```bash
-   npm test
-   npm run lint
-   npm run typecheck
+   npm run validate
    ```
 
 3. **Build successfully**
@@ -322,9 +324,8 @@ async function fetchUserProfile(
 
 ## Questions?
 
-- Open an issue for bugs
-- Start a discussion for feature ideas
-- Join our Discord community
+- Open a GitHub issue for bugs
+- Start a GitHub Discussion for feature ideas
 - Email: dev@gravity.ai
 
 Thank you for contributing to Gravity! 🚀
