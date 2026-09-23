@@ -85,7 +85,7 @@ export class CacheManager {
             console.log(`[Cache] Cache hit: ${key}`);
             return entry.data;
         } catch (error: any) {
-            console.error(`[Cache] Get error for ${key}:`, error);
+            console.error("[Cache] Get error", error);
             return null;
         }
     }
@@ -117,7 +117,7 @@ export class CacheManager {
             await this.redis.setex(fullKey, ttl, serialized);
             console.log(`[Cache] Cache set: ${key} (TTL: ${ttl}s)`);
         } catch (error: any) {
-            console.error(`[Cache] Set error for ${key}:`, error);
+            console.error("[Cache] Set error", error);
         }
     }
 

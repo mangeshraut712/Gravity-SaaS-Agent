@@ -1,3 +1,27 @@
+function encodeText(value: string): string {
+    return value.replace(/[&<>"']/g, (ch) => {
+        switch (ch) {
+            case "&": return "&amp;";
+            case "<": return "&lt;";
+            case ">": return "&gt;";
+            case '"': return "&quot;";
+            default: return "&#39;";
+        }
+    });
+}
+
+function isPlainEmail(email: string): boolean {
+    if (email.length > 254) return false;
+    const at = email.indexOf("@");
+    if (at <= 0 || email.lastIndexOf("@") !== at) return false;
+    const local = email.slice(0, at);
+    const domain = email.slice(at + 1);
+    const dot = domain.lastIndexOf(".");
+    if (dot <= 0 || dot === domain.length - 1) return false;
+    const ok = (part: string) => part.length > 0 && ![...part].some((ch) => ch === " " || ch === "\t");
+    return ok(local) && ok(domain);
+}
+
 /**
  * Request Validation Middleware
  * Validates incoming requests using JSON Schema
@@ -20,7 +44,7 @@ const validators: Record<string, (value: any) => boolean> = {
     boolean: (v) => typeof v === 'boolean',
     array: (v) => Array.isArray(v),
     object: (v) => typeof v === 'object' && !Array.isArray(v) && v !== null,
-    email: (v) => typeof v === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+    email: (v) => typeof v === 'string' && isPlainEmail(v),
     url: (v) => typeof v === 'string' && /^https?:\/\/.+/.test(v),
     uuid: (v) => typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v),
 };
@@ -208,10 +232,7 @@ export function sanitizeInput(req: Request, _res: Response, next: NextFunction) 
     const sanitize = (obj: any): any => {
         if (typeof obj === 'string') {
             // Remove potential XSS payloads
-            return obj
-                .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-                .replace(/javascript:/gi, '')
-                .replace(/on\w+\s*=/gi, '');
+            return encodeText(obj);
         }
         if (Array.isArray(obj)) {
             return obj.map(sanitize);

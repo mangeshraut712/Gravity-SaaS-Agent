@@ -10,6 +10,9 @@ env:
   NODE_VERSION: '20'
   NEXT_TELEMETRY_DISABLED: '1'
 
+permissions:
+  contents: read
+
 jobs:
   lint-and-typecheck:
     name: Lint & Type Check

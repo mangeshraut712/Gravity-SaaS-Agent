@@ -45,9 +45,9 @@ export class GravityMCPClient {
         }
 
         if (tool.dangerous) {
-            console.warn(`[MCP] Executing dangerous tool ${name} with args:`, args);
+            console.warn("[MCP] Executing dangerous tool", name);
         } else {
-            console.log(`[MCP] Executing tool ${name} with args:`, args);
+            console.log("[MCP] Executing tool", name);
         }
 
         try {
