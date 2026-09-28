@@ -11,18 +11,6 @@
 
 [Features](#-features) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Architecture](#-architecture) • [Contributing](#-contributing)
 
-<br />
-
-<img src="docs/screenshots/landing-hero.png" alt="Gravity landing page — Launch AI Agents in 5 Minutes" width="900" />
-
-<p>
-<img src="docs/screenshots/dashboard.png" alt="Gravity operator dashboard with live agent metrics" width="440" />
-&nbsp;
-<img src="docs/screenshots/templates.png" alt="Gravity agent template library" width="440" />
-</p>
-
-<sub>Captured from the running Next.js dashboard (landing, operator home, template library).</sub>
-
 </div>
 
 ---
@@ -37,6 +25,24 @@ Gravity is a **production-ready, multi-tenant AI agent SaaS platform** that enab
 - 💼 **SaaS Founders** launching AI agent products
 - 🚀 **Startups** automating customer service
 - 👨‍💻 **Developers** learning modern SaaS architecture
+
+---
+
+## Screenshots
+
+Framed captures of the live app (current UI).
+
+<div align="center">
+
+<img src="docs/screenshots/01-home.webp" alt="Launch agents in minutes — Gravity landing page" width="720" />
+
+<img src="docs/screenshots/02-features.webp" alt="Every channel, one desk — Gravity features" width="720" />
+
+<img src="docs/screenshots/03-pricing.webp" alt="Start free, scale later — Gravity pricing" width="720" />
+
+<img src="docs/screenshots/04-login.webp" alt="Sign in and ship agents — Gravity login and signup" width="720" />
+
+</div>
 
 ---
 
