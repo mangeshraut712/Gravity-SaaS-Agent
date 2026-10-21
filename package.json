@@ -67,7 +67,7 @@
     "vite": "6.4.3",
     "uuid": "13.0.1",
     "flatted": "3.4.2",
-    "follow-redirects": "1.16.0",
+    "follow-redirects": "1.16.1",
     "rollup": "4.59.0",
     "picomatch@2": "2.3.2",
     "picomatch@4": "4.0.4",
