@@ -70,7 +70,7 @@ export default function TemplatesPage() {
         </div>
         <Link
           href="/agents/new"
-          className="btn-primary !h-12 !px-8 font-bold uppercase tracking-widest text-xs shadow-lg shadow-violet-500/10"
+          className="btn-primary h-12! px-8! font-bold uppercase tracking-widest text-xs shadow-lg shadow-violet-500/10"
         >
           Build custom agent
         </Link>
@@ -97,7 +97,7 @@ export default function TemplatesPage() {
         {filtered.map((t) => (
           <article
             key={t.id}
-            className="card p-6 flex flex-col justify-between hover:border-violet-500/30 hover:bg-black/5 transition-all group border-black/10 bg-black/[0.02]"
+            className="card p-6 flex flex-col justify-between hover:border-violet-500/30 hover:bg-black/5 transition-all group border-black/10 bg-black/2"
           >
             <div>
               <div className="flex items-start justify-between gap-4">
@@ -113,7 +113,7 @@ export default function TemplatesPage() {
                   </div>
                 </div>
                 {t.badge && (
-                  <span className="badge badge-amber !bg-amber-500/10 !text-amber-600 border border-amber-500/20 font-black text-[9px] uppercase tracking-tighter px-2">
+                  <span className="badge badge-amber bg-amber-500/10! text-amber-600! border border-amber-500/20 font-black text-[9px] uppercase tracking-tighter px-2">
                     {t.badge}
                   </span>
                 )}
@@ -124,13 +124,13 @@ export default function TemplatesPage() {
             <div className="mt-8 flex gap-3">
               <Link
                 href={`/agents/new?template=${t.id}`}
-                className="btn-secondary flex-1 text-center text-[10px] font-black tracking-[0.1em] transition-all py-3"
+                className="btn-secondary flex-1 text-center text-[10px] font-black tracking-widest transition-all py-3"
               >
                 PREVIEW
               </Link>
               <Link
                 href={`/agents/new?template=${t.id}`}
-                className="btn-primary flex-1 text-center text-[10px] font-black tracking-[0.1em] py-3 shadow-lg shadow-violet-500/10"
+                className="btn-primary flex-1 text-center text-[10px] font-black tracking-widest py-3 shadow-lg shadow-violet-500/10"
               >
                 USE TEMPLATE
               </Link>
@@ -139,8 +139,8 @@ export default function TemplatesPage() {
         ))}
       </div>
 
-      <div className="mt-16 rounded-3xl bg-black/[0.03] p-12 text-center border border-black/10 relative overflow-hidden group">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="mt-16 rounded-3xl bg-black/3 p-12 text-center border border-black/10 relative overflow-hidden group">
+        <div className="absolute inset-0 bg-linear-to-br from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
         <div className="relative z-10 max-w-2xl mx-auto">
           <div className="h-16 w-16 bg-violet-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-violet-500/20">
             <Sparkles className="h-8 w-8 text-violet-600" />
@@ -151,7 +151,7 @@ export default function TemplatesPage() {
           <p className="text-black/60 font-medium mb-8">
             Architect a bespoke AI agent from the ground up, tailored specifically to your unique organizational logic and data.
           </p>
-          <Link href="/agents/new" className="inline-flex btn-primary !h-14 !px-10 font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-violet-500/20">
+          <Link href="/agents/new" className="inline-flex btn-primary h-14! px-10! font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-violet-500/20">
             Launch Custom Builder
             <ArrowRight className="ml-3 h-4 w-4" />
           </Link>

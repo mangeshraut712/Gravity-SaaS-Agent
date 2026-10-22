@@ -66,11 +66,11 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex items-center gap-3 animate-slide-up stagger-1">
-          <Link href="/templates" className="btn-secondary !px-5 !py-3 flex items-center gap-2 text-sm">
+          <Link href="/templates" className="btn-secondary px-5! py-3! flex items-center gap-2 text-sm">
             <Search className="h-4 w-4" />
             Find Templates
           </Link>
-          <Link href="/agents/new" className="btn-primary !px-5 !py-3 flex items-center gap-2 text-sm shadow-lg shadow-violet-500/20">
+          <Link href="/agents/new" className="btn-primary px-5! py-3! flex items-center gap-2 text-sm shadow-lg shadow-violet-500/20">
             <Plus className="h-4 w-4" />
             Create New Agent
           </Link>
@@ -99,7 +99,7 @@ export default function DashboardPage() {
               <div className="mt-6">
                 <div className="h-1.5 w-full bg-black/10 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full"
+                    className="h-full bg-linear-to-r from-violet-500 to-indigo-500 rounded-full"
                     style={{ width: `${stat.progress}%` }}
                   />
                 </div>
@@ -117,7 +117,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Agents Table */}
         <div className="lg:col-span-8 card overflow-hidden animate-slide-up stagger-2 border-black/10">
-          <div className="p-6 border-b border-black/10 flex items-center justify-between bg-black/[0.02]">
+          <div className="p-6 border-b border-black/10 flex items-center justify-between bg-black/2">
             <h2 className="text-lg font-bold text-black flex items-center gap-2">
               <Zap className="h-5 w-5 text-violet-600" />
               Recent Agents
@@ -149,7 +149,7 @@ export default function DashboardPage() {
                     </td>
                     <td className="px-6 py-4">
                       <span className={`badge ${agent.status === 'Active' ? 'badge-teal' : 'badge-amber'
-                        } !py-1 !px-3 font-bold uppercase tracking-tighter text-[10px]`}>
+                        } py-1! px-3! font-bold uppercase tracking-tighter text-[10px]`}>
                         {agent.status}
                       </span>
                     </td>
@@ -166,7 +166,7 @@ export default function DashboardPage() {
               </tbody>
             </table>
           </div>
-          <div className="p-4 bg-black/[0.02] border-t border-black/10 text-center">
+          <div className="p-4 bg-black/2 border-t border-black/10 text-center">
             <Link href="/agents/new" className="text-sm font-bold text-violet-700 hover:text-violet-800 transition-colors">
               + Create another agent
             </Link>
@@ -175,7 +175,7 @@ export default function DashboardPage() {
 
         {/* Activity Feed */}
         <div className="lg:col-span-4 card animate-slide-up stagger-3 border-black/10">
-          <div className="p-6 border-b border-black/10 bg-black/[0.02]">
+          <div className="p-6 border-b border-black/10 bg-black/2">
             <h2 className="text-lg font-bold text-black flex items-center gap-2">
               <Activity className="h-5 w-5 text-emerald-600" />
               Activity Feed
@@ -197,8 +197,8 @@ export default function DashboardPage() {
               ))}
             </div>
           </div>
-          <div className="p-6 border-t border-black/10 bg-black/[0.02]">
-            <button className="w-full btn-secondary !py-3 text-[11px] font-bold transition-all uppercase tracking-widest">
+          <div className="p-6 border-t border-black/10 bg-black/2">
+            <button className="w-full btn-secondary py-3! text-[11px] font-bold transition-all uppercase tracking-widest">
               View Full Logs
             </button>
           </div>

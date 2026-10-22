@@ -101,7 +101,7 @@ export function ChatWidget({ agentId }: ChatWidgetProps) {
           >
             <div
               className={`max-w-[80%] rounded-2xl px-3 py-2 ${m.role === 'user'
-                  ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white'
+                  ? 'bg-linear-to-r from-purple-500 to-blue-500 text-white'
                   : 'bg-gray-100 text-black'
                 }`}
             >
@@ -122,13 +122,13 @@ export function ChatWidget({ agentId }: ChatWidgetProps) {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Type a message…"
-          className="h-8 flex-1 rounded-full border border-black/10 bg-white px-3 text-[11px] text-black outline-none ring-0 placeholder:text-black/50 focus:border-violet-400"
+          className="h-8 flex-1 rounded-full border border-black/10 bg-white px-3 text-[11px] text-black outline-hidden ring-0 placeholder:text-black/50 focus:border-violet-400"
         />
         <button
           type="button"
           onClick={() => void handleSend()}
           disabled={loading || !input.trim()}
-          className="h-8 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 px-3 text-[11px] font-semibold text-white shadow shadow-purple-900/40 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+          className="h-8 rounded-full bg-linear-to-r from-purple-500 to-blue-500 px-3 text-[11px] font-semibold text-white shadow-sm shadow-purple-900/40 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? 'Sending…' : 'Send'}
         </button>

@@ -30,7 +30,7 @@ export default function SettingsTab({ darkMode }: SettingsTabProps) {
                         <input
                             type="text"
                             defaultValue="GravityOS"
-                            className={`w-full px-3 py-2 rounded-lg ${darkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'} border focus:outline-none focus:ring-2 focus:ring-purple-500`}
+                            className={`w-full px-3 py-2 rounded-lg ${darkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'} border focus:outline-hidden focus:ring-2 focus:ring-purple-500`}
                         />
                     </div>
                     <div>
@@ -40,7 +40,7 @@ export default function SettingsTab({ darkMode }: SettingsTabProps) {
                         <input
                             type="email"
                             defaultValue="admin@gravityos.com"
-                            className={`w-full px-3 py-2 rounded-lg ${darkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'} border focus:outline-none focus:ring-2 focus:ring-purple-500`}
+                            className={`w-full px-3 py-2 rounded-lg ${darkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'} border focus:outline-hidden focus:ring-2 focus:ring-purple-500`}
                         />
                     </div>
                 </div>

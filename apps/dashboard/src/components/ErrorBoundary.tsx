@@ -97,13 +97,13 @@ export class ErrorBoundary extends Component<Props, State> {
                         <div className="mt-6 flex justify-center space-x-4">
                             <button
                                 onClick={this.handleReset}
-                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                             >
                                 Try Again
                             </button>
                             <button
                                 onClick={() => window.location.reload()}
-                                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-black/80 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-black/80 bg-white hover:bg-gray-50 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                             >
                                 Refresh Page
                             </button>
@@ -137,7 +137,7 @@ export function AsyncErrorBoundary({
                 <p className="mt-1 text-sm text-red-600">{error.message}</p>
                 <button
                     onClick={reset}
-                    className="mt-3 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    className="mt-3 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                 >
                     Try Again
                 </button>

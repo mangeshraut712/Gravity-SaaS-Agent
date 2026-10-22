@@ -87,13 +87,13 @@ export default function BillingPage() {
 
       {/* Usage Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="card p-8 space-y-6 border-black/10 bg-black/[0.02]">
+        <div className="card p-8 space-y-6 border-black/10 bg-black/2">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-black/60 uppercase tracking-widest">Active Plan</p>
               <h2 className="text-2xl font-bold text-black capitalize mt-1">{tier}</h2>
             </div>
-            <Badge variant="success" className="h-8 px-4 font-bold !bg-emerald-500/10 !text-emerald-600 border border-emerald-500/20">Active</Badge>
+            <Badge variant="success" className="h-8 px-4 font-bold bg-emerald-500/10! text-emerald-600! border border-emerald-500/20">Active</Badge>
           </div>
 
           <div className="space-y-6">
@@ -104,7 +104,7 @@ export default function BillingPage() {
               </div>
               <div className="h-2 w-full bg-black/10 rounded-full overflow-hidden shadow-inner">
                 <div
-                  className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full"
+                  className="h-full bg-linear-to-r from-violet-500 to-indigo-500 rounded-full"
                   style={{ width: `${(agentsUsed / limits.maxAgents) * 100}%` }}
                 />
               </div>
@@ -125,7 +125,7 @@ export default function BillingPage() {
           </div>
         </div>
 
-        <div className="card p-8 bg-gradient-to-br from-violet-500/10 to-indigo-600/10 border-violet-500/20 flex flex-col justify-between shadow-2xl relative overflow-hidden group">
+        <div className="card p-8 bg-linear-to-br from-violet-500/10 to-indigo-600/10 border-violet-500/20 flex flex-col justify-between shadow-2xl relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
             <Zap className="h-32 w-32 text-violet-600" />
           </div>
@@ -139,7 +139,7 @@ export default function BillingPage() {
             </p>
           </div>
           <div className="pt-6 relative z-10">
-            <Button variant="premium" className="w-full gap-2 !h-12 font-bold uppercase tracking-widest text-[11px]">
+            <Button variant="premium" className="w-full gap-2 h-12! font-bold uppercase tracking-widest text-[11px]">
               View Pro Features <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
@@ -149,10 +149,10 @@ export default function BillingPage() {
       {/* Plan Selections */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {plans.map((plan) => (
-          <div key={plan.id} className={`card p-8 flex flex-col transition-all hover:translate-y-[-8px] hover:border-black/10 ${plan.popular ? 'border-violet-500/30' : 'border-black/10'} bg-black/[0.02] relative overflow-hidden`}>
+          <div key={plan.id} className={`card p-8 flex flex-col transition-all hover:translate-y-[-8px] hover:border-black/10 ${plan.popular ? 'border-violet-500/30' : 'border-black/10'} bg-black/2 relative overflow-hidden`}>
             {plan.popular && (
               <div className="absolute -top-1 left-1/2 -translate-x-1/2">
-                <div className="bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-1.5 rounded-b-xl text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-xl">Most Popular</div>
+                <div className="bg-linear-to-r from-violet-600 to-indigo-600 px-4 py-1.5 rounded-b-xl text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-xl">Most Popular</div>
               </div>
             )}
             <div className="mb-8 mt-4">
@@ -180,7 +180,7 @@ export default function BillingPage() {
 
             <Button
               variant={plan.popular ? 'premium' : tier === plan.id ? 'outline' : 'default'}
-              className={cn("w-full !h-12 font-bold uppercase tracking-widest text-[10px]", tier === plan.id && "!border-black/10 !bg-black/5 !text-black/60 cursor-not-allowed")}
+              className={cn("w-full h-12! font-bold uppercase tracking-widest text-[10px]", tier === plan.id && "border-black/10! bg-black/5! text-black/60! cursor-not-allowed")}
               asChild={tier !== plan.id && !!(plan.id === 'pro' ? proCheckout : plan.id === 'business' ? businessCheckout : null)}
               disabled={tier === plan.id}
             >

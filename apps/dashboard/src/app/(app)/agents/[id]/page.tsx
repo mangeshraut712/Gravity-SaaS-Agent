@@ -157,7 +157,7 @@ function AgentDetailContent({ params }: { params: Promise<{ id: string }> }) {
                         Back to workforce
                     </Button>
                     <div className="flex items-center gap-6">
-                        <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-xl shadow-violet-500/20">
+                        <div className="h-20 w-20 rounded-2xl bg-linear-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-xl shadow-violet-500/20">
                             <Bot className="h-10 w-10 text-white" />
                         </div>
                         <div>
@@ -175,7 +175,7 @@ function AgentDetailContent({ params }: { params: Promise<{ id: string }> }) {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-gray-50 border border-gray-100 shadow-sm">
+                    <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-gray-50 border border-gray-100 shadow-xs">
                         <span className="text-xs font-bold uppercase tracking-widest text-black/50">
                             {agent.status === 'active' ? 'Agent Live' : 'Agent Paused'}
                         </span>
@@ -205,7 +205,7 @@ function AgentDetailContent({ params }: { params: Promise<{ id: string }> }) {
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         {/* API Integration */}
-                        <div className="card p-8 space-y-6 border-gray-100 shadow-sm">
+                        <div className="card p-8 space-y-6 border-gray-100 shadow-xs">
                             <div>
                                 <h3 className="text-lg font-bold text-black mb-1">API Integration</h3>
                                 <p className="text-sm text-black/60">Use this key to integrate this agent into your own applications.</p>
@@ -228,7 +228,7 @@ function AgentDetailContent({ params }: { params: Promise<{ id: string }> }) {
                         </div>
 
                         {/* Deployment Mode */}
-                        <div className="card p-8 space-y-6 border-gray-100 shadow-sm">
+                        <div className="card p-8 space-y-6 border-gray-100 shadow-xs">
                             <div>
                                 <h3 className="text-lg font-bold text-black mb-1">Deployment Status</h3>
                                 <p className="text-sm text-black/60">Current active channels for this agent.</p>
@@ -247,7 +247,7 @@ function AgentDetailContent({ params }: { params: Promise<{ id: string }> }) {
                 </TabsContent>
 
                 <TabsContent value="conversations" className="animate-slide-up">
-                    <div className="card p-20 text-center border-gray-100 shadow-sm">
+                    <div className="card p-20 text-center border-gray-100 shadow-xs">
                         <MessageSquare className="h-12 w-12 mx-auto text-black/40 mb-4" />
                         <h3 className="text-xl font-bold text-black mb-2">No active conversations</h3>
                         <p className="text-black/60 max-w-sm mx-auto">
@@ -257,7 +257,7 @@ function AgentDetailContent({ params }: { params: Promise<{ id: string }> }) {
                 </TabsContent>
 
                 <TabsContent value="analytics" className="animate-slide-up">
-                    <div className="card p-20 text-center border-gray-100 shadow-sm">
+                    <div className="card p-20 text-center border-gray-100 shadow-xs">
                         <BarChart3 className="h-12 w-12 mx-auto text-black/40 mb-4" />
                         <h3 className="text-xl font-bold text-black mb-2">Analytics gathering data</h3>
                         <p className="text-black/60 max-w-sm mx-auto">
@@ -267,7 +267,7 @@ function AgentDetailContent({ params }: { params: Promise<{ id: string }> }) {
                 </TabsContent>
 
                 <TabsContent value="settings" className="animate-slide-up">
-                    <div className="card p-8 border-gray-100 shadow-sm">
+                    <div className="card p-8 border-gray-100 shadow-xs">
                         <h3 className="text-lg font-bold text-black mb-4">Core Model Settings</h3>
                         <div className="space-y-6 max-w-xl">
                             <div className="space-y-2">
