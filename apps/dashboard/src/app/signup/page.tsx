@@ -59,7 +59,7 @@ export default function SignupPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <Link href="/" className="flex items-center justify-center gap-3 mb-10">
-          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
+          <div className="h-12 w-12 rounded-2xl bg-linear-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
             <Sparkles className="h-6 w-6 text-white" />
           </div>
           <div>
@@ -85,7 +85,7 @@ export default function SignupPage() {
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full h-12 pl-12 pr-4 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder:text-gray-400 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
+                    className="w-full h-12 pl-12 pr-4 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder:text-gray-400 focus:outline-hidden focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
                     placeholder="Alex Rivera"
                   />
                 </div>
@@ -99,7 +99,7 @@ export default function SignupPage() {
                     type="text"
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
-                    className="w-full h-12 pl-12 pr-4 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder:text-gray-400 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
+                    className="w-full h-12 pl-12 pr-4 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder:text-gray-400 focus:outline-hidden focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
                     placeholder="Rivera Studio"
                   />
                 </div>
@@ -115,7 +115,7 @@ export default function SignupPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full h-12 pl-12 pr-4 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder:text-gray-400 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
+                  className="w-full h-12 pl-12 pr-4 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder:text-gray-400 focus:outline-hidden focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
                   placeholder="you@company.com"
                 />
               </div>
@@ -131,7 +131,7 @@ export default function SignupPage() {
                   minLength={8}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full h-12 pl-12 pr-4 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder:text-gray-400 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
+                  className="w-full h-12 pl-12 pr-4 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder:text-gray-400 focus:outline-hidden focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
                   placeholder="At least 8 characters"
                 />
               </div>

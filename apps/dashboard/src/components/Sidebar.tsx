@@ -40,7 +40,7 @@ export function Sidebar({ email }: SidebarProps) {
     return (
         <aside className="hidden w-72 flex-col px-6 py-8 sm:flex h-screen sticky top-0 bg-white border-r border-gray-200 z-20">
             <Link href="/dashboard" className="flex items-center gap-3 px-3 transition-transform hover:scale-[1.02] active:scale-[0.98]">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-500/20">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-linear-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-500/20">
                     <Sparkles className="h-6 w-6 text-white" />
                 </div>
                 <div>
@@ -81,7 +81,7 @@ export function Sidebar({ email }: SidebarProps) {
             <div className="mt-auto space-y-4">
                 <div className="p-5 bg-gray-50 border border-gray-200 rounded-2xl">
                     <div className="flex items-center gap-4">
-                        <div className="h-11 w-11 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-600 flex items-center justify-center text-xs font-black text-white shadow-lg">
+                        <div className="h-11 w-11 rounded-xl bg-linear-to-tr from-violet-600 to-indigo-600 flex items-center justify-center text-xs font-black text-white shadow-lg">
                             {email.slice(0, 2).toUpperCase()}
                         </div>
                         <div className="truncate flex-1">

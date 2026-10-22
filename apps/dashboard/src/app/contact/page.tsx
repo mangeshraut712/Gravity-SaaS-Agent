@@ -55,7 +55,7 @@ export default function ContactPage() {
                                         id="name"
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="w-full h-12 px-4 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder:text-gray-400 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
+                                        className="w-full h-12 px-4 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder:text-gray-400 focus:outline-hidden focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
                                         placeholder="John Doe"
                                         required
                                     />
@@ -67,7 +67,7 @@ export default function ContactPage() {
                                         id="email"
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className="w-full h-12 px-4 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder:text-gray-400 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
+                                        className="w-full h-12 px-4 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder:text-gray-400 focus:outline-hidden focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
                                         placeholder="john@example.com"
                                         required
                                     />
@@ -81,7 +81,7 @@ export default function ContactPage() {
                                     id="subject"
                                     value={formData.subject}
                                     onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                                    className="w-full h-12 px-4 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder:text-gray-400 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
+                                    className="w-full h-12 px-4 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder:text-gray-400 focus:outline-hidden focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
                                     placeholder="How can we help?"
                                     required
                                 />
@@ -94,7 +94,7 @@ export default function ContactPage() {
                                     rows={5}
                                     value={formData.message}
                                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder:text-gray-400 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all resize-none"
+                                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-black placeholder:text-gray-400 focus:outline-hidden focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all resize-none"
                                     placeholder="Tell us more about your inquiry..."
                                     required
                                 />
@@ -126,7 +126,7 @@ export default function ContactPage() {
                             <h3 className="text-xl font-bold text-black mb-6">Other ways to reach us</h3>
                             <div className="space-y-5">
                                 <a href="mailto:support@gravity-ai.com" className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-all group">
-                                    <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg">
+                                    <div className="h-12 w-12 rounded-xl bg-linear-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg">
                                         <Mail className="h-5 w-5 text-white" />
                                     </div>
                                     <div>
@@ -136,7 +136,7 @@ export default function ContactPage() {
                                 </a>
 
                                 <a href="https://twitter.com/gravity_ai" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-all group">
-                                    <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-lg">
+                                    <div className="h-12 w-12 rounded-xl bg-linear-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-lg">
                                         <Twitter className="h-5 w-5 text-white" />
                                     </div>
                                     <div>
@@ -156,7 +156,7 @@ export default function ContactPage() {
                                 </a>
 
                                 <a href="https://discord.gg/gravity" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-all group">
-                                    <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+                                    <div className="h-12 w-12 rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
                                         <MessageSquare className="h-5 w-5 text-white" />
                                     </div>
                                     <div>

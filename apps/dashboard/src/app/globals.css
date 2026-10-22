@@ -1,6 +1,42 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@theme {
+  --color-background: rgb(var(--background-start-rgb));
+  --color-foreground: rgb(var(--foreground-rgb));
+
+  --color-primary: rgb(var(--primary-rgb));
+  --color-primary-foreground: #ffffff;
+
+  --color-secondary: rgb(var(--secondary-rgb));
+  --color-secondary-foreground: #ffffff;
+
+  --color-accent: rgb(var(--accent-rgb));
+  --color-accent-foreground: #ffffff;
+
+  --background-image-gradient-radial: radial-gradient(var(--tw-gradient-stops));
+  --background-image-gradient-conic: conic-gradient(
+    from 180deg at 50% 50%,
+    var(--tw-gradient-stops)
+  );
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
 
 :root {
   /* 2026 Color System - High Contrast Light */
@@ -36,26 +72,28 @@
   --radius-xl: 1rem;
 }
 
-* {
-  box-sizing: border-box;
-}
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
 
-html {
-  scroll-behavior: smooth;
-  /* Fluid base font size: 14px on mobile, 16px on desktop */
-  font-size: clamp(14px, 1vw + 12px, 16px);
-}
+  html {
+    scroll-behavior: smooth;
+    /* Fluid base font size: 14px on mobile, 16px on desktop */
+    font-size: clamp(14px, 1vw + 12px, 16px);
+  }
 
-body {
-  color: var(--foreground-primary);
-  background: var(--background);
-  min-height: 100vh;
-  font-family: 'Inter var', 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  /* Fluid line height */
-  line-height: 1.6;
+  body {
+    color: var(--foreground-primary);
+    background: var(--background);
+    min-height: 100vh;
+    font-family: 'Inter var', 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    /* Fluid line height */
+    line-height: 1.6;
+  }
 }
 
 /* Improved Font Feature Settings */

@@ -120,7 +120,7 @@ function AgentsContent() {
       </div>
 
       {/* Table Card */}
-      <div className="card overflow-hidden border-black/10 bg-black/[0.02]">
+      <div className="card overflow-hidden border-black/10 bg-black/2">
         {loading || authLoading ? (
           <div className="p-32 text-center">
             <div className="h-12 w-12 animate-spin rounded-full border-4 border-violet-500/20 border-t-violet-500 mx-auto" />
@@ -141,7 +141,7 @@ function AgentsContent() {
             </p>
             {!search && (
               <Link href="/agents/new">
-                <button className="btn-primary !h-14 font-black uppercase tracking-[0.2em] px-10">Deploy Agent</button>
+                <button className="btn-primary h-14! font-black uppercase tracking-[0.2em] px-10">Deploy Agent</button>
               </Link>
             )}
           </div>
@@ -149,7 +149,7 @@ function AgentsContent() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-black/10 bg-black/[0.03]">
+                <tr className="border-b border-black/10 bg-black/3">
                   <th className="text-left py-5 px-8 font-bold text-black/60 text-[10px] uppercase tracking-[0.2em]">Agent Identity</th>
                   <th className="text-left py-5 px-8 font-bold text-black/60 text-[10px] uppercase tracking-[0.2em]">Framework</th>
                   <th className="text-left py-5 px-8 font-bold text-black/60 text-[10px] uppercase tracking-[0.2em]">DNA Profile</th>
@@ -178,7 +178,7 @@ function AgentsContent() {
                     <td className="py-5 px-8 capitalize text-black/60 text-sm font-medium">{agent.personality}</td>
                     <td className="py-5 px-8">
                       <span className={cn(
-                        "inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.1em]",
+                        "inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest",
                         agent.status === "active"
                           ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
                           : agent.status === "paused"

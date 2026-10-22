@@ -145,7 +145,7 @@ function NewAgentForm() {
 
       {error && <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm">{error}</div>}
 
-      <div className="card p-8 min-h-[400px] border-gray-100 shadow-sm relative overflow-hidden">
+      <div className="card p-8 min-h-[400px] border-gray-100 shadow-xs relative overflow-hidden">
         {currentStep === 1 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
             <h2 className="text-xl font-bold text-black">Basic Setup</h2>

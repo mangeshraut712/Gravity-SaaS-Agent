@@ -60,7 +60,7 @@ export default function SettingsPage() {
           return (
             <div
               key={section.id}
-              className="card p-6 flex items-start gap-5 hover:border-violet-500/30 hover:bg-black/5 transition-all cursor-pointer group border-black/10 bg-black/[0.02]"
+              className="card p-6 flex items-start gap-5 hover:border-violet-500/30 hover:bg-black/5 transition-all cursor-pointer group border-black/10 bg-black/2"
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-600 group-hover:bg-violet-500/20 group-hover:scale-110 transition-all shadow-inner border border-violet-500/10">
                 <Icon className="h-6 w-6" />
@@ -77,8 +77,8 @@ export default function SettingsPage() {
         })}
       </div>
 
-      <div className="mt-12 rounded-2xl bg-black/[0.03] p-10 border border-black/10 relative overflow-hidden group">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="mt-12 rounded-2xl bg-black/3 p-10 border border-black/10 relative overflow-hidden group">
+        <div className="absolute inset-0 bg-linear-to-br from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <h3 className="text-xl font-bold text-black">Need expert assistance?</h3>
@@ -86,7 +86,7 @@ export default function SettingsPage() {
               Our support engineers are available 24/7 to help you optimize your agents.
             </p>
           </div>
-          <button className="btn-primary !h-12 !px-8 font-bold uppercase tracking-widest text-xs whitespace-nowrap shadow-lg shadow-violet-500/10">
+          <button className="btn-primary h-12! px-8! font-bold uppercase tracking-widest text-xs whitespace-nowrap shadow-lg shadow-violet-500/10">
             Contact Support
           </button>
         </div>

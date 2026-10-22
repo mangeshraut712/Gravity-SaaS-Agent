@@ -99,7 +99,7 @@ function ConversationsContent() {
 
             {/* Metrics Bar */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div className="card flex items-center gap-4 p-5 hover:!translate-y-0 border-black/10 bg-black/[0.03]">
+                <div className="card flex items-center gap-4 p-5 hover:translate-y-0! border-black/10 bg-black/3">
                     <div className="h-12 w-12 rounded-xl bg-violet-500/10 flex items-center justify-center text-violet-600 shadow-inner">
                         <MessageSquare className="h-6 w-6" />
                     </div>
@@ -108,7 +108,7 @@ function ConversationsContent() {
                         <p className="text-2xl font-bold text-black">{conversations.filter(c => c.status === 'active').length}</p>
                     </div>
                 </div>
-                <div className="card flex items-center gap-4 p-5 hover:!translate-y-0 border-black/10 bg-black/[0.03]">
+                <div className="card flex items-center gap-4 p-5 hover:translate-y-0! border-black/10 bg-black/3">
                     <div className="h-12 w-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 shadow-inner">
                         <Bot className="h-6 w-6" />
                     </div>
@@ -117,7 +117,7 @@ function ConversationsContent() {
                         <p className="text-2xl font-bold text-gradient-teal-cyan tracking-tight">92%</p>
                     </div>
                 </div>
-                <div className="card flex items-center gap-4 p-5 hover:!translate-y-0 border-black/10 bg-black/[0.03]">
+                <div className="card flex items-center gap-4 p-5 hover:translate-y-0! border-black/10 bg-black/3">
                     <div className="h-12 w-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-600 shadow-inner">
                         <Users className="h-6 w-6" />
                     </div>
@@ -141,7 +141,7 @@ function ConversationsContent() {
             </div>
 
             {/* Table */}
-            <div className="card overflow-hidden border-black/10 bg-black/[0.02]">
+            <div className="card overflow-hidden border-black/10 bg-black/2">
                 {loading || authLoading ? (
                     <div className="p-24 text-center">
                         <div className="h-12 w-12 animate-spin rounded-full border-4 border-violet-500/20 border-t-violet-500 mx-auto" />
@@ -161,7 +161,7 @@ function ConversationsContent() {
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead>
-                                <tr className="border-b border-black/10 bg-black/[0.03]">
+                                <tr className="border-b border-black/10 bg-black/3">
                                     <th className="text-left py-4 px-6 font-semibold text-black/60 text-[11px] uppercase tracking-widest">User</th>
                                     <th className="text-left py-4 px-6 font-semibold text-black/60 text-[11px] uppercase tracking-widest">Agent</th>
                                     <th className="text-left py-4 px-6 font-semibold text-black/60 text-[11px] uppercase tracking-widest">Status</th>
@@ -176,7 +176,7 @@ function ConversationsContent() {
                                             {c.user_identifier}
                                         </td>
                                         <td className="py-4 px-6">
-                                            <span className="badge badge-violet !bg-violet-500/10 !border-violet-500/20 text-violet-600 font-bold text-[10px] px-2 py-0.5 uppercase tracking-tight">
+                                            <span className="badge badge-violet bg-violet-500/10! border-violet-500/20! text-violet-600 font-bold text-[10px] px-2 py-0.5 uppercase tracking-tight">
                                                 {c.agent_name}
                                             </span>
                                         </td>

@@ -183,25 +183,25 @@ export default function AnalyticsPage() {
         </div>
 
         <div className="space-y-4">
-          <div className="card p-6 border-black/10 hover:border-black/20 transition-all hover:bg-black/[0.03]">
+          <div className="card p-6 border-black/10 hover:border-black/20 transition-all hover:bg-black/3">
             <p className="text-[10px] text-black/60 uppercase font-black tracking-[0.2em]">Avg response time</p>
             <p className="mt-1 text-2xl font-bold text-black tracking-tight">~1.2s</p>
             <div className="mt-3 h-1 w-full bg-black/10 rounded-full overflow-hidden">
               <div className="h-full w-[85%] bg-emerald-500/50" />
             </div>
           </div>
-          <div className="card p-6 border-black/10 hover:border-black/20 transition-all hover:bg-black/[0.03]">
+          <div className="card p-6 border-black/10 hover:border-black/20 transition-all hover:bg-black/3">
             <p className="text-[10px] text-black/60 uppercase font-black tracking-[0.2em]">Resolution rate</p>
             <p className="mt-1 text-2xl font-bold text-gradient-teal-cyan tracking-tight">87%</p>
             <div className="mt-3 h-1 w-full bg-black/10 rounded-full overflow-hidden">
               <div className="h-full w-[87%] bg-teal-500/50" />
             </div>
           </div>
-          <div className="card p-6 border-black/10 hover:border-black/20 transition-all hover:bg-black/[0.03]">
+          <div className="card p-6 border-black/10 hover:border-black/20 transition-all hover:bg-black/3">
             <p className="text-[10px] text-black/60 uppercase font-black tracking-[0.2em]">Active agents</p>
             <p className="mt-1 text-2xl font-bold text-gradient-coral-violet tracking-tight">3</p>
           </div>
-          <div className="card p-6 border-black/10 hover:border-black/20 transition-all hover:bg-black/[0.03]">
+          <div className="card p-6 border-black/10 hover:border-black/20 transition-all hover:bg-black/3">
             <p className="text-[10px] text-black/60 uppercase font-black tracking-[0.2em]">Conversations today</p>
             <p className="mt-1 text-2xl font-bold text-black tracking-tight">142</p>
           </div>

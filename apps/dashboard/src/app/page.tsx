@@ -36,7 +36,7 @@ function Navbar() {
             <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
                 {/* Logo */}
                 <Link href="/" className="flex items-center gap-3 group">
-                    <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20 group-hover:scale-105 transition-transform">
+                    <div className="h-11 w-11 rounded-2xl bg-linear-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20 group-hover:scale-105 transition-transform">
                         <Sparkles className="h-5 w-5 text-white" />
                     </div>
                     <div>
@@ -188,7 +188,7 @@ function HeroSection() {
                     <div className="flex items-center gap-2">
                         <div className="flex -space-x-3">
                             {[1, 2, 3, 4, 5].map((i) => (
-                                <div key={i} className="h-10 w-10 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 border-2 border-white flex items-center justify-center text-xs font-bold text-white">
+                                <div key={i} className="h-10 w-10 rounded-full bg-linear-to-br from-violet-500 to-indigo-600 border-2 border-white flex items-center justify-center text-xs font-bold text-white">
                                     {String.fromCharCode(64 + i)}
                                 </div>
                             ))}
@@ -437,7 +437,7 @@ function Footer() {
                 <div className="grid md:grid-cols-6 gap-12">
                     <div className="md:col-span-2">
                         <Link href="/" className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center">
+                            <div className="h-10 w-10 rounded-xl bg-linear-to-br from-violet-600 to-indigo-600 flex items-center justify-center">
                                 <Sparkles className="h-5 w-5 text-white" />
                             </div>
                             <span className="text-xl font-black text-black">Gravity</span>
