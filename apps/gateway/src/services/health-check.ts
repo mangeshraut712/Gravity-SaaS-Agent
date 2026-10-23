@@ -83,6 +83,7 @@ export class HealthCheckService {
                 this.lastEventLoopLag = Date.now() - start;
             });
         }, 1000);
+        this.eventLoopLagCheck.unref?.();
     }
 
     register(config: HealthCheckConfig): void {
@@ -95,6 +96,7 @@ export class HealthCheckService {
             const intervalId = setInterval(() => {
                 this.runCheck(config);
             }, config.interval);
+            intervalId.unref?.();
             this.intervals.set(config.name, intervalId);
         }
     }

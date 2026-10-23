@@ -120,6 +120,13 @@ export class ChannelManager {
   /**
    * Get status of all channels
    */
+  getConfiguredStatuses(): Array<{ type: string; status: string }> {
+    return Array.from(this.channelStatuses.entries()).map(([type, status]) => ({
+      type,
+      status,
+    }));
+  }
+
   getChannelStatuses(): Record<string, string> {
     const statuses: Record<string, string> = {};
     

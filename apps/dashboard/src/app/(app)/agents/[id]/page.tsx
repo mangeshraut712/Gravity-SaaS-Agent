@@ -4,7 +4,7 @@
 
 
 
-import { Suspense, useEffect, useState, use } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -46,7 +46,17 @@ interface Agent {
 }
 
 function AgentDetailContent({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+    const [id, setId] = useState("");
+
+    useEffect(() => {
+        let active = true;
+        void params.then((value) => {
+            if (active) setId(value.id);
+        });
+        return () => {
+            active = false;
+        };
+    }, [params]);
     const { user } = useAuth();
     const router = useRouter();
 

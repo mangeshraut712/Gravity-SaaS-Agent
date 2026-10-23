@@ -16,6 +16,25 @@ export interface CacheEntry<T> {
     compressed?: boolean;
 }
 
+function rememberJsonResponse(
+    res: Response,
+    cacheManager: CacheManager,
+    cacheKey: string,
+    options: CacheOptions,
+    failureLabel: string,
+): void {
+    const originalJson = res.json.bind(res);
+    res.json = function (data: any) {
+        if (data && data.success !== false) {
+            cacheManager.set(cacheKey, data, options).catch((error: any) => {
+                console.error(failureLabel, error);
+            });
+        }
+        res.set('X-Cache', 'MISS');
+        return originalJson(data);
+    };
+}
+
 export class CacheManager {
     private redis: Redis;
     private defaultTTL: number = 300; // 5 minutes
@@ -37,25 +56,22 @@ export class CacheManager {
         return `${this.keyPrefix}${key}`;
     }
 
-    private serialize<T>(data: T, compress: boolean = false): string {
-        const serialized = JSON.stringify({
-            data,
-            timestamp: new Date(),
-            compressed: compress
-        });
-
-        if (compress) {
-            // In production, use proper compression
+    private serialize<T>(entry: CacheEntry<T>): string {
+        const serialized = JSON.stringify(entry);
+        if (entry.compressed) {
             return Buffer.from(serialized).toString('base64');
         }
-
         return serialized;
     }
 
-    private deserialize<T>(serialized: string): T | null {
+    private deserialize<T>(serialized: string): CacheEntry<T> | null {
         try {
-            const parsed = JSON.parse(serialized);
-            return parsed.data;
+            const json = serialized.trim().startsWith('{')
+                ? serialized
+                : Buffer.from(serialized, 'base64').toString('utf8');
+            const parsed = JSON.parse(json) as CacheEntry<T>;
+            parsed.timestamp = new Date(parsed.timestamp);
+            return parsed;
         } catch (error: any) {
             console.error('[Cache] Deserialization error:', error);
             return null;
@@ -71,9 +87,11 @@ export class CacheManager {
                 return null;
             }
 
-            const entry: CacheEntry<T> = JSON.parse(serialized);
+            const entry = this.deserialize<T>(serialized);
+            if (!entry) {
+                return null;
+            }
 
-            // Check if expired
             const now = new Date();
             const expiryTime = new Date(entry.timestamp.getTime() + entry.ttl * 1000);
 
@@ -103,7 +121,7 @@ export class CacheManager {
                 compressed: options.compress || false
             };
 
-            const serialized = JSON.stringify(entry);
+            const serialized = this.serialize(entry);
 
             if (options.tags && options.tags.length > 0) {
                 // Store tag mappings for invalidation
@@ -208,19 +226,7 @@ export class CacheManager {
                 return res.json(cached);
             }
 
-            // Intercept response to cache it
-            const originalJson = res.json;
-            res.json = function (data: any) {
-                // Only cache successful responses
-                if (data && data.success !== false) {
-                    cacheManager.set(cacheKey, data, options).catch((error: any) => {
-                        console.error('[Cache] Failed to cache response:', error);
-                    });
-                }
-                res.set('X-Cache', 'MISS');
-                return originalJson.call(this, data);
-            };
-
+            rememberJsonResponse(res, cacheManager, cacheKey, options, '[Cache] Failed to cache response:');
             next();
         };
     }
@@ -263,17 +269,13 @@ export const CacheHelpers = {
                 return res.json(cached);
             }
 
-            const originalJson = res.json;
-            res.json = function (data: any) {
-                if (data && data.success !== false) {
-                    cacheManager.set(cacheKey, data, { ttl: 300 }).catch((error: any) => {
-                        console.error('[Cache] Failed to cache API response:', error);
-                    });
-                }
-                res.set('X-Cache', 'MISS');
-                return originalJson.call(this, data);
-            };
-
+            rememberJsonResponse(
+                res,
+                cacheManager,
+                cacheKey,
+                { ttl: 300 },
+                '[Cache] Failed to cache API response:',
+            );
             next();
         }).catch((error: any) => {
             console.error('[Cache] Error in middleware:', error);

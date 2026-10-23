@@ -1,3 +1,11 @@
+/**
+ * Request Validation Middleware
+ * Validates incoming requests using JSON Schema
+ */
+
+import { Request, Response, NextFunction } from 'express';
+import { Errors, isPlainEmail } from '@gravity/types';
+
 function encodeText(value: string): string {
     return value.replace(/[&<>"']/g, (ch) => {
         switch (ch) {
@@ -9,26 +17,6 @@ function encodeText(value: string): string {
         }
     });
 }
-
-function isPlainEmail(email: string): boolean {
-    if (email.length > 254) return false;
-    const at = email.indexOf("@");
-    if (at <= 0 || email.lastIndexOf("@") !== at) return false;
-    const local = email.slice(0, at);
-    const domain = email.slice(at + 1);
-    const dot = domain.lastIndexOf(".");
-    if (dot <= 0 || dot === domain.length - 1) return false;
-    const ok = (part: string) => part.length > 0 && ![...part].some((ch) => ch === " " || ch === "\t");
-    return ok(local) && ok(domain);
-}
-
-/**
- * Request Validation Middleware
- * Validates incoming requests using JSON Schema
- */
-
-import { Request, Response, NextFunction } from 'express';
-import { ErrorCode, Errors } from '@gravity/types';
 
 export interface ValidationSchema {
     body?: Record<string, any>;
