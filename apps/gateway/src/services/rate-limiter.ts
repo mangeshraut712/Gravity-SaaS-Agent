@@ -63,6 +63,7 @@ export class TieredRateLimiter {
         this.cleanupInterval = setInterval(() => {
             this.cleanup();
         }, 5 * 60 * 1000); // Every 5 minutes
+        this.cleanupInterval.unref?.();
     }
 
     private getBucketKey(userId: string, tier: UserTier): string {

@@ -30,10 +30,10 @@
     "start:gateway": "npm run start -w @gravity/gateway",
     "lint": "npm run lint --workspaces --if-present",
     "lint:fix": "npm run lint --workspaces --if-present -- --fix",
-    "test": "npm run test --workspaces --if-present",
-    "test:watch": "npm run test:watch --workspaces --if-present",
-    "test:coverage": "npm run test:coverage --workspaces --if-present",
-    "test:ci": "npm run test:coverage --workspaces --if-present",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:ci": "vitest run --coverage",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
@@ -56,9 +56,13 @@
     "optimize": "npm run clean:all && npm install && npm run build"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.0",
     "@types/node": "^20.19.30",
+    "@vitest/coverage-v8": "4.1.12",
     "concurrently": "^9.2.5",
     "eslint": "^8.57.0",
+    "jsdom": "26.1.0",
     "prettier": "^3.0.0",
     "typescript": "^5.0.0",
     "vitest": "4.1.12"

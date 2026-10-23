@@ -38,7 +38,8 @@ export class CircuitBreaker {
     private state: CircuitBreakerState;
     private eventHistory: CircuitBreakerEvent[] = [];
     private eventHandlers: Map<CircuitBreakerEventType, CircuitBreakerEventHandler[]> = new Map();
-    private timeoutId: NodeJS.Timeout | null = null;
+    private timeoutId: ReturnType<typeof setTimeout> | null = null;
+    private monitoringInterval: ReturnType<typeof setInterval> | null = null;
 
     constructor(config: CircuitBreakerConfig) {
         this.config = config;
@@ -54,10 +55,21 @@ export class CircuitBreaker {
     }
 
     private startMonitoring(): void {
-        // Clean up old events periodically
-        setInterval(() => {
+        this.monitoringInterval = setInterval(() => {
             this.cleanupOldEvents();
         }, this.config.monitoringWindow);
+        this.monitoringInterval.unref?.();
+    }
+
+    destroy(): void {
+        if (this.monitoringInterval) {
+            clearInterval(this.monitoringInterval);
+            this.monitoringInterval = null;
+        }
+        if (this.timeoutId) {
+            clearTimeout(this.timeoutId);
+            this.timeoutId = null;
+        }
     }
 
     private cleanupOldEvents(): void {
@@ -125,21 +137,28 @@ export class CircuitBreaker {
             }
         }
 
-        // Execute the function with timeout
         const startTime = Date.now();
         try {
             const timeoutPromise = new Promise<never>((_, reject) => {
-                const timeoutId = setTimeout(() => {
+                this.timeoutId = setTimeout(() => {
                     reject(new CircuitBreakerError('Function timeout', this.config.name, this.state));
                 }, this.config.timeout);
             });
 
             const result = await Promise.race([fn(), timeoutPromise]);
+            if (this.timeoutId) {
+                clearTimeout(this.timeoutId);
+                this.timeoutId = null;
+            }
 
             const duration = Date.now() - startTime;
             this.handleSuccess(duration);
             return result;
         } catch (error) {
+            if (this.timeoutId) {
+                clearTimeout(this.timeoutId);
+                this.timeoutId = null;
+            }
             const duration = Date.now() - startTime;
             this.handleError(error as Error, duration);
             throw error;
@@ -153,14 +172,14 @@ export class CircuitBreaker {
             this.state.successCount++;
 
             if (this.state.successCount >= this.config.successThreshold) {
-                // Close the circuit
+                const successes = this.state.successCount;
                 this.state.status = 'closed';
                 this.state.failureCount = 0;
                 this.state.successCount = 0;
                 this.state.lastSuccess = now;
                 this.state.nextAttempt = null;
                 this.emit({ type: 'success', timestamp: now, duration });
-                logger.info(`Circuit breaker ${this.config.name} closed after ${this.state.successCount} successes`);
+                logger.info(`Circuit breaker ${this.config.name} closed after ${successes} successes`);
             } else {
                 this.state.lastSuccess = now;
                 this.emit({ type: 'success', timestamp: now, duration });
