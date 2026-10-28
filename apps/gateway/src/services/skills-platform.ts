@@ -1,6 +1,7 @@
 import { Skill, Workspace, SkillExecution } from '@gravity/types';
 import { GravityMemory } from '@gravity/memory';
 import { GravityMCPClient } from '@gravity/mcp-client';
+import { randomUUID } from 'node:crypto';
 
 /**
  * Skills Platform - Clawdbot-inspired workspace and skill management
@@ -166,7 +167,7 @@ export class SkillsPlatform {
     }
 
     const execution: SkillExecution = {
-      id: `exec-${Date.now()}`,
+      id: `exec-${Date.now()}-${randomUUID()}`,
       skillId,
       workspaceId,
       userId,
