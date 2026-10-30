@@ -35,6 +35,26 @@ describe('SkillsPlatform', () => {
         });
     });
 
+    it('keeps executions started in the same millisecond', async () => {
+        const { skills } = platform();
+        const workspace = await skills.createWorkspace('user-1', 'Ops');
+        const dateNow = vi.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000);
+
+        try {
+            const first = await skills.executeSkill('automation', workspace.id, 'user-1', 'first');
+            const second = await skills.executeSkill('communication', workspace.id, 'user-1', 'second');
+            const history = skills.getExecutionHistory('user-1', 10);
+
+            expect(first.id).not.toBe(second.id);
+            expect(history).toHaveLength(2);
+            expect(history.map((execution) => execution.id)).toEqual(
+                expect.arrayContaining([first.id, second.id]),
+            );
+        } finally {
+            dateNow.mockRestore();
+        }
+    });
+
     it('executes each skill category', async () => {
         const { skills } = platform();
         const workspace = await skills.createWorkspace('user-1', 'Ops');
