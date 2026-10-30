@@ -36,6 +36,7 @@ function builder(result: { data?: unknown; error?: unknown; count?: number | nul
         update: () => query,
         insert: vi.fn(async () => ({ error: null })),
         single: async () => result,
+        maybeSingle: async () => result,
         then: (resolve: (value: typeof result) => void) => Promise.resolve(result).then(resolve),
     };
     return query;
@@ -354,6 +355,7 @@ describe('polar webhook route', () => {
         admin.from.mockReturnValue(builder({ data: null, error: null }));
         const missingCustomer = await post(JSON.stringify({ type: 'subscription.created' }));
         expect(missingCustomer.status).toBe(400);
+        expect(getSupabaseAdminClient).not.toHaveBeenCalled();
 
         const unknown = await post(JSON.stringify({
             event: 'order.paid',
@@ -404,5 +406,66 @@ describe('polar webhook route', () => {
             customer: { id: 'cus_1' },
         }));
         expect(crashed.status).toBe(500);
+    });
+
+    it('does not acknowledge a failed customer lookup', async () => {
+        admin.from.mockReturnValue(builder({
+            data: null,
+            error: { message: 'database unavailable' },
+        }));
+
+        const response = await post(JSON.stringify({
+            type: 'order.paid',
+            customer: { id: 'cus_1' },
+            product: { id: 'unknown-product' },
+        }));
+
+        expect(response.status).toBe(500);
+    });
+
+    it('does not acknowledge a failed tier update', async () => {
+        const inserted = vi.fn(async () => ({ error: null }));
+        let userQueries = 0;
+        admin.from.mockImplementation((table: string) => {
+            if (table === 'users') {
+                userQueries += 1;
+                if (userQueries === 1) {
+                    return builder({ data: { id: 'user-1', subscription_tier: 'free' }, error: null });
+                }
+                return {
+                    update: () => ({
+                        eq: async () => ({ error: { message: 'tier update failed' } }),
+                    }),
+                };
+            }
+            if (table === 'billing_events') return { insert: inserted };
+            return builder({ data: null, error: null });
+        });
+
+        const response = await post(JSON.stringify({
+            type: 'subscription.updated',
+            customer: { id: 'cus_1' },
+            subscription: { product_id: 'biz-product' },
+        }));
+
+        expect(response.status).toBe(500);
+        expect(inserted).not.toHaveBeenCalled();
+    });
+
+    it('does not acknowledge a failed billing-event insert', async () => {
+        const inserted = vi.fn(async () => ({ error: { message: 'event log write failed' } }));
+        admin.from.mockImplementation((table: string) => {
+            if (table === 'billing_events') return { insert: inserted };
+            return builder({ data: { id: 'user-1', subscription_tier: 'free' }, error: null });
+        });
+
+        const response = await post(JSON.stringify({
+            type: 'order.paid',
+            customer: { id: 'cus_1' },
+            product: { id: 'unknown-product' },
+        }));
+
+        expect(response.status).toBe(500);
+        expect(inserted).toHaveBeenCalledOnce();
     });
 });

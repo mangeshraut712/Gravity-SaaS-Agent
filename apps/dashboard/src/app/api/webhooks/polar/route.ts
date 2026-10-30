@@ -63,8 +63,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const admin = getSupabaseAdminClient();
-
   // The exact Polar schema may differ; we defensively read common fields.
   const eventType: string = payload?.type ?? payload?.event ?? 'unknown';
   const customerEmail: string | null =
@@ -89,6 +87,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const admin = getSupabaseAdminClient();
+
     // Find the corresponding user by email or existing polar_customer_id
     const { data: user, error: userError } = await admin
       .from('users')
@@ -102,9 +102,13 @@ export async function POST(req: NextRequest) {
           .join(','),
       )
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    if (!user || userError) {
+    if (userError) {
+      throw userError;
+    }
+
+    if (!user) {
       return NextResponse.json(
         { error: 'No matching user for this webhook.' },
         { status: 200 },
@@ -112,21 +116,29 @@ export async function POST(req: NextRequest) {
     }
 
     if (targetTier) {
-      await admin
+      const { error: updateError } = await admin
         .from('users')
         .update({
           subscription_tier: targetTier,
           polar_customer_id: customerId ?? undefined,
         })
         .eq('id', user.id);
+
+      if (updateError) {
+        throw updateError;
+      }
     }
 
-    await admin.from('billing_events').insert({
+    const { error: billingEventError } = await admin.from('billing_events').insert({
       user_id: user.id,
       provider: 'polar',
       event_type: eventType,
       raw_payload: payload,
     });
+
+    if (billingEventError) {
+      throw billingEventError;
+    }
 
     return NextResponse.json({ received: true });
   } catch (err) {
