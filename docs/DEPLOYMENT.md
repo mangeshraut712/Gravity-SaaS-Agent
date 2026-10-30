@@ -42,6 +42,9 @@ JWT_SECRET=
 # Billing
 POLAR_PRO_PRODUCT_ID=
 POLAR_BUSINESS_PRODUCT_ID=
+# Required when the Polar webhook endpoint is enabled. Configure this only in
+# the dashboard's server-side environment; never expose it to the browser.
+POLAR_WEBHOOK_SECRET=
 
 # Application URLs
 APP_URL=https://your-domain.com

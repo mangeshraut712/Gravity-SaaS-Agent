@@ -245,6 +245,9 @@ JWT_SECRET=generate-a-strong-random-secret-min-32-chars
 # Billing (Optional - for subscription features)
 POLAR_PRO_PRODUCT_ID=prod_xxxxx
 POLAR_BUSINESS_PRODUCT_ID=prod_xxxxx
+# Required when the Polar webhook endpoint is enabled. Set only in the
+# dashboard's server-side environment; never expose it to the browser.
+POLAR_WEBHOOK_SECRET=whsec_xxxxx
 
 # Caching (Optional - falls back to in-memory if not set)
 REDIS_URL=redis://localhost:6379
