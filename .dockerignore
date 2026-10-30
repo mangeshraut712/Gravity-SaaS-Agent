@@ -1,0 +1,11 @@
+# Keep local credentials and build artifacts out of every Docker build context.
+.env
+.env.*
+!.env.example
+
+.git
+.next
+coverage
+dist
+node_modules
+npm-debug.log*

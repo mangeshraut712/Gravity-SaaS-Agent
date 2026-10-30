@@ -24,6 +24,7 @@ vi.mock('../../../apps/dashboard/src/lib/index.ts', async () => {
 });
 
 import { POST as chat } from '../../../apps/dashboard/src/app/api/chat/[agentId]/route.js';
+import { GET as health } from '../../../apps/dashboard/src/app/api/health/route.js';
 import { POST as polar } from '../../../apps/dashboard/src/app/api/webhooks/polar/route.js';
 
 function builder(result: { data?: unknown; error?: unknown; count?: number | null }) {
@@ -50,6 +51,15 @@ const agent = {
     custom_instructions: 'Use the customer name.',
     knowledge_base: [{ title: 'Hours' }, { title: '' }, { type: 'note' }],
 };
+
+describe('dashboard health route', () => {
+    it('returns an OK response without requiring application dependencies', async () => {
+        const response = await health();
+
+        expect(response.status).toBe(200);
+        expect(await response.json()).toEqual({ status: 'ok' });
+    });
+});
 
 describe('dashboard chat route', () => {
     beforeEach(() => {

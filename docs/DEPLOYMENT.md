@@ -45,9 +45,13 @@ POLAR_BUSINESS_PRODUCT_ID=
 # Required when the Polar webhook endpoint is enabled. Configure this only in
 # the dashboard's server-side environment; never expose it to the browser.
 POLAR_WEBHOOK_SECRET=
+# Browser checkout configuration (non-secret; match the product IDs above)
+NEXT_PUBLIC_POLAR_PRO_PRODUCT_ID=
+NEXT_PUBLIC_POLAR_BUSINESS_PRODUCT_ID=
 
 # Application URLs
 APP_URL=https://your-domain.com
+NEXT_PUBLIC_APP_URL=https://your-domain.com
 GATEWAY_URL=https://api.your-domain.com
 ```
 
@@ -119,6 +123,9 @@ See `.env.example` for all available options.
 
 - Docker 20.10+
 - Docker Compose 2.0+
+- A Supabase environment. The included Compose file is not a replacement for
+  Supabase Auth and cannot initialize `supabase/schema.sql` on its plain
+  PostgreSQL service by itself.
 
 ### Single Server Deployment
 
@@ -132,29 +139,22 @@ See `.env.example` for all available options.
 
 2. **Build and Run**
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
+
+   `NEXT_PUBLIC_*` values are baked into the dashboard during its image build.
+   Rebuild the dashboard after changing them. Never place the service-role key
+   or `POLAR_WEBHOOK_SECRET` in a `NEXT_PUBLIC_*` variable.
 
 3. **Access Services**
    - Dashboard: `http://localhost:3000`
-   - Gateway: `http://localhost:3003`
+   - Gateway: `http://localhost:3001`
 
-### Production Docker Setup
+### Production Docker Status
 
-1. **Use Production Compose File**
-   ```bash
-   docker-compose -f docker-compose.prod.yml up -d
-   ```
-
-2. **Enable SSL**
-   - Use nginx-proxy or Traefik
-   - Configure Let's Encrypt for automatic SSL
-
-3. **Monitoring**
-   ```bash
-   docker-compose logs -f
-   docker stats
-   ```
+No `docker-compose.prod.yml` or nginx configuration is committed. Do not treat
+the included Compose file as a production deployment recipe until a reviewed
+reverse-proxy and hosting configuration exists.
 
 ## Deploy to AWS
 
@@ -250,6 +250,11 @@ See `.env.example` for all available options.
    - Copy contents of `supabase/schema.sql`
    - Execute the script
 
+   The schema relies on Supabase-owned `auth.users`, so do not run it against
+   plain PostgreSQL. Use a fresh non-production Supabase environment until the
+   repository's `users` versus `profiles` account-model mismatch has a reviewed
+   migration plan.
+
 3. **Enable RLS**
    - Go to Authentication → Policies
    - Enable Row Level Security on all tables
@@ -273,7 +278,7 @@ See `.env.example` for all available options.
 
 1. **Health Checks**
    ```bash
-   curl https://your-domain.com/health
+   curl https://your-domain.com/api/health
    curl https://api.your-domain.com/health
    ```
 

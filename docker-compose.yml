@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # ============================================================================
   # Gateway Service
@@ -8,7 +6,7 @@ services:
     build:
       context: .
       dockerfile: ./apps/gateway/Dockerfile
-      target: production
+      target: runner
     ports:
       - "3001:3001"
     environment:
@@ -28,15 +26,13 @@ services:
       - LOG_LEVEL=info
       - ENABLE_METRICS=true
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
     networks:
       - gravity-net
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:3001/health" ]
+      test: ["CMD", "node", "-e", 'require("http").get("http://localhost:3001/health", ({ statusCode }) => process.exit(statusCode === 200 ? 0 : 1)).on("error", () => process.exit(1))']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -57,7 +53,13 @@ services:
     build:
       context: .
       dockerfile: ./apps/dashboard/Dockerfile
-      target: production
+      target: runner
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+        NEXT_PUBLIC_POLAR_PRO_PRODUCT_ID: ${NEXT_PUBLIC_POLAR_PRO_PRODUCT_ID}
+        NEXT_PUBLIC_POLAR_BUSINESS_PRODUCT_ID: ${NEXT_PUBLIC_POLAR_BUSINESS_PRODUCT_ID}
     ports:
       - "3000:3000"
     environment:
@@ -67,13 +69,17 @@ services:
       - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - APP_URL=${APP_URL}
+      - POLAR_PRO_PRODUCT_ID=${POLAR_PRO_PRODUCT_ID}
+      - POLAR_BUSINESS_PRODUCT_ID=${POLAR_BUSINESS_PRODUCT_ID}
+      - POLAR_WEBHOOK_SECRET=${POLAR_WEBHOOK_SECRET}
     depends_on:
       - gateway
     networks:
       - gravity-net
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:3000/api/health" ]
+      test: ["CMD", "node", "-e", 'require("http").get("http://localhost:3000/api/health", ({ statusCode }) => process.exit(statusCode === 200 ? 0 : 1)).on("error", () => process.exit(1))']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -90,6 +96,9 @@ services:
   # ============================================================================
   # PostgreSQL Database
   # ============================================================================
+  # Optional generic PostgreSQL for local experiments. The application uses
+  # Supabase for account data; its Supabase schema cannot run in this service
+  # because it depends on Supabase-managed auth and realtime schemas.
   postgres:
     image: postgres:15-alpine
     ports:
@@ -100,10 +109,11 @@ services:
       - POSTGRES_DB=gravity
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./supabase/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
     networks:
       - gravity-net
     restart: unless-stopped
+    profiles:
+      - legacy-postgres
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d gravity" ]
       interval: 10s

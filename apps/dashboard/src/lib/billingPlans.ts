@@ -34,9 +34,15 @@ export function buildPolarCheckoutUrl(
   targetTier: SubscriptionTier,
   customerEmail: string | null,
 ): string | null {
-  const appUrl = process.env.APP_URL;
-  const proId = process.env.POLAR_PRO_PRODUCT_ID;
-  const businessId = process.env.POLAR_BUSINESS_PRODUCT_ID;
+  // This helper is used by the client-rendered billing page. Product IDs and
+  // the application origin are intentionally public checkout configuration;
+  // the webhook secret remains server-only.
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL;
+  const proId =
+    process.env.NEXT_PUBLIC_POLAR_PRO_PRODUCT_ID ?? process.env.POLAR_PRO_PRODUCT_ID;
+  const businessId =
+    process.env.NEXT_PUBLIC_POLAR_BUSINESS_PRODUCT_ID ??
+    process.env.POLAR_BUSINESS_PRODUCT_ID;
 
   const productId =
     targetTier === 'pro' ? proId : targetTier === 'business' ? businessId : null;
