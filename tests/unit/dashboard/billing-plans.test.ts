@@ -11,6 +11,9 @@ describe('billing plans', () => {
         APP_URL: process.env.APP_URL,
         POLAR_PRO_PRODUCT_ID: process.env.POLAR_PRO_PRODUCT_ID,
         POLAR_BUSINESS_PRODUCT_ID: process.env.POLAR_BUSINESS_PRODUCT_ID,
+        NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+        NEXT_PUBLIC_POLAR_PRO_PRODUCT_ID: process.env.NEXT_PUBLIC_POLAR_PRO_PRODUCT_ID,
+        NEXT_PUBLIC_POLAR_BUSINESS_PRODUCT_ID: process.env.NEXT_PUBLIC_POLAR_BUSINESS_PRODUCT_ID,
     };
 
     afterEach(() => {
@@ -51,5 +54,19 @@ describe('billing plans', () => {
         const business = buildPolarCheckoutUrl('business', null);
         expect(business).toContain('product_id=biz-product');
         expect(business).not.toContain('customer_email');
+    });
+
+    it('uses browser-safe public configuration for checkout URLs', () => {
+        delete process.env.APP_URL;
+        delete process.env.POLAR_PRO_PRODUCT_ID;
+        delete process.env.POLAR_BUSINESS_PRODUCT_ID;
+        process.env.NEXT_PUBLIC_APP_URL = 'https://app.example';
+        process.env.NEXT_PUBLIC_POLAR_PRO_PRODUCT_ID = 'public-pro-product';
+        process.env.NEXT_PUBLIC_POLAR_BUSINESS_PRODUCT_ID = 'public-business-product';
+
+        const url = buildPolarCheckoutUrl('pro', 'dev@gravity.ai');
+
+        expect(url).toContain('product_id=public-pro-product');
+        expect(url).toContain('success_url=https%3A%2F%2Fapp.example%2Fbilling%3Fstatus%3Dsuccess');
     });
 });

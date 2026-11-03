@@ -245,6 +245,16 @@ JWT_SECRET=generate-a-strong-random-secret-min-32-chars
 # Billing (Optional - for subscription features)
 POLAR_PRO_PRODUCT_ID=prod_xxxxx
 POLAR_BUSINESS_PRODUCT_ID=prod_xxxxx
+# Required when the Polar webhook endpoint is enabled. Set only in the
+# dashboard's server-side environment; never expose it to the browser.
+POLAR_WEBHOOK_SECRET=whsec_xxxxx
+# Browser checkout configuration (non-secret; match the product IDs above)
+NEXT_PUBLIC_POLAR_PRO_PRODUCT_ID=prod_xxxxx
+NEXT_PUBLIC_POLAR_BUSINESS_PRODUCT_ID=prod_xxxxx
+
+# Application URL
+APP_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 # Caching (Optional - falls back to in-memory if not set)
 REDIS_URL=redis://localhost:6379
@@ -468,8 +478,8 @@ POST /api/chat                 # Chat with AI (OpenRouter)
 ### Docker Deployment
 
 ```bash
-# Production deployment with Docker Compose
-docker-compose up -d
+# Local/staging application stack with Docker Compose
+docker compose up -d
 
 # Services:
 # - Dashboard: http://localhost:3000
@@ -478,6 +488,10 @@ docker-compose up -d
 #
 # Local `npm run dev` still serves the gateway on http://localhost:3003.
 ```
+
+> The included Compose file requires a Supabase environment; it does not
+> bootstrap Supabase Auth from its plain PostgreSQL service. See the
+> [deployment guide](docs/DEPLOYMENT.md#database-setup) before staging.
 
 > 📖 **Full deployment guide:** [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 
