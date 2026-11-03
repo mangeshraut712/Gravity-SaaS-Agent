@@ -5,7 +5,7 @@
 **Production-ready multi-tenant SaaS platform for deploying AI agents across multiple channels**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Next.js](https://img.shields.io/badge/Next.js-15.5-black)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16.4-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
 [![CI/CD](https://github.com/mangeshraut712/Gravity-SaaS-Agent/actions/workflows/ci.yml/badge.svg)](https://github.com/mangeshraut712/Gravity-SaaS-Agent/actions)
 
@@ -638,7 +638,7 @@ Built with amazing open-source technologies:
 ![Build Status](https://github.com/mangeshraut712/Gravity-SaaS-Agent/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
-![Next.js](https://img.shields.io/badge/Next.js-15.5-black)
+![Next.js](https://img.shields.io/badge/Next.js-16.4-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
 
 ---
