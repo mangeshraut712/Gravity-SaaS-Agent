@@ -45,7 +45,7 @@
     "docker:logs": "docker-compose logs -f",
     "docker:restart": "docker-compose restart",
     "prepare": "node -e \"try { require('husky').install() } catch (e) {if (e.code !== 'MODULE_NOT_FOUND') throw e}\"",
-    "postinstall": "echo '✅ Dependencies installed successfully!'",
+    "postinstall": "echo '\u2705 Dependencies installed successfully!'",
     "validate": "npm run typecheck && npm run lint && npm run test",
     "precommit": "npm run lint && npm run typecheck",
     "prepush": "npm run validate",
@@ -75,8 +75,7 @@
     "rollup": "4.59.0",
     "picomatch@2": "2.3.2",
     "picomatch@4": "4.0.4",
-    "minimatch@3": "3.1.4",
-    "minimatch@9": "9.0.7"
+    "minimatch": "11.0.4"
   },
   "engines": {
     "node": ">=18.0.0",
