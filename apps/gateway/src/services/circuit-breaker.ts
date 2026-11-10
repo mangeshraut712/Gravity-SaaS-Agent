@@ -76,10 +76,12 @@ export class CircuitBreaker {
         const cutoff = Date.now() - this.config.monitoringWindow;
         this.eventHistory = this.eventHistory.filter(e => e.timestamp.getTime() > cutoff);
 
-        // Reset counts if window has passed
+        // Recount only events that are still inside the window. A periodic
+        // zeroing would drop a failure that is only milliseconds old when the
+        // first tick fires at construction + monitoringWindow.
         if (this.state.status === 'closed') {
-            this.state.failureCount = 0;
-            this.state.successCount = 0;
+            this.state.failureCount = this.eventHistory.filter(e => e.type === 'failure').length;
+            this.state.successCount = this.eventHistory.filter(e => e.type === 'success').length;
         }
     }
 
@@ -138,26 +140,27 @@ export class CircuitBreaker {
         }
 
         const startTime = Date.now();
+        let timeoutId: ReturnType<typeof setTimeout> | null = null;
         try {
             const timeoutPromise = new Promise<never>((_, reject) => {
-                this.timeoutId = setTimeout(() => {
+                timeoutId = setTimeout(() => {
                     reject(new CircuitBreakerError('Function timeout', this.config.name, this.state));
                 }, this.config.timeout);
             });
 
             const result = await Promise.race([fn(), timeoutPromise]);
-            if (this.timeoutId) {
-                clearTimeout(this.timeoutId);
-                this.timeoutId = null;
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
             }
 
             const duration = Date.now() - startTime;
             this.handleSuccess(duration);
             return result;
         } catch (error) {
-            if (this.timeoutId) {
-                clearTimeout(this.timeoutId);
-                this.timeoutId = null;
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
             }
             const duration = Date.now() - startTime;
             this.handleError(error as Error, duration);
