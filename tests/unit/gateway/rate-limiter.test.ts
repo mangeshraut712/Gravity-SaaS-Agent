@@ -67,6 +67,26 @@ describe('TieredRateLimiter', () => {
         expect(limiter.getStats().totalBuckets).toBe(0);
     });
 
+    it('reports resetTime as when the next token is available, not when the bucket is full', () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
+        const limiter = create();
+        limiter.consume('user1', 'FREE');
+        limiter.consume('user1', 'FREE');
+        const blocked = limiter.consume('user1', 'FREE');
+        expect(blocked.allowed).toBe(false);
+        expect(blocked.remaining).toBe(0);
+        // windowMs=1000, maxRequests=2 => one token every 500ms
+        expect(blocked.resetTime.getTime() - Date.now()).toBe(500);
+        // After half a window, the next request is allowed even though the
+        // bucket is not yet full.
+        vi.advanceTimersByTime(500);
+        const next = limiter.checkRateLimit('user1', 'FREE');
+        expect(next.allowed).toBe(true);
+        expect(next.resetTime.getTime()).toBe(Date.now());
+        vi.useRealTimers();
+    });
+
     it('exposes express middleware and request helpers', () => {
         const middleware = createTieredRateLimitMiddleware(
             () => 'FREE',

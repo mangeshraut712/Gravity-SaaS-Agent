@@ -51,6 +51,15 @@ export interface TokenBucket {
     lastRefill: number;
 }
 
+
+function nextTokenResetTime(bucket: TokenBucket, config: RateLimitConfig): Date {
+    if (bucket.tokens >= 1) {
+        return new Date();
+    }
+    const tokensNeeded = 1 - bucket.tokens;
+    return new Date(Date.now() + (tokensNeeded / config.maxRequests) * config.windowMs);
+}
+
 export class TieredRateLimiter {
     private configs: TieredRateLimitConfig;
     private buckets: Map<string, TokenBucket> = new Map();
@@ -106,11 +115,9 @@ export class TieredRateLimiter {
         const allowed = bucket.tokens >= 1;
         const remaining = Math.floor(Math.max(0, bucket.tokens));
 
-        // Calculate reset time based on time until tokens are fully restored
-        const tokensNeeded = config.maxRequests - remaining;
-        const resetTime = new Date(
-            Date.now() + (tokensNeeded / config.maxRequests) * config.windowMs
-        );
+        // Time until the next request is allowed (one token), not until the
+        // bucket is completely full again.
+        const resetTime = nextTokenResetTime(bucket, config);
 
         return {
             allowed,
@@ -134,10 +141,7 @@ export class TieredRateLimiter {
         }
 
         const remaining = Math.floor(Math.max(0, bucket.tokens));
-        const tokensNeeded = config.maxRequests - remaining;
-        const resetTime = new Date(
-            Date.now() + (tokensNeeded / config.maxRequests) * config.windowMs
-        );
+        const resetTime = nextTokenResetTime(bucket, config);
 
         if (!allowed) {
             logger.warn('Rate limit exceeded', { userId, tier, remaining });
