@@ -9,6 +9,7 @@ import {
 } from '@gravity/types';
 import { openRouterBreaker, circuitBreakerManager } from './circuit-breaker.js';
 import { logger } from './logger.js';
+import { resolveTemperature } from './sampling.js';
 
 export class OpenRouterProvider implements IModelProvider {
   name = 'openrouter';
@@ -40,7 +41,7 @@ export class OpenRouterProvider implements IModelProvider {
               content: msg.content
             })),
             maxTokens: request.maxTokens || 4000,
-            temperature: request.temperature || 0.7,
+            temperature: resolveTemperature(request.temperature),
             stream: request.stream || false
           };
 
