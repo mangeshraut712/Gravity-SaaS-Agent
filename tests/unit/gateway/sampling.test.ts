@@ -9,6 +9,9 @@ describe('resolveTemperature', () => {
 
   it('falls back for missing or invalid values and clamps the 0-2 range', () => {
     expect(resolveTemperature(undefined)).toBe(0.7);
+    expect(resolveTemperature(null)).toBe(0.7);
+    expect(resolveTemperature('')).toBe(0.7);
+    expect(resolveTemperature(false)).toBe(0.7);
     expect(resolveTemperature('hot')).toBe(0.7);
     expect(resolveTemperature(1.2)).toBe(1.2);
     expect(resolveTemperature(9)).toBe(2);
