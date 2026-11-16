@@ -87,6 +87,18 @@ describe('TieredRateLimiter', () => {
         vi.useRealTimers();
     });
 
+    it('calculates resetTime according to requested batch tokens', () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
+        const limiter = create();
+        limiter.consume('batch-user', 'FREE', 2);
+        const blocked = limiter.consume('batch-user', 'FREE', 2);
+        expect(blocked.allowed).toBe(false);
+        expect(blocked.remaining).toBe(0);
+        expect(blocked.resetTime.getTime() - Date.now()).toBe(1000);
+        vi.useRealTimers();
+    });
+
     it('exposes express middleware and request helpers', () => {
         const middleware = createTieredRateLimitMiddleware(
             () => 'FREE',

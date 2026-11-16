@@ -52,12 +52,12 @@ export interface TokenBucket {
 }
 
 
-function nextTokenResetTime(bucket: TokenBucket, config: RateLimitConfig): Date {
-    if (bucket.tokens >= 1) {
+function nextTokenResetTime(bucket: TokenBucket, config: RateLimitConfig, tokensNeeded: number = 1): Date {
+    if (bucket.tokens >= tokensNeeded) {
         return new Date();
     }
-    const tokensNeeded = 1 - bucket.tokens;
-    return new Date(Date.now() + (tokensNeeded / config.maxRequests) * config.windowMs);
+    const needed = tokensNeeded - bucket.tokens;
+    return new Date(Date.now() + (needed / config.maxRequests) * config.windowMs);
 }
 
 export class TieredRateLimiter {
@@ -141,7 +141,7 @@ export class TieredRateLimiter {
         }
 
         const remaining = Math.floor(Math.max(0, bucket.tokens));
-        const resetTime = nextTokenResetTime(bucket, config);
+        const resetTime = nextTokenResetTime(bucket, config, tokens);
 
         if (!allowed) {
             logger.warn('Rate limit exceeded', { userId, tier, remaining });
