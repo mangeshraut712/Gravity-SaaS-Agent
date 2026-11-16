@@ -103,6 +103,16 @@ describe('CircuitBreaker', () => {
         expect(breaker.getState().failureCount).toBe(0);
     });
 
+    it('keeps a recent failure when the first monitoring tick fires', async () => {
+        vi.useFakeTimers();
+        const breaker = create({ failureThreshold: 5, monitoringWindow: 1000 });
+        await vi.advanceTimersByTimeAsync(900);
+        await expect(breaker.execute(() => Promise.reject(new Error('fail')))).rejects.toThrow('fail');
+        expect(breaker.getState().failureCount).toBe(1);
+        await vi.advanceTimersByTimeAsync(100);
+        expect(breaker.getState().failureCount).toBe(1);
+    });
+
     it('supports manual open, close, reset, and stats', async () => {
         const breaker = create();
         await breaker.execute(() => Promise.resolve('ok'));
