@@ -23,6 +23,7 @@ import { SystemStats, Session, ChatCompletionRequest, ChannelType } from '@gravi
 import { modelProviderManager } from './services/model-provider.js';
 import { circuitBreakerManager } from './services/circuit-breaker.js';
 import { rateLimiter } from './services/rate-limiter.js';
+import { resolveTemperature } from './services/sampling.js';
 
 const SESSION_TTL = 24 * 60 * 60 * 1000;
 
@@ -222,7 +223,7 @@ export function createGatewayApp(deps: GatewayDependencies = {}): GatewayRuntime
                 const completionRequest: ChatCompletionRequest = {
                     messages: session.messages,
                     model: usedModel,
-                    temperature: temperature || 0.7,
+                    temperature: resolveTemperature(temperature),
                     maxTokens: maxTokens || 4000
                 };
 
