@@ -38,7 +38,7 @@ export class CircuitBreaker {
     private state: CircuitBreakerState;
     private eventHistory: CircuitBreakerEvent[] = [];
     private eventHandlers: Map<CircuitBreakerEventType, CircuitBreakerEventHandler[]> = new Map();
-    private timeoutId: ReturnType<typeof setTimeout> | null = null;
+    private activeTimeouts: Set<ReturnType<typeof setTimeout>> = new Set();
     private monitoringInterval: ReturnType<typeof setInterval> | null = null;
 
     constructor(config: CircuitBreakerConfig) {
@@ -66,10 +66,10 @@ export class CircuitBreaker {
             clearInterval(this.monitoringInterval);
             this.monitoringInterval = null;
         }
-        if (this.timeoutId) {
-            clearTimeout(this.timeoutId);
-            this.timeoutId = null;
+        for (const tid of this.activeTimeouts) {
+            clearTimeout(tid);
         }
+        this.activeTimeouts.clear();
     }
 
     private cleanupOldEvents(): void {
@@ -144,13 +144,18 @@ export class CircuitBreaker {
         try {
             const timeoutPromise = new Promise<never>((_, reject) => {
                 timeoutId = setTimeout(() => {
+                    if (timeoutId) {
+                        this.activeTimeouts.delete(timeoutId);
+                    }
                     reject(new CircuitBreakerError('Function timeout', this.config.name, this.state));
                 }, this.config.timeout);
+                this.activeTimeouts.add(timeoutId);
             });
 
             const result = await Promise.race([fn(), timeoutPromise]);
             if (timeoutId) {
                 clearTimeout(timeoutId);
+                this.activeTimeouts.delete(timeoutId);
                 timeoutId = null;
             }
 
@@ -160,6 +165,7 @@ export class CircuitBreaker {
         } catch (error) {
             if (timeoutId) {
                 clearTimeout(timeoutId);
+                this.activeTimeouts.delete(timeoutId);
                 timeoutId = null;
             }
             const duration = Date.now() - startTime;
@@ -181,6 +187,7 @@ export class CircuitBreaker {
                 this.state.successCount = 0;
                 this.state.lastSuccess = now;
                 this.state.nextAttempt = null;
+                this.eventHistory = [];
                 this.emit({ type: 'success', timestamp: now, duration });
                 logger.info(`Circuit breaker ${this.config.name} closed after ${successes} successes`);
             } else {
@@ -217,9 +224,10 @@ export class CircuitBreaker {
     }
 
     reset(): void {
-        if (this.timeoutId) {
-            clearTimeout(this.timeoutId);
+        for (const tid of this.activeTimeouts) {
+            clearTimeout(tid);
         }
+        this.activeTimeouts.clear();
         this.state = {
             status: 'closed',
             failureCount: 0,
@@ -244,6 +252,7 @@ export class CircuitBreaker {
         this.state.failureCount = 0;
         this.state.successCount = 0;
         this.state.nextAttempt = null;
+        this.eventHistory = [];
         logger.info(`Circuit breaker ${this.config.name} force closed`);
     }
 
