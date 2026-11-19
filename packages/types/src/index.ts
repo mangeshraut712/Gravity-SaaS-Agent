@@ -163,7 +163,8 @@ export interface ModelResponse {
     };
     finish_reason: string;
   }>;
-  usage: {
+  // Some upstream providers omit usage on a completion.
+  usage?: {
     prompt_tokens: number;
     completion_tokens: number;
     total_tokens: number;
@@ -194,7 +195,7 @@ export interface ChatCompletionRequest {
 export interface ChatCompletionResponse {
   content: string;
   model: string;
-  usage: {
+  usage?: {
     promptTokens: number;
     completionTokens: number;
     totalTokens: number;

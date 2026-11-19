@@ -72,11 +72,13 @@ export class OpenRouterProvider implements IModelProvider {
           return {
             content: data.choices[0]?.message?.content || '',
             model: data.model,
-            usage: {
-              promptTokens: data.usage.prompt_tokens,
-              completionTokens: data.usage.completion_tokens,
-              totalTokens: data.usage.total_tokens
-            },
+            usage: data.usage
+              ? {
+                  promptTokens: data.usage.prompt_tokens,
+                  completionTokens: data.usage.completion_tokens,
+                  totalTokens: data.usage.total_tokens
+                }
+              : undefined,
             provider: this.name
           };
         });

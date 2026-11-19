@@ -55,6 +55,23 @@ describe('OpenRouterProvider', () => {
         await expect(provider.getUsageStats()).resolves.toMatchObject({ totalRequests: 0 });
     });
 
+    it('returns the completion when the provider omits usage', async () => {
+        const fetchMock = vi.fn(async () => jsonResponse({
+            id: 'cmpl',
+            object: 'chat.completion',
+            created: 1,
+            model: 'openrouter/anthropic/claude-3.5-sonnet',
+            choices: [{ index: 0, message: { role: 'assistant', content: 'hello' }, finish_reason: 'stop' }],
+        }));
+        globalThis.fetch = fetchMock as typeof fetch;
+
+        const completion = await new OpenRouterProvider(config).chatCompletion({
+            messages: [{ role: 'user', content: 'hi', timestamp: new Date() }],
+        });
+        expect(completion).toMatchObject({ content: 'hello', provider: 'openrouter', usage: undefined });
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
     it('retries failed completions and falls back when listing models', async () => {
         vi.useFakeTimers();
         globalThis.fetch = vi.fn(async () => jsonResponse({ error: 'nope' }, 500)) as typeof fetch;
