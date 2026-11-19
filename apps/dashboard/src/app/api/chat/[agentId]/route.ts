@@ -71,11 +71,20 @@ export async function POST(req: NextRequest, context: any) {
     monthStart.setDate(1);
     monthStart.setHours(0, 0, 0, 0);
 
+    // The plan limit is per account, so count across every agent the owner has.
+    const { data: ownerAgents } = await admin
+      .from('agents')
+      .select('id')
+      .eq('user_id', owner.id);
+    const ownerAgentIds = Array.from(
+      new Set([agent.id, ...(ownerAgents ?? []).map((row: { id: string }) => row.id)]),
+    );
+
     const { count: messagesThisMonth } = await admin
       .from('analytics_events')
       .select('id', { head: true, count: 'exact' })
       .eq('event_type', 'message_sent')
-      .eq('agent_id', agent.id)
+      .in('agent_id', ownerAgentIds)
       .gte('created_at', monthStart.toISOString());
 
     if ((messagesThisMonth ?? 0) >= limits.maxMessagesPerMonth) {

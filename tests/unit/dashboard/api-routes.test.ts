@@ -31,6 +31,7 @@ function builder(result: { data?: unknown; error?: unknown; count?: number | nul
     const query = {
         select: () => query,
         eq: () => query,
+        in: vi.fn(() => query),
         gte: () => query,
         or: () => query,
         limit: () => query,
@@ -67,9 +68,14 @@ describe('dashboard chat route', () => {
         vi.unstubAllGlobals();
     });
 
-    function mockTables(overrides?: { messages?: number; agent?: unknown; owner?: unknown }) {
+    function mockTables(overrides?: { messages?: number; agent?: unknown; owner?: unknown; ownerAgents?: Array<{ id: string }> }) {
         admin.from.mockImplementation((table: string) => {
-            if (table === 'agents') return builder({ data: overrides?.agent === undefined ? agent : overrides.agent, error: overrides?.agent === null ? { message: 'missing' } : null });
+            if (table === 'agents') {
+                const query = builder({ data: overrides?.agent === undefined ? agent : overrides.agent, error: overrides?.agent === null ? { message: 'missing' } : null });
+                // The owner's agent list is awaited directly rather than via single().
+                query.then = (resolve) => Promise.resolve({ data: overrides?.ownerAgents ?? [{ id: 'agent-1' }], error: null }).then(resolve);
+                return query;
+            }
             if (table === 'users') return builder({ data: overrides?.owner === undefined ? { id: 'user-1', subscription_tier: 'free' } : overrides.owner, error: overrides?.owner === null ? { message: 'missing' } : null });
             return builder({ count: overrides?.messages ?? 0, error: null });
         });
@@ -94,6 +100,28 @@ describe('dashboard chat route', () => {
             { params: { agentId: 'agent-1' } },
         );
         expect(empty.status).toBe(400);
+    });
+
+    it('counts the monthly quota across all of the owner\'s agents', async () => {
+        let events: ReturnType<typeof builder> | undefined;
+        mockTables({ messages: 100, ownerAgents: [{ id: 'agent-1' }, { id: 'agent-2' }] });
+        const base = admin.from.getMockImplementation()!;
+        admin.from.mockImplementation((table: string) => {
+            const query = base(table);
+            if (table === 'analytics_events') events = query;
+            return query;
+        });
+
+        const limited = await chat(
+            new NextRequest('http://localhost/api/chat/agent-1', {
+                method: 'POST',
+                body: JSON.stringify({ message: 'Hi' }),
+            }),
+            { params: { agentId: 'agent-1' } },
+        );
+
+        expect(limited.status).toBe(429);
+        expect(events?.in).toHaveBeenCalledWith('agent_id', ['agent-1', 'agent-2']);
     });
 
     it('enforces ownership, quotas, and gateway failures', async () => {
