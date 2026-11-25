@@ -121,6 +121,7 @@ export async function POST(req: NextRequest, context: any) {
       },
       body: JSON.stringify({
         message: userMessage,
+        systemPrompt,
         userId: owner.id,
         conversationId: agentId,
         model: process.env.OPENROUTER_MODEL || 'openrouter/anthropic/claude-3.5-sonnet',

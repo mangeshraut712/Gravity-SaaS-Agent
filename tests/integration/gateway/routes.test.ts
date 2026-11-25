@@ -234,6 +234,27 @@ describe('gateway routes', () => {
         });
     });
 
+    it('sends the agent system prompt with each completion without storing it in history', async () => {
+        const runtime = buildApp();
+        await withServer(runtime.app, async (baseUrl) => {
+            const post = (body: Record<string, unknown>) => fetch(`${baseUrl}/api/v1/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            await post({ message: 'Hello', userId: 'owner-1', systemPrompt: 'You are a calm support agent.' });
+            await post({ message: 'Again', userId: 'owner-1', systemPrompt: '   ' });
+
+            const first = runtime.calls[0] as { messages: Array<{ role: string; content: string }> };
+            expect(first.messages[0]).toMatchObject({ role: 'system', content: 'You are a calm support agent.' });
+            expect(first.messages[1]).toMatchObject({ role: 'user', content: 'Hello' });
+
+            const second = runtime.calls[1] as { messages: Array<{ role: string }> };
+            expect(second.messages.map((m) => m.role)).toEqual(['user', 'assistant', 'user']);
+            expect(runtime.sessions.get('owner-1')?.messages.some((m) => m.role === 'system')).toBe(false);
+        });
+    });
+
     it('expires idle sessions', async () => {
         vi.useFakeTimers();
         const sessions = new Map<string, Session>();

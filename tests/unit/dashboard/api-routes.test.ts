@@ -240,6 +240,24 @@ describe('dashboard chat route', () => {
         }
     });
 
+    it('forwards the agent system prompt to the gateway', async () => {
+        mockTables();
+        const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) => new Response(JSON.stringify({ data: { response: 'ok' } }), { status: 200 }));
+        vi.stubGlobal('fetch', fetchMock);
+        const response = await chat(
+            new NextRequest('http://localhost/api/chat/agent-1', {
+                method: 'POST',
+                body: JSON.stringify({ message: 'Hi' }),
+            }),
+            { params: { agentId: 'agent-1' } },
+        );
+        expect(response.status).toBe(200);
+        const sent = JSON.parse(String(fetchMock.mock.calls[0][1]?.body));
+        expect(sent.systemPrompt).toContain('You are a calm support agent');
+        expect(sent.systemPrompt).toContain('Use the customer name.');
+        expect(sent.systemPrompt).toContain('You have knowledge about: Hours.');
+    });
+
     it('returns the gateway reply and records an analytics event', async () => {
         mockTables();
         const fetchMock = vi.fn(async () => new Response(JSON.stringify({
