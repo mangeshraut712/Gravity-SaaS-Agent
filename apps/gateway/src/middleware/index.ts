@@ -200,23 +200,21 @@ export class MiddlewareFactory {
 
     // Tier-based Rate Limiting
     static tierBasedRateLimit() {
+        // Build each limiter once per middleware instance. Creating them inside
+        // the request handler gave every request a fresh store, so the caps
+        // never accumulated and never triggered.
+        const window = 15 * 60 * 1000; // 15 minutes
+        const limiters = {
+            FREE: MiddlewareFactory.createRateLimit({ windowMs: window, maxRequests: 30 }),
+            PRO: MiddlewareFactory.createRateLimit({ windowMs: window, maxRequests: 100 }),
+            ENTERPRISE: MiddlewareFactory.createRateLimit({ windowMs: window, maxRequests: 500 }),
+            ANONYMOUS: MiddlewareFactory.createRateLimit({ windowMs: window, maxRequests: 30 }) // Free tier limit
+        };
+
         return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-            const user = req.user;
-            if (!user) {
-                return MiddlewareFactory.createRateLimit({
-                    windowMs: 15 * 60 * 1000, // 15 minutes
-                    maxRequests: 30 // Free tier limit
-                })(req, res, next);
-            }
-
-            const limits = {
-                FREE: { windowMs: 15 * 60 * 1000, maxRequests: 30 },
-                PRO: { windowMs: 15 * 60 * 1000, maxRequests: 100 },
-                ENTERPRISE: { windowMs: 15 * 60 * 1000, maxRequests: 500 }
-            };
-
-            const limit = limits[user.tier];
-            return MiddlewareFactory.createRateLimit(limit)(req, res, next);
+            const tier = req.user?.tier;
+            const limiter = (tier && limiters[tier]) || limiters.ANONYMOUS;
+            return limiter(req, res, next);
         };
     }
 
