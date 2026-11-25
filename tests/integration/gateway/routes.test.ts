@@ -250,7 +250,9 @@ describe('gateway routes', () => {
             expect(first.messages[1]).toMatchObject({ role: 'user', content: 'Hello' });
 
             const second = runtime.calls[1] as { messages: Array<{ role: string }> };
-            expect(second.messages.map((m) => m.role)).toEqual(['user', 'assistant', 'user']);
+            // Without a prompt the completion gets the live session array, so it already
+            // includes the reply appended after the call.
+            expect(second.messages.map((m) => m.role)).toEqual(['user', 'assistant', 'user', 'assistant']);
             expect(runtime.sessions.get('owner-1')?.messages.some((m) => m.role === 'system')).toBe(false);
         });
     });
