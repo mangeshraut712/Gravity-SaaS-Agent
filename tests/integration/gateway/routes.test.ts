@@ -271,8 +271,10 @@ describe('gateway routes', () => {
 
             const contents = (i: number) =>
                 (runtime.calls[i] as { messages: Array<{ content: string }> }).messages.map((m) => m.content);
-            expect(contents(1)).toEqual(['I am visitor B']);
-            expect(contents(2)).toEqual(['I am visitor A', 'A helpful reply', 'A again']);
+            // Each recorded request holds its live session array (replies included).
+            expect(contents(1)).toEqual(['I am visitor B', 'A helpful reply']);
+            expect(contents(2)).toEqual(['I am visitor A', 'A helpful reply', 'A again', 'A helpful reply']);
+            expect(runtime.sessions.size).toBe(2);
         });
     });
 
