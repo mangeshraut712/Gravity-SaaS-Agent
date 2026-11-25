@@ -116,6 +116,21 @@ describe('dashboard chat route', () => {
         expect(await response.json()).toEqual({ reply: 'Sure.' });
     });
 
+    it('does not answer for a paused agent', async () => {
+        mockTables({ agent: { ...agent, status: 'paused' } });
+        const fetchMock = vi.fn();
+        vi.stubGlobal('fetch', fetchMock);
+        const response = await chat(
+            new NextRequest('http://localhost/api/chat/agent-1', {
+                method: 'POST',
+                body: JSON.stringify({ message: 'Hi' }),
+            }),
+            { params: { agentId: 'agent-1' } },
+        );
+        expect(response.status).toBe(403);
+        expect(fetchMock).not.toHaveBeenCalled();
+    });
+
     it('counts the monthly quota across all of the owner\'s agents', async () => {
         let events: ReturnType<typeof builder> | undefined;
         mockTables({ messages: 100, ownerAgents: [{ id: 'agent-1' }, { id: 'agent-2' }] });
