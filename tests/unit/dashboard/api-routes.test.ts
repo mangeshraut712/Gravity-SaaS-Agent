@@ -258,6 +258,29 @@ describe('dashboard chat route', () => {
         expect(sent.systemPrompt).toContain('You have knowledge about: Hours.');
     });
 
+    it('includes knowledge pasted in the launch wizard in the system prompt', async () => {
+        const long = 'x'.repeat(5000);
+        mockTables({
+            agent: { ...agent, knowledge_base: [{ type: 'text', content: '  We open at 9am.  ' }, { type: 'text', content: long }, { type: 'text', content: 42 }] },
+            owner: { id: 'user-1', subscription_tier: 'free' },
+        });
+        const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) => new Response(JSON.stringify({ data: { response: 'ok' } }), { status: 200 }));
+        vi.stubGlobal('fetch', fetchMock);
+        const response = await chat(
+            new NextRequest('http://localhost/api/chat/agent-1', {
+                method: 'POST',
+                body: JSON.stringify({ message: 'When do you open?' }),
+            }),
+            { params: { agentId: 'agent-1' } },
+        );
+        expect(response.status).toBe(200);
+        const sent = JSON.parse(String(fetchMock.mock.calls[0][1]?.body));
+        expect(sent.systemPrompt).toContain("Context from the client's knowledge base:\nWe open at 9am.\n\nxxx");
+        expect(sent.systemPrompt).not.toContain('You have knowledge about');
+        expect(sent.systemPrompt).not.toContain('x'.repeat(4000));
+        expect(sent.systemPrompt).not.toContain('42');
+    });
+
     it('returns the gateway reply and records an analytics event', async () => {
         mockTables();
         const fetchMock = vi.fn(async () => new Response(JSON.stringify({
