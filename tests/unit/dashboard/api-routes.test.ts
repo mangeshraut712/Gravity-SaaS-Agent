@@ -33,10 +33,15 @@ function builder(result: { data?: unknown; error?: unknown; count?: number | nul
         eq: () => query,
         in: vi.fn(() => query),
         gte: () => query,
+        lte: () => query,
         or: () => query,
         limit: () => query,
         update: () => query,
-        insert: vi.fn(async () => ({ error: null })),
+        insert: vi.fn(() => ({
+            select: () => ({ single: async () => ({ data: { id: 'evt-1', created_at: new Date().toISOString() }, error: null }) }),
+            then: (resolve: (value: { error: null }) => void) => Promise.resolve({ error: null }).then(resolve),
+        })),
+        delete: () => query,
         single: async () => result,
         maybeSingle: async () => result,
         then: (resolve: (value: typeof result) => void) => Promise.resolve(result).then(resolve),
@@ -310,16 +315,122 @@ describe('dashboard chat route', () => {
             { params: { agentId: 'agent-1' } },
         );
 
-        // Free plan: 100/month, 10/minute. The mocked count answers both windows.
-        mockTables({ messages: 10 });
+        // Free plan: 100/month, 10/minute. The mocked count answers both windows and,
+        // for the minute window, includes this request's own reservation.
+        mockTables({ messages: 11 });
         const burst = await send();
         expect(burst.status).toBe(429);
         expect(burst.headers.get('Retry-After')).toBe('60');
         expect((await burst.json()).error).toMatch(/last minute/);
         expect(fetchMock).not.toHaveBeenCalled();
 
-        mockTables({ messages: 9 });
+        mockTables({ messages: 10 });
         expect((await send()).status).toBe(200);
+    });
+
+    function fakeEventStore() {
+        const rows: Array<{ id: string; agent_id: string; event_type: string; metadata: unknown; created_at: string }> = [];
+        let nextId = 0;
+        const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
+        const table = () => {
+            let filterId: string | undefined;
+            let mode: 'count' | 'delete' | 'update' = 'count';
+            let patch: Record<string, unknown> = {};
+            let upTo: string | undefined;
+            const query: Record<string, unknown> = {
+                insert: (row: { agent_id: string; event_type: string; metadata: unknown }) => ({
+                    select: () => ({
+                        single: async () => {
+                            await tick();
+                            const id = `evt-${++nextId}`;
+                            // Strictly increasing, like now() across separate inserts.
+                            const created_at = new Date(Date.now() - 30_000 + nextId).toISOString();
+                            rows.push({ ...row, id, created_at });
+                            return { data: { id, created_at }, error: null };
+                        },
+                    }),
+                }),
+                select: () => query,
+                in: () => query,
+                gte: () => query,
+                lte: (_column: string, value: string) => { upTo = value; return query; },
+                delete: () => { mode = 'delete'; return query; },
+                update: (value: Record<string, unknown>) => { mode = 'update'; patch = value; return query; },
+                eq: (column: string, value: string) => { if (column === 'id') filterId = value; return query; },
+                then: async (resolve: (value: unknown) => void) => {
+                    await tick();
+                    if (mode === 'delete') {
+                        const index = rows.findIndex((row) => row.id === filterId);
+                        if (index >= 0) rows.splice(index, 1);
+                        return resolve({ error: null });
+                    }
+                    if (mode === 'update') {
+                        const row = rows.find((candidate) => candidate.id === filterId);
+                        if (row) Object.assign(row, patch);
+                        return resolve({ error: null });
+                    }
+                    return resolve({
+                        count: rows.filter((row) => row.event_type === 'message_sent' && (!upTo || row.created_at <= upTo)).length,
+                        error: null,
+                    });
+                },
+            };
+            return query;
+        };
+        return { rows, table };
+    }
+
+    it('reserves burst capacity before calling the gateway so concurrent requests cannot overshoot', async () => {
+        const store = fakeEventStore();
+        mockTables();
+        const base = admin.from.getMockImplementation()!;
+        admin.from.mockImplementation((name: string) => (name === 'analytics_events' ? store.table() : base(name)));
+        let inFlight = 0;
+        const fetchMock = vi.fn(async () => {
+            inFlight += 1;
+            await new Promise((resolve) => setTimeout(resolve, 5));
+            inFlight -= 1;
+            return new Response(JSON.stringify({ data: { response: 'ok', usage: { totalTokens: 3 } } }), { status: 200 });
+        });
+        vi.stubGlobal('fetch', fetchMock);
+
+        const responses = await Promise.all(
+            Array.from({ length: 20 }, () => chat(
+                new NextRequest('http://localhost/api/chat/agent-1', { method: 'POST', body: JSON.stringify({ message: 'Hi' }) }),
+                { params: { agentId: 'agent-1' } },
+            )),
+        );
+
+        const admitted = responses.filter((response) => response.status === 200).length;
+        expect(admitted).toBe(10); // free plan: 10/minute, no more and no fewer
+        expect(fetchMock).toHaveBeenCalledTimes(admitted);
+        expect(responses.every((response) => [200, 429].includes(response.status))).toBe(true);
+        // Refused requests release their reservation; admitted ones keep a finished event.
+        expect(store.rows).toHaveLength(admitted);
+        expect(store.rows.every((row) => (row.metadata as { pending?: boolean }).pending === undefined)).toBe(true);
+        expect(inFlight).toBe(0);
+    });
+
+    it('releases the reservation when the gateway fails', async () => {
+        const store = fakeEventStore();
+        mockTables();
+        const base = admin.from.getMockImplementation()!;
+        admin.from.mockImplementation((name: string) => (name === 'analytics_events' ? store.table() : base(name)));
+        vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ error: 'busy' }), { status: 502 })));
+        const failed = await chat(
+            new NextRequest('http://localhost/api/chat/agent-1', { method: 'POST', body: JSON.stringify({ message: 'Hi' }) }),
+            { params: { agentId: 'agent-1' } },
+        );
+        expect(failed.status).toBe(502);
+        expect(store.rows).toHaveLength(0);
+
+        vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('network down'); }));
+        const crashed = await chat(
+            new NextRequest('http://localhost/api/chat/agent-1', { method: 'POST', body: JSON.stringify({ message: 'Hi' }) }),
+            { params: { agentId: 'agent-1' } },
+        );
+        expect(crashed.status).toBe(500);
+        expect(store.rows).toHaveLength(0);
     });
 
     it('returns the gateway reply and records an analytics event', async () => {

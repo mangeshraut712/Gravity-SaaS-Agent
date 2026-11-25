@@ -44,8 +44,10 @@ export async function POST(req: NextRequest, context: any) {
     );
   }
 
+  let reservationId: string | null = null;
+  let admin: ReturnType<typeof getSupabaseAdminClient> | null = null;
   try {
-    const admin = getSupabaseAdminClient();
+    admin = getSupabaseAdminClient();
     // Fetch the agent and its owner profile
     const { data: agent, error: agentError } = await admin
       .from('agents')
@@ -118,16 +120,38 @@ export async function POST(req: NextRequest, context: any) {
     }
 
     // Burst limit: monthly quotas alone let one script spend a plan's whole month
-    // (and the owner's model budget) in seconds.
+    // (and the owner's model budget) in seconds. Reserve the slot *before* calling
+    // the model, then count the window up to and including this reservation, so
+    // in-flight requests hold capacity and a concurrent burst can't all slip under
+    // the cap. Counting only rows at or before our own keeps later arrivals from
+    // pushing an earlier request over the limit.
+    const { data: reservation, error: reservationError } = await admin
+      .from('analytics_events')
+      .insert({
+        agent_id: agent.id,
+        event_type: 'message_sent',
+        metadata: { source: 'web_chat', pending: true },
+      })
+      .select('id, created_at')
+      .single();
+    if (reservationError || !reservation) {
+      throw reservationError ?? new Error('Could not reserve a message slot.');
+    }
+    reservationId = reservation.id as string;
+
     const minuteAgo = new Date(Date.now() - 60_000);
     const { count: messagesLastMinute } = await admin
       .from('analytics_events')
       .select('id', { head: true, count: 'exact' })
       .eq('event_type', 'message_sent')
       .in('agent_id', ownerAgentIds)
-      .gte('created_at', minuteAgo.toISOString());
+      .gte('created_at', minuteAgo.toISOString())
+      .lte('created_at', reservation.created_at as string);
 
-    if ((messagesLastMinute ?? 0) >= limits.maxMessagesPerMinute) {
+    // The count includes this request's own reservation.
+    if ((messagesLastMinute ?? 0) > limits.maxMessagesPerMinute) {
+      await releaseReservation(admin, reservationId);
+      reservationId = null;
       return NextResponse.json(
         { error: 'Too many messages in the last minute. Please wait a moment and try again.' },
         { status: 429, headers: { 'Retry-After': '60' } },
@@ -164,6 +188,9 @@ export async function POST(req: NextRequest, context: any) {
         .json()
         .catch(() => ({ error: 'Gateway error' }));
       console.error('[AgentFlow] Gateway error', errorPayload);
+      // A failed reply isn't billed against the plan.
+      await releaseReservation(admin, reservationId);
+      reservationId = null;
       return NextResponse.json(
         { error: errorPayload.error || 'Agent failed to respond. Please try again.' },
         { status: 502 },
@@ -173,24 +200,35 @@ export async function POST(req: NextRequest, context: any) {
     const data = (await gatewayRes.json()) as { data?: { response?: string; usage?: any } };
     const reply = data.data?.response ?? 'I am ready to help, but something went wrong retrieving my response.';
 
-    // Record analytics event
-    await admin.from('analytics_events').insert({
-      agent_id: agent.id,
-      event_type: 'message_sent',
-      metadata: {
-        source: 'web_chat',
-        usage: data.data?.usage
-      },
-    });
+    // Turn the reservation into the recorded analytics event.
+    await admin
+      .from('analytics_events')
+      .update({
+        metadata: {
+          source: 'web_chat',
+          usage: data.data?.usage
+        },
+      })
+      .eq('id', reservationId);
+    reservationId = null;
 
     return NextResponse.json({ reply });
   } catch (err) {
     console.error('[AgentFlow] Chat handler error', err);
+    if (admin && reservationId) await releaseReservation(admin, reservationId).catch(() => undefined);
     return NextResponse.json(
       { error: 'Unexpected error while processing message.' },
       { status: 500 },
     );
   }
+}
+
+async function releaseReservation(
+  admin: ReturnType<typeof getSupabaseAdminClient>,
+  id: string | null,
+) {
+  if (!id) return;
+  await admin.from('analytics_events').delete().eq('id', id);
 }
 
 function buildSystemPrompt(agent: {
