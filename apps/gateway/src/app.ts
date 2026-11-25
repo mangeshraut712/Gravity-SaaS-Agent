@@ -196,7 +196,10 @@ export function createGatewayApp(deps: GatewayDependencies = {}): GatewayRuntime
 
         logger.info('Processing chat message via OpenRouter', { userId, conversationId, model });
 
-        let session = sessions.get(userId);
+        // One history per conversation: an owner's agents serve many visitors, and
+        // keying by userId alone mixed every visitor's messages into one transcript.
+        const sessionKey = conversationId ? `${userId}:${conversationId}` : userId;
+        let session = sessions.get(sessionKey);
         if (!session) {
             session = {
                 userId,
@@ -204,7 +207,7 @@ export function createGatewayApp(deps: GatewayDependencies = {}): GatewayRuntime
                 createdAt: new Date(),
                 lastActive: new Date(),
             };
-            sessions.set(userId, session);
+            sessions.set(sessionKey, session);
         }
 
         session.messages.push({

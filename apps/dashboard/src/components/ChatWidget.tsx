@@ -15,6 +15,19 @@ interface ChatWidgetProps {
   agentId: string;
 }
 
+function visitorIdFor(agentId: string): string {
+  const key = `agentflow:visitor:${agentId}`;
+  try {
+    const existing = window.localStorage.getItem(key);
+    if (existing) return existing;
+    const created = crypto.randomUUID();
+    window.localStorage.setItem(key, created);
+    return created;
+  } catch {
+    return crypto.randomUUID();
+  }
+}
+
 export function ChatWidget({ agentId }: ChatWidgetProps) {
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [input, setInput] = React.useState('');
@@ -42,7 +55,7 @@ export function ChatWidget({ agentId }: ChatWidgetProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: trimmed }),
+        body: JSON.stringify({ message: trimmed, visitorId: visitorIdFor(agentId) }),
       });
 
       if (!res.ok) {
@@ -52,11 +65,12 @@ export function ChatWidget({ agentId }: ChatWidgetProps) {
         throw new Error(payload?.error ?? 'Failed to get response from agent.');
       }
 
-      const data = (await res.json()) as { data?: { response?: string } };
+      // The chat route responds with { reply }.
+      const data = (await res.json()) as { reply?: string; data?: { response?: string } };
       const agentMessage: Message = {
         id: String(Date.now() + 1),
         role: 'agent',
-        content: data.data?.response ?? 'I am ready to help, but something went wrong retrieving my response.',
+        content: data.reply ?? data.data?.response ?? 'I am ready to help, but something went wrong retrieving my response.',
         createdAt: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, agentMessage]);

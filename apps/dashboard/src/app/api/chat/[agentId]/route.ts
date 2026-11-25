@@ -11,6 +11,10 @@ function gatewayUrl(): string {
 // Keeps pasted knowledge from crowding out the conversation in the model context.
 const KNOWLEDGE_CHAR_LIMIT = 4000;
 
+// Visitor ids come from the browser (see ChatWidget); anything else gets a fresh id,
+// i.e. no shared history.
+const VISITOR_ID = /^[A-Za-z0-9_-]{8,64}$/;
+
 export async function POST(req: NextRequest, context: any) {
   // Next.js 15+ passes route params as a Promise; awaiting a plain object is a no-op.
   const agentId: string | undefined = (await context?.params)?.agentId;
@@ -22,9 +26,9 @@ export async function POST(req: NextRequest, context: any) {
     );
   }
 
-  let body: { message?: string; userId?: string } = {};
+  let body: { message?: string; userId?: string; visitorId?: unknown } = {};
   try {
-    body = (await req.json()) as { message?: string; userId?: string };
+    body = (await req.json()) as { message?: string; userId?: string; visitorId?: unknown };
   } catch {
     return NextResponse.json(
       { error: 'Invalid JSON payload.' },
@@ -113,6 +117,11 @@ export async function POST(req: NextRequest, context: any) {
       );
     }
 
+    const visitorId =
+      typeof body.visitorId === 'string' && VISITOR_ID.test(body.visitorId)
+        ? body.visitorId
+        : crypto.randomUUID();
+
     // Build system prompt from agent configuration
     const systemPrompt = buildSystemPrompt(agent);
 
@@ -126,7 +135,7 @@ export async function POST(req: NextRequest, context: any) {
         message: userMessage,
         systemPrompt,
         userId: owner.id,
-        conversationId: agentId,
+        conversationId: `${agentId}:${visitorId}`,
         model: process.env.OPENROUTER_MODEL || 'openrouter/anthropic/claude-3.5-sonnet',
         temperature: 0.7,
         maxTokens: 512,

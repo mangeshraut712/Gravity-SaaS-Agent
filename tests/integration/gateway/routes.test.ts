@@ -257,6 +257,25 @@ describe('gateway routes', () => {
         });
     });
 
+    it('keeps a separate history per conversation for the same owner', async () => {
+        const runtime = buildApp();
+        await withServer(runtime.app, async (baseUrl) => {
+            const post = (body: Record<string, unknown>) => fetch(`${baseUrl}/api/v1/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            await post({ message: 'I am visitor A', userId: 'owner-1', conversationId: 'agent-1:visitor-a' });
+            await post({ message: 'I am visitor B', userId: 'owner-1', conversationId: 'agent-1:visitor-b' });
+            await post({ message: 'A again', userId: 'owner-1', conversationId: 'agent-1:visitor-a' });
+
+            const contents = (i: number) =>
+                (runtime.calls[i] as { messages: Array<{ content: string }> }).messages.map((m) => m.content);
+            expect(contents(1)).toEqual(['I am visitor B']);
+            expect(contents(2)).toEqual(['I am visitor A', 'A helpful reply', 'A again']);
+        });
+    });
+
     it('expires idle sessions', async () => {
         vi.useFakeTimers();
         const sessions = new Map<string, Session>();
