@@ -102,6 +102,20 @@ describe('dashboard chat route', () => {
         expect(empty.status).toBe(400);
     });
 
+    it('reads the agent id from the Promise params Next.js 16 passes', async () => {
+        mockTables();
+        vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ data: { response: 'Sure.' } }), { status: 200 })));
+        const response = await chat(
+            new NextRequest('http://localhost/api/chat/agent-1', {
+                method: 'POST',
+                body: JSON.stringify({ message: 'Hi' }),
+            }),
+            { params: Promise.resolve({ agentId: 'agent-1' }) },
+        );
+        expect(response.status).toBe(200);
+        expect(await response.json()).toEqual({ reply: 'Sure.' });
+    });
+
     it('counts the monthly quota across all of the owner\'s agents', async () => {
         let events: ReturnType<typeof builder> | undefined;
         mockTables({ messages: 100, ownerAgents: [{ id: 'agent-1' }, { id: 'agent-2' }] });
