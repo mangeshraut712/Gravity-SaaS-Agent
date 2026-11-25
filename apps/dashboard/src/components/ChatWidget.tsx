@@ -15,16 +15,26 @@ interface ChatWidgetProps {
   agentId: string;
 }
 
-function visitorIdFor(agentId: string): string {
+// Used when localStorage is blocked, so a visitor keeps one ID for the page's lifetime
+// instead of starting a fresh conversation on every message.
+const memoryVisitorIds = new Map<string, string>();
+
+export function visitorIdFor(agentId: string): string {
   const key = `agentflow:visitor:${agentId}`;
   try {
     const existing = window.localStorage.getItem(key);
     if (existing) return existing;
-    const created = crypto.randomUUID();
+    const created = memoryVisitorIds.get(key) ?? crypto.randomUUID();
+    memoryVisitorIds.set(key, created);
     window.localStorage.setItem(key, created);
     return created;
   } catch {
-    return crypto.randomUUID();
+    let fallback = memoryVisitorIds.get(key);
+    if (!fallback) {
+      fallback = crypto.randomUUID();
+      memoryVisitorIds.set(key, fallback);
+    }
+    return fallback;
   }
 }
 

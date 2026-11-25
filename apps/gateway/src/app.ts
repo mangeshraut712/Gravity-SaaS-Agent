@@ -198,7 +198,11 @@ export function createGatewayApp(deps: GatewayDependencies = {}): GatewayRuntime
 
         // One history per conversation: an owner's agents serve many visitors, and
         // keying by userId alone mixed every visitor's messages into one transcript.
-        const sessionKey = conversationId ? `${userId}:${conversationId}` : userId;
+        // The ID returned to the client must select the same history on the next call,
+        // and the key must be unambiguous ("a:b"+"c" vs "a"+"b:c"), hence a JSON tuple.
+        const resolvedConversationId =
+            typeof conversationId === 'string' && conversationId ? conversationId : String(userId);
+        const sessionKey = JSON.stringify([String(userId), resolvedConversationId]);
         let session = sessions.get(sessionKey);
         if (!session) {
             session = {
@@ -264,7 +268,7 @@ export function createGatewayApp(deps: GatewayDependencies = {}): GatewayRuntime
             success: true,
             data: {
                 response,
-                conversationId: conversationId || userId,
+                conversationId: resolvedConversationId,
                 model: usedModel,
                 usage
             }
