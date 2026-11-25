@@ -34,6 +34,7 @@ function builder(result: { data?: unknown; error?: unknown; count?: number | nul
         in: vi.fn(() => query),
         gte: () => query,
         lte: () => query,
+        lt: () => query,
         or: () => query,
         limit: () => query,
         update: () => query,
@@ -328,21 +329,19 @@ describe('dashboard chat route', () => {
         expect((await send()).status).toBe(200);
     });
 
-    function fakeEventStore() {
-        const rows: Array<{ id: string; agent_id: string; event_type: string; metadata: unknown; created_at: string }> = [];
+    function fakeSlotStore(options: { countError?: boolean } = {}) {
+        const rows: Array<{ id: string; user_id: string; created_at: string }> = [];
         let nextId = 0;
         const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
         const table = () => {
-            let filterId: string | undefined;
-            let mode: 'count' | 'delete' | 'update' = 'count';
-            let patch: Record<string, unknown> = {};
-            let upTo: string | undefined;
+            const filters: { id?: string; user_id?: string; upTo?: string; before?: string } = {};
+            let mode: 'count' | 'delete' = 'count';
             const query: Record<string, unknown> = {
-                insert: (row: { agent_id: string; event_type: string; metadata: unknown }) => ({
+                insert: (row: { user_id: string }) => ({
                     select: () => ({
                         single: async () => {
                             await tick();
-                            const id = `evt-${++nextId}`;
+                            const id = `slot-${++nextId}`;
                             // Strictly increasing, like now() across separate inserts.
                             const created_at = new Date(Date.now() - 30_000 + nextId).toISOString();
                             rows.push({ ...row, id, created_at });
@@ -351,26 +350,26 @@ describe('dashboard chat route', () => {
                     }),
                 }),
                 select: () => query,
-                in: () => query,
                 gte: () => query,
-                lte: (_column: string, value: string) => { upTo = value; return query; },
+                lte: (_column: string, value: string) => { filters.upTo = value; return query; },
+                lt: (_column: string, value: string) => { filters.before = value; return query; },
                 delete: () => { mode = 'delete'; return query; },
-                update: (value: Record<string, unknown>) => { mode = 'update'; patch = value; return query; },
-                eq: (column: string, value: string) => { if (column === 'id') filterId = value; return query; },
+                eq: (column: 'id' | 'user_id', value: string) => { filters[column] = value; return query; },
                 then: async (resolve: (value: unknown) => void) => {
                     await tick();
                     if (mode === 'delete') {
-                        const index = rows.findIndex((row) => row.id === filterId);
-                        if (index >= 0) rows.splice(index, 1);
+                        for (let i = rows.length - 1; i >= 0; i -= 1) {
+                            const row = rows[i];
+                            if (filters.id && row.id !== filters.id) continue;
+                            if (filters.user_id && row.user_id !== filters.user_id) continue;
+                            if (filters.before && !(row.created_at < filters.before)) continue;
+                            rows.splice(i, 1);
+                        }
                         return resolve({ error: null });
                     }
-                    if (mode === 'update') {
-                        const row = rows.find((candidate) => candidate.id === filterId);
-                        if (row) Object.assign(row, patch);
-                        return resolve({ error: null });
-                    }
+                    if (options.countError) return resolve({ count: null, error: { message: 'statement timeout' } });
                     return resolve({
-                        count: rows.filter((row) => row.event_type === 'message_sent' && (!upTo || row.created_at <= upTo)).length,
+                        count: rows.filter((row) => row.user_id === filters.user_id && (!filters.upTo || row.created_at <= filters.upTo)).length,
                         error: null,
                     });
                 },
@@ -380,11 +379,24 @@ describe('dashboard chat route', () => {
         return { rows, table };
     }
 
-    it('reserves burst capacity before calling the gateway so concurrent requests cannot overshoot', async () => {
-        const store = fakeEventStore();
+    function routeWithSlots(store: ReturnType<typeof fakeSlotStore>) {
         mockTables();
         const base = admin.from.getMockImplementation()!;
-        admin.from.mockImplementation((name: string) => (name === 'analytics_events' ? store.table() : base(name)));
+        const analyticsInserts: unknown[] = [];
+        admin.from.mockImplementation((name: string) => {
+            if (name === 'chat_rate_reservations') return store.table();
+            const query = base(name);
+            if (name === 'analytics_events') {
+                query.insert = vi.fn(async (row: unknown) => { analyticsInserts.push(row); return { error: null }; }) as never;
+            }
+            return query;
+        });
+        return analyticsInserts;
+    }
+
+    it('reserves burst capacity before calling the gateway so concurrent requests cannot overshoot', async () => {
+        const store = fakeSlotStore();
+        const analyticsInserts = routeWithSlots(store);
         let inFlight = 0;
         const fetchMock = vi.fn(async () => {
             inFlight += 1;
@@ -405,32 +417,41 @@ describe('dashboard chat route', () => {
         expect(admitted).toBe(10); // free plan: 10/minute, no more and no fewer
         expect(fetchMock).toHaveBeenCalledTimes(admitted);
         expect(responses.every((response) => [200, 429].includes(response.status))).toBe(true);
-        // Refused requests release their reservation; admitted ones keep a finished event.
+        // Refused requests give their slot back; admitted ones keep it for the window.
         expect(store.rows).toHaveLength(admitted);
-        expect(store.rows.every((row) => (row.metadata as { pending?: boolean }).pending === undefined)).toBe(true);
+        expect(store.rows.every((row) => row.user_id === 'user-1')).toBe(true);
+        // The analytics log only gets append-only rows for answered messages.
+        expect(analyticsInserts).toHaveLength(admitted);
         expect(inFlight).toBe(0);
     });
 
-    it('releases the reservation when the gateway fails', async () => {
-        const store = fakeEventStore();
-        mockTables();
-        const base = admin.from.getMockImplementation()!;
-        admin.from.mockImplementation((name: string) => (name === 'analytics_events' ? store.table() : base(name)));
+    it('refuses with 503 and frees the slot when the burst count cannot be read', async () => {
+        const store = fakeSlotStore({ countError: true });
+        const analyticsInserts = routeWithSlots(store);
+        const fetchMock = vi.fn();
+        vi.stubGlobal('fetch', fetchMock);
+        const response = await chat(
+            new NextRequest('http://localhost/api/chat/agent-1', { method: 'POST', body: JSON.stringify({ message: 'Hi' }) }),
+            { params: { agentId: 'agent-1' } },
+        );
+        expect(response.status).toBe(503);
+        expect(fetchMock).not.toHaveBeenCalled();
+        expect(store.rows).toHaveLength(0);
+        expect(analyticsInserts).toHaveLength(0);
+    });
+
+    it('does not record usage for a failed reply and prunes stale slots', async () => {
+        const store = fakeSlotStore();
+        store.rows.push({ id: 'old', user_id: 'user-1', created_at: new Date(Date.now() - 60 * 60_000).toISOString() });
+        const analyticsInserts = routeWithSlots(store);
         vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ error: 'busy' }), { status: 502 })));
         const failed = await chat(
             new NextRequest('http://localhost/api/chat/agent-1', { method: 'POST', body: JSON.stringify({ message: 'Hi' }) }),
             { params: { agentId: 'agent-1' } },
         );
         expect(failed.status).toBe(502);
-        expect(store.rows).toHaveLength(0);
-
-        vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('network down'); }));
-        const crashed = await chat(
-            new NextRequest('http://localhost/api/chat/agent-1', { method: 'POST', body: JSON.stringify({ message: 'Hi' }) }),
-            { params: { agentId: 'agent-1' } },
-        );
-        expect(crashed.status).toBe(500);
-        expect(store.rows).toHaveLength(0);
+        expect(analyticsInserts).toHaveLength(0);
+        expect(store.rows.map((row) => row.id)).toEqual(['slot-1']);
     });
 
     it('returns the gateway reply and records an analytics event', async () => {

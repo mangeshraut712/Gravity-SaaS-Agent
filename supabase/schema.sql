@@ -125,6 +125,17 @@ create table if not exists public.analytics_events (
 create index if not exists idx_analytics_events_agent_id on public.analytics_events(agent_id);
 create index if not exists idx_analytics_events_created_at on public.analytics_events(created_at);
 
+-- Per-minute chat burst slots (dashboard chat route). Short-lived and mutable, so
+-- kept out of the append-only analytics_events log. Only the service role touches it.
+create table if not exists public.chat_rate_reservations (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade not null,
+  created_at timestamp with time zone default now() not null
+);
+
+create index if not exists idx_chat_rate_reservations_user_created
+  on public.chat_rate_reservations(user_id, created_at);
+
 -- Billing Events Table
 create table if not exists public.billing_events (
   id uuid primary key default gen_random_uuid(),
@@ -146,6 +157,8 @@ alter table public.conversations enable row level security;
 alter table public.messages enable row level security;
 alter table public.analytics_events enable row level security;
 alter table public.billing_events enable row level security;
+-- No policies: browser clients get no access; the service-role chat route bypasses RLS.
+alter table public.chat_rate_reservations enable row level security;
 
 -- Profiles: user can see and update only their own profile
 drop policy if exists "Users can read own profile" on public.profiles;
