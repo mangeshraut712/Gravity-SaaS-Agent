@@ -6,6 +6,7 @@ export function isPlainEmail(email: string): boolean {
     const domain = email.slice(at + 1);
     const dot = domain.lastIndexOf('.');
     if (dot <= 0 || dot === domain.length - 1) return false;
-    const ok = (part: string) => part.length > 0 && ![...part].some((ch) => ch === ' ' || ch === '\t');
+    // Reject whitespace and every C0 control (CR/LF enable header injection) plus DEL.
+    const ok = (part: string) => part.length > 0 && ![...part].some((ch) => ch <= ' ' || ch === '\x7f');
     return ok(local) && ok(domain);
 }
