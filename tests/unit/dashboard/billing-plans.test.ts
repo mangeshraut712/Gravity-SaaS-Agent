@@ -25,8 +25,8 @@ describe('billing plans', () => {
 
     it('returns limits for every tier', () => {
         expect(getPlanLimits('free')).toEqual({ maxAgents: 1, maxMessagesPerMonth: 100, maxMessagesPerMinute: 10 });
-        expect(getPlanLimits('pro')).toEqual({ maxAgents: 5, maxMessagesPerMonth: 5000, maxMessagesPerMinute: 30 });
-        expect(getPlanLimits('business')).toEqual({ maxAgents: 10_000, maxMessagesPerMonth: 1_000_000, maxMessagesPerMinute: 120 });
+        expect(getPlanLimits('pro')).toEqual({ maxAgents: 5, maxMessagesPerMonth: 5000, maxMessagesPerMinute: 100 });
+        expect(getPlanLimits('business')).toEqual({ maxAgents: 10_000, maxMessagesPerMonth: 1_000_000, maxMessagesPerMinute: 1000 });
         expect(getPlanLimits('enterprise' as SubscriptionTier)).toBe('enterprise');
     });
 

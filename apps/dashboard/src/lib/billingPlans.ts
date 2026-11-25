@@ -10,9 +10,9 @@ export interface PlanLimits {
 export function getPlanLimits(tier: SubscriptionTier): PlanLimits {
   switch (tier) {
     case 'pro':
-      return { maxAgents: 5, maxMessagesPerMonth: 5000, maxMessagesPerMinute: 30 };
+      return { maxAgents: 5, maxMessagesPerMonth: 5000, maxMessagesPerMinute: 100 };
     case 'business':
-      return { maxAgents: 10_000, maxMessagesPerMonth: 1_000_000, maxMessagesPerMinute: 120 };
+      return { maxAgents: 10_000, maxMessagesPerMonth: 1_000_000, maxMessagesPerMinute: 1000 };
     case 'free':
       return { maxAgents: 1, maxMessagesPerMonth: 100, maxMessagesPerMinute: 10 };
     default: {
