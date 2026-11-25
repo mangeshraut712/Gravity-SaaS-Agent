@@ -117,6 +117,23 @@ export async function POST(req: NextRequest, context: any) {
       );
     }
 
+    // Burst limit: monthly quotas alone let one script spend a plan's whole month
+    // (and the owner's model budget) in seconds.
+    const minuteAgo = new Date(Date.now() - 60_000);
+    const { count: messagesLastMinute } = await admin
+      .from('analytics_events')
+      .select('id', { head: true, count: 'exact' })
+      .eq('event_type', 'message_sent')
+      .in('agent_id', ownerAgentIds)
+      .gte('created_at', minuteAgo.toISOString());
+
+    if ((messagesLastMinute ?? 0) >= limits.maxMessagesPerMinute) {
+      return NextResponse.json(
+        { error: 'Too many messages in the last minute. Please wait a moment and try again.' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
+    }
+
     const visitorId =
       typeof body.visitorId === 'string' && VISITOR_ID.test(body.visitorId)
         ? body.visitorId

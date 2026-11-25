@@ -302,6 +302,26 @@ describe('dashboard chat route', () => {
         expect(anonA).not.toBe(anonB);
     });
 
+    it('enforces a per-minute burst limit below the monthly quota', async () => {
+        const fetchMock = vi.fn(async () => new Response(JSON.stringify({ data: { response: 'ok' } }), { status: 200 }));
+        vi.stubGlobal('fetch', fetchMock);
+        const send = () => chat(
+            new NextRequest('http://localhost/api/chat/agent-1', { method: 'POST', body: JSON.stringify({ message: 'Hi' }) }),
+            { params: { agentId: 'agent-1' } },
+        );
+
+        // Free plan: 100/month, 10/minute. The mocked count answers both windows.
+        mockTables({ messages: 10 });
+        const burst = await send();
+        expect(burst.status).toBe(429);
+        expect(burst.headers.get('Retry-After')).toBe('60');
+        expect((await burst.json()).error).toMatch(/last minute/);
+        expect(fetchMock).not.toHaveBeenCalled();
+
+        mockTables({ messages: 9 });
+        expect((await send()).status).toBe(200);
+    });
+
     it('returns the gateway reply and records an analytics event', async () => {
         mockTables();
         const fetchMock = vi.fn(async () => new Response(JSON.stringify({
