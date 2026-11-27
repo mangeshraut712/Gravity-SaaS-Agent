@@ -4,7 +4,8 @@ import { getPlanLimits, getSupabaseAdminClient } from '../../../../lib';
 const GATEWAY_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export async function POST(req: NextRequest, context: any) {
-  const agentId: string | undefined = context?.params?.agentId;
+  // Next.js 15+ passes route params as a Promise; awaiting a plain object is a no-op.
+  const agentId: string | undefined = (await context?.params)?.agentId;
 
   if (!agentId) {
     return NextResponse.json(
