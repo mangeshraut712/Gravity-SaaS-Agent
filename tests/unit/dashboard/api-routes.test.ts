@@ -206,6 +206,40 @@ describe('dashboard chat route', () => {
         expect(unreadable.status).toBe(502);
     });
 
+    it('defaults to the local gateway port and honours GATEWAY_URL', async () => {
+        const saved = { gateway: process.env.GATEWAY_URL, public: process.env.NEXT_PUBLIC_API_URL };
+        delete process.env.GATEWAY_URL;
+        delete process.env.NEXT_PUBLIC_API_URL;
+        try {
+            const fetchMock = vi.fn(async (_url: string) => new Response(JSON.stringify({ data: { response: 'ok' } }), { status: 200 }));
+            vi.stubGlobal('fetch', fetchMock);
+            const send = () => chat(
+                new NextRequest('http://localhost/api/chat/agent-1', {
+                    method: 'POST',
+                    body: JSON.stringify({ message: 'Hi' }),
+                }),
+                { params: { agentId: 'agent-1' } },
+            );
+
+            mockTables();
+            expect((await send()).status).toBe(200);
+            expect(fetchMock.mock.calls[0][0]).toBe('http://localhost:3003/api/v1/chat');
+
+            process.env.NEXT_PUBLIC_API_URL = 'http://gateway:3001';
+            mockTables();
+            await send();
+            expect(fetchMock.mock.calls[1][0]).toBe('http://gateway:3001/api/v1/chat');
+
+            process.env.GATEWAY_URL = 'http://127.0.0.1:4000';
+            mockTables();
+            await send();
+            expect(fetchMock.mock.calls[2][0]).toBe('http://127.0.0.1:4000/api/v1/chat');
+        } finally {
+            if (saved.gateway === undefined) delete process.env.GATEWAY_URL; else process.env.GATEWAY_URL = saved.gateway;
+            if (saved.public === undefined) delete process.env.NEXT_PUBLIC_API_URL; else process.env.NEXT_PUBLIC_API_URL = saved.public;
+        }
+    });
+
     it('returns the gateway reply and records an analytics event', async () => {
         mockTables();
         const fetchMock = vi.fn(async () => new Response(JSON.stringify({

@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPlanLimits, getSupabaseAdminClient } from '../../../../lib';
 
-const GATEWAY_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+// `npm run dev:gateway` listens on 3003 (apps/gateway/src/index.ts); Docker Compose
+// sets NEXT_PUBLIC_API_URL=http://gateway:3001 explicitly. Read per request so the
+// server-only GATEWAY_URL from .env.example also works.
+function gatewayUrl(): string {
+  return process.env.GATEWAY_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003';
+}
 
 export async function POST(req: NextRequest, context: any) {
   // Next.js 15+ passes route params as a Promise; awaiting a plain object is a no-op.
@@ -109,7 +114,7 @@ export async function POST(req: NextRequest, context: any) {
     const systemPrompt = buildSystemPrompt(agent);
 
     // Call the gateway's OpenRouter chat endpoint
-    const gatewayRes = await fetch(`${GATEWAY_URL}/api/v1/chat`, {
+    const gatewayRes = await fetch(`${gatewayUrl()}/api/v1/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
