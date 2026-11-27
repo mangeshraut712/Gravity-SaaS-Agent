@@ -38,7 +38,7 @@ export async function POST(req: NextRequest, context: any) {
     const { data: agent, error: agentError } = await admin
       .from('agents')
       .select(
-        'id, user_id, template_type, personality, custom_instructions, knowledge_base',
+        'id, user_id, template_type, personality, custom_instructions, knowledge_base, status',
       )
       .eq('id', agentId)
       .single();
@@ -47,6 +47,13 @@ export async function POST(req: NextRequest, context: any) {
       return NextResponse.json(
         { error: 'Agent not found.' },
         { status: 404 },
+      );
+    }
+
+    if (agent.status === 'paused') {
+      return NextResponse.json(
+        { error: 'This agent is paused.' },
+        { status: 403 },
       );
     }
 
