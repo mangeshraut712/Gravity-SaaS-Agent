@@ -3,16 +3,18 @@ export type SubscriptionTier = 'free' | 'pro' | 'business';
 export interface PlanLimits {
   maxAgents: number;
   maxMessagesPerMonth: number;
+  /** Burst cap per owner account, across all agents, over a rolling 60 s window. */
+  maxMessagesPerMinute: number;
 }
 
 export function getPlanLimits(tier: SubscriptionTier): PlanLimits {
   switch (tier) {
     case 'pro':
-      return { maxAgents: 5, maxMessagesPerMonth: 5000 };
+      return { maxAgents: 5, maxMessagesPerMonth: 5000, maxMessagesPerMinute: 100 };
     case 'business':
-      return { maxAgents: 10_000, maxMessagesPerMonth: 1_000_000 };
+      return { maxAgents: 10_000, maxMessagesPerMonth: 1_000_000, maxMessagesPerMinute: 1000 };
     case 'free':
-      return { maxAgents: 1, maxMessagesPerMonth: 100 };
+      return { maxAgents: 1, maxMessagesPerMonth: 100, maxMessagesPerMinute: 10 };
     default: {
       const _exhaustive: never = tier;
       return _exhaustive;

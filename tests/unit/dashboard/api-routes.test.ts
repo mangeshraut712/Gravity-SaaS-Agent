@@ -33,10 +33,16 @@ function builder(result: { data?: unknown; error?: unknown; count?: number | nul
         eq: () => query,
         in: vi.fn(() => query),
         gte: () => query,
+        lte: () => query,
+        lt: () => query,
         or: () => query,
         limit: () => query,
         update: () => query,
-        insert: vi.fn(async () => ({ error: null })),
+        insert: vi.fn(() => ({
+            select: () => ({ single: async () => ({ data: { id: 'evt-1', created_at: new Date().toISOString() }, error: null }) }),
+            then: (resolve: (value: { error: null }) => void) => Promise.resolve({ error: null }).then(resolve),
+        })),
+        delete: () => query,
         single: async () => result,
         maybeSingle: async () => result,
         then: (resolve: (value: typeof result) => void) => Promise.resolve(result).then(resolve),
@@ -300,6 +306,189 @@ describe('dashboard chat route', () => {
         expect(anonA).toMatch(/^agent-1:[0-9a-f-]{36}$/);
         expect(anonB).toMatch(/^agent-1:[0-9a-f-]{36}$/);
         expect(anonA).not.toBe(anonB);
+    });
+
+    it('enforces a per-minute burst limit below the monthly quota', async () => {
+        const fetchMock = vi.fn(async () => new Response(JSON.stringify({ data: { response: 'ok' } }), { status: 200 }));
+        vi.stubGlobal('fetch', fetchMock);
+        const send = () => chat(
+            new NextRequest('http://localhost/api/chat/agent-1', { method: 'POST', body: JSON.stringify({ message: 'Hi' }) }),
+            { params: { agentId: 'agent-1' } },
+        );
+
+        // Free plan: 100/month, 10/minute. The mocked count answers both windows and,
+        // for the minute window, includes this request's own reservation.
+        mockTables({ messages: 11 });
+        const burst = await send();
+        expect(burst.status).toBe(429);
+        expect(burst.headers.get('Retry-After')).toBe('60');
+        expect((await burst.json()).error).toMatch(/last minute/);
+        expect(fetchMock).not.toHaveBeenCalled();
+
+        mockTables({ messages: 10 });
+        expect((await send()).status).toBe(200);
+    });
+
+    function fakeSlotStore(options: { countError?: boolean; cleanupThrows?: boolean } = {}) {
+        const rows: Array<{ id: string; user_id: string; created_at: string }> = [];
+        let nextId = 0;
+        // Resolves when a stale-slot cleanup has finished (cleanup now runs in the background).
+        let cleanupDone: (() => void) | undefined;
+        const cleanupFinished = new Promise<void>((resolve) => { cleanupDone = resolve; });
+        const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
+        const table = () => {
+            const filters: { id?: string; user_id?: string; upTo?: string; before?: string } = {};
+            let mode: 'count' | 'delete' = 'count';
+            const query: Record<string, unknown> = {
+                insert: (row: { user_id: string }) => ({
+                    select: () => ({
+                        single: async () => {
+                            await tick();
+                            const id = `slot-${++nextId}`;
+                            // Strictly increasing, like now() across separate inserts.
+                            const created_at = new Date(Date.now() - 30_000 + nextId).toISOString();
+                            rows.push({ ...row, id, created_at });
+                            return { data: { id, created_at }, error: null };
+                        },
+                    }),
+                }),
+                select: () => query,
+                gte: () => query,
+                lte: (_column: string, value: string) => { filters.upTo = value; return query; },
+                lt: (_column: string, value: string) => { filters.before = value; return query; },
+                delete: () => { mode = 'delete'; return query; },
+                eq: (column: 'id' | 'user_id', value: string) => { filters[column] = value; return query; },
+                then: async (resolve: (value: unknown) => void) => {
+                    await tick();
+                    if (mode === 'delete') {
+                        // The stale-slot cleanup is the only delete filtered by created_at.
+                        // Like the real client, failures resolve with { error } rather than throwing.
+                        if (options.cleanupThrows && filters.before) {
+                            cleanupDone?.();
+                            return resolve({ error: { message: 'cleanup connection reset' } });
+                        }
+                        for (let i = rows.length - 1; i >= 0; i -= 1) {
+                            const row = rows[i];
+                            if (filters.id && row.id !== filters.id) continue;
+                            if (filters.user_id && row.user_id !== filters.user_id) continue;
+                            if (filters.before && !(row.created_at < filters.before)) continue;
+                            rows.splice(i, 1);
+                        }
+                        if (filters.before) cleanupDone?.();
+                        return resolve({ error: null });
+                    }
+                    if (options.countError) return resolve({ count: null, error: { message: 'statement timeout' } });
+                    return resolve({
+                        count: rows.filter((row) => row.user_id === filters.user_id && (!filters.upTo || row.created_at <= filters.upTo)).length,
+                        error: null,
+                    });
+                },
+            };
+            return query;
+        };
+        return { rows, table, cleanupFinished };
+    }
+
+    function routeWithSlots(store: ReturnType<typeof fakeSlotStore>) {
+        mockTables();
+        const base = admin.from.getMockImplementation()!;
+        const analyticsInserts: unknown[] = [];
+        admin.from.mockImplementation((name: string) => {
+            if (name === 'chat_rate_reservations') return store.table();
+            const query = base(name);
+            if (name === 'analytics_events') {
+                query.insert = vi.fn(async (row: unknown) => { analyticsInserts.push(row); return { error: null }; }) as never;
+            }
+            return query;
+        });
+        return analyticsInserts;
+    }
+
+    it('reserves burst capacity before calling the gateway so concurrent requests cannot overshoot', async () => {
+        const store = fakeSlotStore();
+        const analyticsInserts = routeWithSlots(store);
+        let inFlight = 0;
+        const fetchMock = vi.fn(async () => {
+            inFlight += 1;
+            await new Promise((resolve) => setTimeout(resolve, 5));
+            inFlight -= 1;
+            return new Response(JSON.stringify({ data: { response: 'ok', usage: { totalTokens: 3 } } }), { status: 200 });
+        });
+        vi.stubGlobal('fetch', fetchMock);
+
+        const responses = await Promise.all(
+            Array.from({ length: 20 }, () => chat(
+                new NextRequest('http://localhost/api/chat/agent-1', { method: 'POST', body: JSON.stringify({ message: 'Hi' }) }),
+                { params: { agentId: 'agent-1' } },
+            )),
+        );
+
+        const admitted = responses.filter((response) => response.status === 200).length;
+        expect(admitted).toBe(10); // free plan: 10/minute, no more and no fewer
+        expect(fetchMock).toHaveBeenCalledTimes(admitted);
+        expect(responses.every((response) => [200, 429].includes(response.status))).toBe(true);
+        // Refused requests give their slot back; admitted ones keep it for the window.
+        expect(store.rows).toHaveLength(admitted);
+        expect(store.rows.every((row) => row.user_id === 'user-1')).toBe(true);
+        // The analytics log only gets append-only rows for answered messages.
+        expect(analyticsInserts).toHaveLength(admitted);
+        expect(inFlight).toBe(0);
+    });
+
+    it('does not fail an admitted request when the stale-slot cleanup fails', async () => {
+        const store = fakeSlotStore({ cleanupThrows: true });
+        routeWithSlots(store);
+        const fetchMock = vi.fn(async () => new Response(JSON.stringify({ data: { response: 'ok' } }), { status: 200 }));
+        vi.stubGlobal('fetch', fetchMock);
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+        const response = await chat(
+            new NextRequest('http://localhost/api/chat/agent-1', { method: 'POST', body: JSON.stringify({ message: 'Hi' }) }),
+            { params: { agentId: 'agent-1' } },
+        );
+
+        // The request passed every check before cleanup ran, so a cleanup failure
+        // must not turn it into a 500.
+        expect(response.status).toBe(200);
+        expect(await response.json()).toEqual({ reply: 'ok' });
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        // The failure is logged rather than silently dropped. The mock signals when
+        // the query settles; the route's continuation runs on the next microtask.
+        await store.cleanupFinished;
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        expect(warn).toHaveBeenCalledWith('[AgentFlow] Rate-limit slot cleanup failed', expect.objectContaining({ message: 'cleanup connection reset' }));
+        warn.mockRestore();
+    });
+
+    it('refuses with 503 and frees the slot when the burst count cannot be read', async () => {
+        const store = fakeSlotStore({ countError: true });
+        const analyticsInserts = routeWithSlots(store);
+        const fetchMock = vi.fn();
+        vi.stubGlobal('fetch', fetchMock);
+        const response = await chat(
+            new NextRequest('http://localhost/api/chat/agent-1', { method: 'POST', body: JSON.stringify({ message: 'Hi' }) }),
+            { params: { agentId: 'agent-1' } },
+        );
+        expect(response.status).toBe(503);
+        expect(fetchMock).not.toHaveBeenCalled();
+        expect(store.rows).toHaveLength(0);
+        expect(analyticsInserts).toHaveLength(0);
+    });
+
+    it('does not record usage for a failed reply and prunes stale slots', async () => {
+        const store = fakeSlotStore();
+        store.rows.push({ id: 'old', user_id: 'user-1', created_at: new Date(Date.now() - 60 * 60_000).toISOString() });
+        const analyticsInserts = routeWithSlots(store);
+        vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ error: 'busy' }), { status: 502 })));
+        const failed = await chat(
+            new NextRequest('http://localhost/api/chat/agent-1', { method: 'POST', body: JSON.stringify({ message: 'Hi' }) }),
+            { params: { agentId: 'agent-1' } },
+        );
+        expect(failed.status).toBe(502);
+        expect(analyticsInserts).toHaveLength(0);
+        // Cleanup runs in the background, so wait for it rather than assume it has run.
+        await store.cleanupFinished;
+        expect(store.rows.map((row) => row.id)).toEqual(['slot-1']);
     });
 
     it('returns the gateway reply and records an analytics event', async () => {

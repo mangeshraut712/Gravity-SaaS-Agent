@@ -117,6 +117,62 @@ export async function POST(req: NextRequest, context: any) {
       );
     }
 
+    // Burst limit: monthly quotas alone let one script spend a plan's whole month
+    // (and the owner's model budget) in seconds. Each request first takes a slot in
+    // chat_rate_reservations, then counts the owner's slots in the last minute up to
+    // and including its own, so in-flight requests hold capacity and a concurrent
+    // burst can't all slip under the cap. Slots live outside the append-only
+    // analytics log and never count toward the monthly quota; an abandoned slot only
+    // occupies the one-minute window.
+    const { data: slot, error: slotError } = await admin
+      .from('chat_rate_reservations')
+      .insert({ user_id: owner.id })
+      .select('id, created_at')
+      .single();
+    if (slotError || !slot) {
+      throw slotError ?? new Error('Could not reserve a message slot.');
+    }
+
+    const minuteAgo = new Date(Date.now() - 60_000);
+    const { count: messagesLastMinute, error: burstError } = await admin
+      .from('chat_rate_reservations')
+      .select('id', { head: true, count: 'exact' })
+      .eq('user_id', owner.id)
+      .gte('created_at', minuteAgo.toISOString())
+      .lte('created_at', slot.created_at as string);
+
+    // The count includes this request's own slot. An unknown count is not admitted.
+    if (burstError || (messagesLastMinute ?? 0) > limits.maxMessagesPerMinute) {
+      await admin.from('chat_rate_reservations').delete().eq('id', slot.id);
+      if (burstError) {
+        return NextResponse.json(
+          { error: 'Could not check the message rate. Please try again.' },
+          { status: 503, headers: { 'Retry-After': '5' } },
+        );
+      }
+      return NextResponse.json(
+        { error: 'Too many messages in the last minute. Please wait a moment and try again.' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
+    }
+
+    // Best effort: slots older than the window no longer matter. Not awaited, so
+    // cleanup adds no latency to an admitted request and cannot fail it; stale
+    // rows simply age out on a later request if this one is lost. Supabase
+    // resolves with { error } rather than throwing, so both shapes are handled.
+    void (async () => {
+      try {
+        const { error: cleanupError } = await admin
+          .from('chat_rate_reservations')
+          .delete()
+          .eq('user_id', owner.id)
+          .lt('created_at', new Date(Date.now() - 10 * 60_000).toISOString());
+        if (cleanupError) console.warn('[AgentFlow] Rate-limit slot cleanup failed', cleanupError);
+      } catch (cleanupError) {
+        console.warn('[AgentFlow] Rate-limit slot cleanup failed', cleanupError);
+      }
+    })();
+
     const visitorId =
       typeof body.visitorId === 'string' && VISITOR_ID.test(body.visitorId)
         ? body.visitorId
