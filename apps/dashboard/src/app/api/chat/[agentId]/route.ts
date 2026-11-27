@@ -156,12 +156,22 @@ export async function POST(req: NextRequest, context: any) {
       );
     }
 
-    // Best effort: slots older than the window no longer matter.
-    await admin
-      .from('chat_rate_reservations')
-      .delete()
-      .eq('user_id', owner.id)
-      .lt('created_at', new Date(Date.now() - 10 * 60_000).toISOString());
+    // Best effort: slots older than the window no longer matter. Not awaited, so
+    // cleanup adds no latency to an admitted request and cannot fail it; stale
+    // rows simply age out on a later request if this one is lost. Supabase
+    // resolves with { error } rather than throwing, so both shapes are handled.
+    void (async () => {
+      try {
+        const { error: cleanupError } = await admin
+          .from('chat_rate_reservations')
+          .delete()
+          .eq('user_id', owner.id)
+          .lt('created_at', new Date(Date.now() - 10 * 60_000).toISOString());
+        if (cleanupError) console.warn('[AgentFlow] Rate-limit slot cleanup failed', cleanupError);
+      } catch (cleanupError) {
+        console.warn('[AgentFlow] Rate-limit slot cleanup failed', cleanupError);
+      }
+    })();
 
     const visitorId =
       typeof body.visitorId === 'string' && VISITOR_ID.test(body.visitorId)

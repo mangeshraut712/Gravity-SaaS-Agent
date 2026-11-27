@@ -329,9 +329,12 @@ describe('dashboard chat route', () => {
         expect((await send()).status).toBe(200);
     });
 
-    function fakeSlotStore(options: { countError?: boolean } = {}) {
+    function fakeSlotStore(options: { countError?: boolean; cleanupThrows?: boolean } = {}) {
         const rows: Array<{ id: string; user_id: string; created_at: string }> = [];
         let nextId = 0;
+        // Resolves when a stale-slot cleanup has finished (cleanup now runs in the background).
+        let cleanupDone: (() => void) | undefined;
+        const cleanupFinished = new Promise<void>((resolve) => { cleanupDone = resolve; });
         const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
         const table = () => {
             const filters: { id?: string; user_id?: string; upTo?: string; before?: string } = {};
@@ -358,6 +361,12 @@ describe('dashboard chat route', () => {
                 then: async (resolve: (value: unknown) => void) => {
                     await tick();
                     if (mode === 'delete') {
+                        // The stale-slot cleanup is the only delete filtered by created_at.
+                        // Like the real client, failures resolve with { error } rather than throwing.
+                        if (options.cleanupThrows && filters.before) {
+                            cleanupDone?.();
+                            return resolve({ error: { message: 'cleanup connection reset' } });
+                        }
                         for (let i = rows.length - 1; i >= 0; i -= 1) {
                             const row = rows[i];
                             if (filters.id && row.id !== filters.id) continue;
@@ -365,6 +374,7 @@ describe('dashboard chat route', () => {
                             if (filters.before && !(row.created_at < filters.before)) continue;
                             rows.splice(i, 1);
                         }
+                        if (filters.before) cleanupDone?.();
                         return resolve({ error: null });
                     }
                     if (options.countError) return resolve({ count: null, error: { message: 'statement timeout' } });
@@ -376,7 +386,7 @@ describe('dashboard chat route', () => {
             };
             return query;
         };
-        return { rows, table };
+        return { rows, table, cleanupFinished };
     }
 
     function routeWithSlots(store: ReturnType<typeof fakeSlotStore>) {
@@ -425,6 +435,31 @@ describe('dashboard chat route', () => {
         expect(inFlight).toBe(0);
     });
 
+    it('does not fail an admitted request when the stale-slot cleanup fails', async () => {
+        const store = fakeSlotStore({ cleanupThrows: true });
+        routeWithSlots(store);
+        const fetchMock = vi.fn(async () => new Response(JSON.stringify({ data: { response: 'ok' } }), { status: 200 }));
+        vi.stubGlobal('fetch', fetchMock);
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+        const response = await chat(
+            new NextRequest('http://localhost/api/chat/agent-1', { method: 'POST', body: JSON.stringify({ message: 'Hi' }) }),
+            { params: { agentId: 'agent-1' } },
+        );
+
+        // The request passed every check before cleanup ran, so a cleanup failure
+        // must not turn it into a 500.
+        expect(response.status).toBe(200);
+        expect(await response.json()).toEqual({ reply: 'ok' });
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        // The failure is logged rather than silently dropped. The mock signals when
+        // the query settles; the route's continuation runs on the next microtask.
+        await store.cleanupFinished;
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        expect(warn).toHaveBeenCalledWith('[AgentFlow] Rate-limit slot cleanup failed', expect.objectContaining({ message: 'cleanup connection reset' }));
+        warn.mockRestore();
+    });
+
     it('refuses with 503 and frees the slot when the burst count cannot be read', async () => {
         const store = fakeSlotStore({ countError: true });
         const analyticsInserts = routeWithSlots(store);
@@ -451,6 +486,8 @@ describe('dashboard chat route', () => {
         );
         expect(failed.status).toBe(502);
         expect(analyticsInserts).toHaveLength(0);
+        // Cleanup runs in the background, so wait for it rather than assume it has run.
+        await store.cleanupFinished;
         expect(store.rows.map((row) => row.id)).toEqual(['slot-1']);
     });
 
