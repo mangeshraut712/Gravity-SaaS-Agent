@@ -196,7 +196,14 @@ export function createGatewayApp(deps: GatewayDependencies = {}): GatewayRuntime
 
         logger.info('Processing chat message via OpenRouter', { userId, conversationId, model });
 
-        let session = sessions.get(userId);
+        // One history per conversation: an owner's agents serve many visitors, and
+        // keying by userId alone mixed every visitor's messages into one transcript.
+        // The ID returned to the client must select the same history on the next call,
+        // and the key must be unambiguous ("a:b"+"c" vs "a"+"b:c"), hence a JSON tuple.
+        const resolvedConversationId =
+            typeof conversationId === 'string' && conversationId ? conversationId : String(userId);
+        const sessionKey = JSON.stringify([String(userId), resolvedConversationId]);
+        let session = sessions.get(sessionKey);
         if (!session) {
             session = {
                 userId,
@@ -204,7 +211,7 @@ export function createGatewayApp(deps: GatewayDependencies = {}): GatewayRuntime
                 createdAt: new Date(),
                 lastActive: new Date(),
             };
-            sessions.set(userId, session);
+            sessions.set(sessionKey, session);
         }
 
         session.messages.push({
@@ -261,7 +268,7 @@ export function createGatewayApp(deps: GatewayDependencies = {}): GatewayRuntime
             success: true,
             data: {
                 response,
-                conversationId: conversationId || userId,
+                conversationId: resolvedConversationId,
                 model: usedModel,
                 usage
             }

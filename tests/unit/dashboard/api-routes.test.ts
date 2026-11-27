@@ -281,6 +281,27 @@ describe('dashboard chat route', () => {
         expect(sent.systemPrompt).not.toContain('42');
     });
 
+    it('scopes the gateway conversation to the agent and visitor', async () => {
+        const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) => new Response(JSON.stringify({ data: { response: 'ok' } }), { status: 200 }));
+        vi.stubGlobal('fetch', fetchMock);
+        const send = async (body: Record<string, unknown>) => {
+            mockTables();
+            await chat(
+                new NextRequest('http://localhost/api/chat/agent-1', { method: 'POST', body: JSON.stringify(body) }),
+                { params: { agentId: 'agent-1' } },
+            );
+            return JSON.parse(String(fetchMock.mock.calls.at(-1)?.[1]?.body)).conversationId as string;
+        };
+
+        expect(await send({ message: 'Hi', visitorId: 'visitor_abc123' })).toBe('agent-1:visitor_abc123');
+        // Missing or malformed ids never fall back to one shared agent-wide history.
+        const anonA = await send({ message: 'Hi' });
+        const anonB = await send({ message: 'Hi', visitorId: '../../x' });
+        expect(anonA).toMatch(/^agent-1:[0-9a-f-]{36}$/);
+        expect(anonB).toMatch(/^agent-1:[0-9a-f-]{36}$/);
+        expect(anonA).not.toBe(anonB);
+    });
+
     it('returns the gateway reply and records an analytics event', async () => {
         mockTables();
         const fetchMock = vi.fn(async () => new Response(JSON.stringify({

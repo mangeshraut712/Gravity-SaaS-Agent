@@ -253,7 +253,64 @@ describe('gateway routes', () => {
             // Without a prompt the completion gets the live session array, so it already
             // includes the reply appended after the call.
             expect(second.messages.map((m) => m.role)).toEqual(['user', 'assistant', 'user', 'assistant']);
-            expect(runtime.sessions.get('owner-1')?.messages.some((m) => m.role === 'system')).toBe(false);
+            // Since per-conversation histories, the key is a JSON [userId, conversationId]
+            // tuple; with no conversationId sent it falls back to the userId.
+            const key = JSON.stringify(['owner-1', 'owner-1']);
+            expect(runtime.sessions.get(key)?.messages.some((m) => m.role === 'system')).toBe(false);
+        });
+    });
+
+    it('keeps a separate history per conversation for the same owner', async () => {
+        const runtime = buildApp();
+        await withServer(runtime.app, async (baseUrl) => {
+            const post = (body: Record<string, unknown>) => fetch(`${baseUrl}/api/v1/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            await post({ message: 'I am visitor A', userId: 'owner-1', conversationId: 'agent-1:visitor-a' });
+            await post({ message: 'I am visitor B', userId: 'owner-1', conversationId: 'agent-1:visitor-b' });
+            await post({ message: 'A again', userId: 'owner-1', conversationId: 'agent-1:visitor-a' });
+
+            const contents = (i: number) =>
+                (runtime.calls[i] as { messages: Array<{ content: string }> }).messages.map((m) => m.content);
+            // Each recorded request holds its live session array (replies included).
+            expect(contents(1)).toEqual(['I am visitor B', 'A helpful reply']);
+            expect(contents(2)).toEqual(['I am visitor A', 'A helpful reply', 'A again', 'A helpful reply']);
+            expect(runtime.sessions.size).toBe(2);
+        });
+    });
+
+    it('continues an ID-less conversation when the returned conversationId is sent back', async () => {
+        const runtime = buildApp();
+        await withServer(runtime.app, async (baseUrl) => {
+            const post = (body: Record<string, unknown>) => fetch(`${baseUrl}/api/v1/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            const first = await (await post({ message: 'first', userId: 'u1' })).json();
+            expect(first.data.conversationId).toBe('u1');
+            await post({ message: 'second', userId: 'u1', conversationId: first.data.conversationId });
+            const contents = (runtime.calls[1] as { messages: Array<{ content: string }> }).messages.map((m) => m.content);
+            expect(contents).toEqual(['first', 'A helpful reply', 'second', 'A helpful reply']);
+            expect(runtime.sessions.size).toBe(1);
+        });
+    });
+
+    it('does not let colon-joined user and conversation IDs collide', async () => {
+        const runtime = buildApp();
+        await withServer(runtime.app, async (baseUrl) => {
+            const post = (body: Record<string, unknown>) => fetch(`${baseUrl}/api/v1/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            await post({ message: 'from a:b', userId: 'a:b', conversationId: 'c' });
+            await post({ message: 'from a', userId: 'a', conversationId: 'b:c' });
+            const contents = (runtime.calls[1] as { messages: Array<{ content: string }> }).messages.map((m) => m.content);
+            expect(contents).toEqual(['from a', 'A helpful reply']);
+            expect(runtime.sessions.size).toBe(2);
         });
     });
 
