@@ -8,6 +8,9 @@ function gatewayUrl(): string {
   return process.env.GATEWAY_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003';
 }
 
+// Keeps pasted knowledge from crowding out the conversation in the model context.
+const KNOWLEDGE_CHAR_LIMIT = 4000;
+
 export async function POST(req: NextRequest, context: any) {
   // Next.js 15+ passes route params as a Promise; awaiting a plain object is a no-op.
   const agentId: string | undefined = (await context?.params)?.agentId;
@@ -121,6 +124,7 @@ export async function POST(req: NextRequest, context: any) {
       },
       body: JSON.stringify({
         message: userMessage,
+        systemPrompt,
         userId: owner.id,
         conversationId: agentId,
         model: process.env.OPENROUTER_MODEL || 'openrouter/anthropic/claude-3.5-sonnet',
@@ -183,17 +187,27 @@ function buildSystemPrompt(agent: {
     if (!agent.knowledge_base) return '';
     try {
       const parsed = agent.knowledge_base as
-        | { type?: string; title?: string }[]
+        | { type?: string; title?: string; content?: unknown }[]
         | string;
       if (typeof parsed === 'string') {
-        return parsed.slice(0, 400);
+        return parsed.slice(0, KNOWLEDGE_CHAR_LIMIT);
       }
       if (Array.isArray(parsed) && parsed.length > 0) {
         const titles = parsed
-          .map((item) => item.title)
+          .map((item) => item?.title)
           .filter(Boolean)
           .join(', ');
-        return titles ? `You have knowledge about: ${titles}.` : '';
+        // The launch wizard stores pasted knowledge as { type: 'text', content }.
+        const pasted = parsed
+          .map((item) => (typeof item?.content === 'string' ? item.content.trim() : ''))
+          .filter(Boolean)
+          .join('\n\n')
+          .slice(0, KNOWLEDGE_CHAR_LIMIT);
+        const parts = [
+          titles ? `You have knowledge about: ${titles}.` : '',
+          pasted,
+        ].filter(Boolean);
+        return parts.join('\n\n');
       }
       return '';
     } catch {

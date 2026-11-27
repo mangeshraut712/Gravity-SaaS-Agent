@@ -190,7 +190,9 @@ export function createGatewayApp(deps: GatewayDependencies = {}): GatewayRuntime
     }));
 
     apiRouter.post('/chat', asyncHandler(async (req: Request, res: Response) => {
-        const { message, userId = 'demo-user', conversationId, model, temperature, maxTokens } = req.body;
+        const { message, userId = 'demo-user', conversationId, model, temperature, maxTokens, systemPrompt } = req.body;
+        // The agent's configured instructions; sent with each completion, never stored in history.
+        const instructions = typeof systemPrompt === 'string' && systemPrompt.trim() ? systemPrompt.slice(0, 8000) : undefined;
 
         logger.info('Processing chat message via OpenRouter', { userId, conversationId, model });
 
@@ -221,7 +223,9 @@ export function createGatewayApp(deps: GatewayDependencies = {}): GatewayRuntime
                 logger.info('Calling OpenRouter API', { model: usedModel, messageCount: session.messages.length });
 
                 const completionRequest: ChatCompletionRequest = {
-                    messages: session.messages,
+                    messages: instructions
+                        ? [{ role: 'system' as const, content: instructions, timestamp: new Date() }, ...session.messages]
+                        : session.messages,
                     model: usedModel,
                     temperature: resolveTemperature(temperature),
                     maxTokens: maxTokens || 4000
